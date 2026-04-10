@@ -1,0 +1,364 @@
+/* ========================================
+   REGISTER FORM - Formulario de registro
+   ======================================== */
+
+.register-form {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 28rem;
+}
+
+/* ========================================
+   HEADER - Logo y subtítulo
+   ======================================== */
+
+.register-form__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.register-form__logo {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.register-form__logo-text {
+  background: linear-gradient(to right, #f97316, #dc2626);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.register-form__subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* ========================================
+   FORMULARIO
+   ======================================== */
+
+.register-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Campo de formulario */
+.register-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.register-form__label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+/* Contenedor de input con icono */
+.register-form__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.register-form__input-icon {
+  position: absolute;
+  left: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.register-form__input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: #f9fafb;
+}
+
+.register-form__input:focus {
+  outline: none;
+  border-color: #f97316;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.register-form__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.register-form__input--error {
+  border-color: #ef4444;
+}
+
+.register-form__input--error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Botón para mostrar/ocultar contraseña */
+.register-form__toggle-password {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  transition: color 0.3s ease;
+}
+
+.register-form__toggle-password:hover {
+  color: #f97316;
+}
+
+.register-form__toggle-password:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.register-form__toggle-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Mensaje de error */
+.register-form__error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: -0.25rem;
+}
+
+/* ========================================
+   TÉRMINOS Y CONDICIONES
+   ======================================== */
+
+.register-form__terms {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.register-form__checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  color: #374151;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.register-form__checkbox {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: #f97316;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.register-form__link {
+  color: #f97316;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.register-form__link:hover {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+/* ========================================
+   BOTÓN DE ENVÍO
+   ======================================== */
+
+.register-form__submit {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(to right, #f97316, #dc2626);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.register-form__submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.5);
+}
+
+.register-form__submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.register-form__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.register-form__submit-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.register-form__submit-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.register-form__submit-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* Spinner de carga */
+.register-form__spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   SEPARADOR
+   ======================================== */
+
+.register-form__divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.register-form__divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+.register-form__divider-text {
+  position: relative;
+  display: inline-block;
+  padding: 0 1rem;
+  background-color: white;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* ========================================
+   BOTONES DE REDES SOCIALES
+   ======================================== */
+
+.register-form__social {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.register-form__social-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background-color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.register-form__social-button:hover {
+  border-color: #9ca3af;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.register-form__social-button--google {
+  color: #4285f4;
+}
+
+.register-form__social-button--facebook {
+  color: #1877f2;
+}
+
+.register-form__social-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* ========================================
+   ENLACE A LOGIN
+   ======================================== */
+
+.register-form__login {
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.register-form__login-link {
+  color: #f97316;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.register-form__login-link:hover {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+/* ========================================
+   RESPONSIVE - Desktop
+   ======================================== */
+
+@media (min-width: 640px) {
+  .register-form {
+    padding: 3rem 2.5rem;
+  }
+
+  .register-form__logo {
+    font-size: 3rem;
+  }
+}
