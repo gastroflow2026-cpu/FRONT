@@ -6,7 +6,6 @@ import {
   registerValidationSchema,
 } from "@/validations/registerSchema";
 import { useFormik } from "formik";
-
 import "./RegisterForm.css";
 import { Lock, Mail, User, UserPlus } from "lucide-react";
 import { useState } from "react";

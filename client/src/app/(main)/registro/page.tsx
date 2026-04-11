@@ -1,6 +1,6 @@
-import RegisterForm from "@/components/RegisterForm/RegisterForm";
 import { ArrowLeft } from "lucide-react";
 import "../../css/RegisterFormPage.css";
+import RegisterForm from "@/components/RegisterForm/RegisterForm";
 
 /**
  * Register Page - Página de registro de nuevos usuarios
