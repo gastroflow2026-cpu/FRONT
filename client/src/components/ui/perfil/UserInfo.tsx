@@ -10,29 +10,41 @@ export default function UserInfo({ user }: { user: User }) {
 
   const { name, email, phone } = user ?? {};
 
-  return (
+return (
     <div className={styles.infoBox}>
-      <p>Bienvenido de nuevo {name}...!</p>
-      <div className={styles.dataBox}>
-        <h3>Informacion personal</h3>
-        <div className={styles.textBox}>
-          <p>Nombre</p>
-          <span>{name}</span>
+
+      <div className={styles.avatarContainer}>
+        <div className={styles.avatarCircle}></div>
+      </div>
+
+      <div className={styles.headerText}>
+        <p className={styles.userName}>{name}</p>
+        <p className={styles.userRole}>Comensal</p>
+      </div>
+
+      <div className={styles.statsRow}>
+        <div className={styles.statItem}>
+          <p className={styles.label}>Correo</p>
+          <span className={styles.value}>{email}</span>
         </div>
-        <div className={styles.textBox}>
-          <p>Correo</p>
-          <span>{email}</span>
-        </div>
-        <div className={styles.textBox}>
-          <p>Telefono</p>
-          <span>{phone}</span>
+        
+        <div className={styles.divider}></div>
+
+        <div className={styles.statItem}>
+          <p className={styles.label}>Número</p>
+          <span className={styles.value}>{phone}</span>
         </div>
       </div>
-      <button
-        type="submit"
-        className={styles.logOut}
-        onClick={logOutHandler}
-      > Cerrar Sesion</button>
+
+      <div className={styles.actionArea}>
+        <button
+          type="button"
+          className={styles.logOut}
+          onClick={logOutHandler}
+        >
+          Cerrar Sesión
+        </button>
+      </div>
     </div>
   );
 }

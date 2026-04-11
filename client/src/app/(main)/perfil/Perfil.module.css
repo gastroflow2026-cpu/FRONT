@@ -1,9 +1,30 @@
-.profile h2{
-    text-align: center;
+.profile {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #af7fdf;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.userLayout{
-    display: flex;
-    justify-content: center;
-    gap: 30px;
+.profile h2 {
+  color: white;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.userLayout {
+  display: flex;
+  gap: 30px;
+  max-width: 1200px;
+}
+
+@media (max-width: 900px) {
+  .userLayout {
+    flex-direction: column;
+    align-items: center;
+  }
 }

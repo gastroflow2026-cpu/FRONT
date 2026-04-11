@@ -14,8 +14,8 @@ export default function Perfil() {
 
   const user = {
     id: 1,
-    name: "User",
-    email: "user@gmail.com",
+    name: "Pedro",
+    email: "pedro@gmail.com",
     phone: "+00 111 222 3333",
   };
 
@@ -37,17 +37,15 @@ export default function Perfil() {
     total: "20 USD",
   };
 
-  const reserva = [
-    res1, res2
-  ]
+  const reserva = [res1, res2];
 
   return (
-    <div className={styles.profile}>
-      <h2>Perfil de usuario</h2>
+    <main className={styles.profile}>
+      <h2>Panel de Usuario</h2>
       <div className={styles.userLayout}>
         <UserInfo user={user} />
         <ReservationsList reserva={reserva} />
       </div>
-    </div>
+    </main>
   );
 }
