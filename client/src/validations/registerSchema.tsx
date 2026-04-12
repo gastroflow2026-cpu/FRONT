@@ -2,27 +2,26 @@ import * as Yup from "yup";
 
 //Definiciones de Interfas
 export interface RegisterFormValues {
-  name: string;
+  first_name: string;
+  last_name:string;
   email: string;
   password: string;
   confirmPassword: string;
-  address: string;
-  phone: string;
 }
 
 //Valores iniciales del formulario
 export const registerInitialValues: RegisterFormValues = {
-  name: "",
+  first_name: "",
+  last_name: "",
   email: "",
   password: "",
   confirmPassword: "",
-  address: "",
-  phone: "",
 };
 
 //Esquema de validaciones
 export const registerValidationSchema = Yup.object({
-  name: Yup.string().required("Nombre Requerido"),
+  first_name: Yup.string().required("Nombre Requerido"),
+  last_name:  Yup.string().required("Apellido Requerido"),
   email: Yup.string()
     .email("Formato de Correo Invalido")
     .required("Correo obligatorio"),
@@ -31,12 +30,5 @@ export const registerValidationSchema = Yup.object({
     .required("Contraseña Requerida"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")])
-    .required("Confirmación Requerida"),
-  address: Yup.string(),
-  phone: Yup.string()
-    .matches(
-      /^[0-9+\-\s()]+$/,
-      "El telefono debe contener solo numeros y caracteres válidos",
-    )
-    .min(10, "El Teléfono debe tener al menos 10 caracteres"),
+    .required("Confirmación Requerida")
 });
