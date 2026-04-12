@@ -57,7 +57,7 @@ const LoginForm = () => {
 
         {/* Panel izquierdo */}
         <div
-          className="hidden lg:flex flex-col justify-center gap-10 p-14 text-white rounded-2xl min-h-[580px]"
+          className="hidden lg:flex flex-col justify-center gap-10 p-14 text-white rounded-2xl min-h-145"
           style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.92), rgba(220,38,38,0.92))" }}
         >
           <div className="flex flex-col gap-6">
