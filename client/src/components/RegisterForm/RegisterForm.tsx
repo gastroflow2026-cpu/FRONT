@@ -8,12 +8,15 @@ import {
 import { useFormik } from "formik";
 import "./RegisterForm.css";
 import { Lock, Mail, User, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { UsersContext } from '../../context/UsersContext';
+import Swal from 'sweetalert2';
 
 export default function RegisterForm() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const {registerNewUser} = useContext(UsersContext)
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: registerInitialValues,
@@ -29,9 +32,27 @@ export default function RegisterForm() {
         setErrors(newErrors);
         return;
       }
-
-      const response = await RegisterUser(values);
-      console.log("Registro OK en BACK", response);
+      const res = await registerNewUser(values);
+      if(res === 201){
+            if(res === 201) {  
+                Swal.fire({
+                    theme: 'dark',
+                    title: 'Éxito!',
+                    text: 'Usuario registrado correctamente',
+                    icon: 'success'
+                });
+            }
+        }
+        else {
+            Swal.fire({
+                theme: 'dark',
+                title: 'Error!',
+                text: 'Inténtelo nuevamente',
+                icon: 'error',
+                
+            });
+            
+        };
       resetForm();
     },
   });
@@ -56,18 +77,42 @@ export default function RegisterForm() {
 
             <input
               className="register-form__input"
-              id="name"
-              name="name"
+              id="first_name"
+              name="first_name"
               type="text"
-              placeholder="Juan Pérez"
-              value={formik.values.name}
+              placeholder="Juan"
+              value={formik.values.first_name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
           </div>
 
-          {formik.errors.name && formik.touched.name && (
-            <div className="register-form__error">{formik.errors.name}</div>
+          {formik.errors.first_name && formik.touched.first_name && (
+            <div className="register-form__error">{formik.errors.first_name}</div>
+          )}
+        </div>
+
+        {/* APELLIDO */}
+        <div className="register-form__field">
+          <label className="register-form__label">Apellido</label>
+
+          <div className="register-form__input-wrapper">
+            <User className="register-form__input-icon" />
+
+            <input
+              className="register-form__input"
+              id="last_name"
+              name="last_name"
+              type="text"
+              placeholder="Perez"
+              value={formik.values.last_name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </div>
+
+          {formik.errors.last_name && formik.touched.last_name && (
+            <div className="register-form__error">{formik.errors.last_name}</div>
           )}
         </div>
         {/* EMAIL */}
@@ -116,6 +161,7 @@ export default function RegisterForm() {
             <div className="register-form__error">{formik.errors.password}</div>
           )}
         </div>
+        
         {/* CONFIRM PASSWORD (si lo tenés en schema) */}
         <div className="register-form__field">
           <label className="register-form__label">Confirmar Contraseña</label>
