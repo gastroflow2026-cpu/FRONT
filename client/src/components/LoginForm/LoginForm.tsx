@@ -1,11 +1,11 @@
 "use client";
 
-import "./login.css";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import { Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
 import Swal from "sweetalert2";
+import Image from "next/image";
 import { loginInitialValues, loginValidationSchema } from "@/validations/loginSchema";
 import { LoginUser } from "@/services/auth.services";
 
@@ -29,83 +29,61 @@ const LoginForm = () => {
       });
       router.push("/");
     } catch (error) {
-    
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden">
+    <div className="min-h-screen flex bg-[radial-gradient(circle_at_20%_20%,#141a33_0%,#070b18_70%)]">
 
-      {/* Fondo y círculos animados */}
-      <div className="login-page__background" />
-      <div className="login-page__circle login-page__circle--1" />
-      <div className="login-page__circle login-page__circle--2" />
-      <div className="login-page__circle login-page__circle--3" />
+      {/* Panel izquierdo — Logo */}
+      <div className="hidden lg:flex w-1/2 items-center justify-center relative border-r border-white/10">
 
-      {/* Botón volver */}
-      <button
-        onClick={() => router.push("/")}
-        className="fixed top-6 left-6 z-50 flex items-center gap-2 bg-white hover:bg-gray-50 hover:-translate-x-1 transition-all px-5 py-3 rounded-full text-gray-700 font-semibold text-sm shadow-md"
-      >
-        ← Volver al inicio
-      </button>
-
-      {/* Contenedor principal */}
-      <div className="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-8 mx-auto px-8 py-16">
-
-        {/* Panel izquierdo */}
-        <div
-          className="hidden lg:flex flex-col justify-center gap-10 p-14 text-white rounded-2xl min-h-145"
-          style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.92), rgba(220,38,38,0.92))" }}
+        {/* Botón volver */}
+        <button
+          onClick={() => router.push("/")}
+          className="absolute top-6 left-6 flex items-center justify-center gap-2 bg-white hover:bg-gray-100 hover:-translate-x-1 transition-all px-5 py-2.5 rounded-full text-gray-700 font-semibold text-sm shadow-md whitespace-nowrap"
         >
-          <div className="flex flex-col gap-6">
-            <div>
-              <h1 className="text-4xl font-bold leading-tight">
-                Bienvenido de vuelta a
-              </h1>
-              <h2
-                className="text-4xl font-bold"
-                style={{
-                  background: "linear-gradient(to right, #fbbf24, #ffffff)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                GastroFlow
-              </h2>
-              <p className="mt-4 text-white/90 text-lg leading-relaxed">
-                Descubrí los mejores restaurantes y reservá tu mesa favorita en segundos
-              </p>
-            </div>
+          <ArrowLeft className="w-4 h-4 shrink-0" />
+          Volver al inicio
+        </button>
 
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { value: "500+", label: "Restaurantes" },
-                { value: "10K+", label: "Usuarios" },
-                { value: "4.8★", label: "Valoración" },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center"
-                >
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-sm text-white/80">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <Image
+          src="/logo.png"
+          alt="GastroFlow Logo"
+          width={340}
+          height={340}
+          className="drop-shadow-2xl"
+        />
+      </div>
+
+      {/* Panel derecho — Formulario */}
+      <div className="flex flex-col justify-center items-center w-full lg:w-1/2 px-8 py-12">
+
+        {/* Header mobile */}
+        <div className="flex lg:hidden flex-col items-center mb-8 gap-3">
+          <Image src="/logo.png" alt="GastroFlow Logo" width={80} height={80} />
         </div>
 
-        {/* Panel derecho - Formulario */}
-        <div className="flex flex-col justify-center bg-white px-12 py-10 rounded-2xl shadow-2xl min-h-145 max-w-lg mx-auto w-full">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold">
-              <span className="text-orange-500">Gastro</span>
-              <span className="text-red-500">Flow</span>
+        {/* Card */}
+        <div
+          className="w-full max-w-lg rounded-2xl px-10 py-10"
+          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+        >
+          {/* Título */}
+          <div className="mb-8 text-center">
+            <h2
+              className="text-4xl font-bold mb-2"
+              style={{
+                background: "linear-gradient(to right, #f97316, #ec4899)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              GastroFlow
             </h2>
-            <p className="text-gray-500 mt-1 text-sm">Inicia sesión para continuar</p>
+            <p className="text-white/50 text-sm">Iniciá sesión para continuar</p>
           </div>
 
           <Formik
@@ -114,52 +92,64 @@ const LoginForm = () => {
             onSubmit={handleSubmit}
           >
             {({ isSubmitting }) => (
-              <Form className="flex flex-col gap-4">
+              <Form className="flex flex-col gap-5">
 
                 {/* Email */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-semibold text-gray-700">Email</label>
-                  <div className="flex items-center border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 gap-2 focus-within:border-orange-400 focus-within:bg-white transition">
-                    <Mail className="text-gray-400 w-4 h-4 shrink-0" />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-white/70">Email</label>
+                  <div
+                    className="flex items-center rounded-lg px-4 py-4 gap-3 transition"
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(249,115,22,0.5)",
+                    }}
+                  >
+                    <Mail className="text-white/30 w-5 h-5 shrink-0" />
                     <Field
                       type="email"
                       name="email"
                       placeholder="tucorreo@ejemplo.com"
-                      className="flex-1 outline-none text-sm text-gray-700 bg-transparent"
+                      className="flex-1 outline-none text-sm text-white bg-transparent placeholder:text-white/20"
                     />
                   </div>
-                  <ErrorMessage name="email" component="p" className="text-red-500 text-xs mt-1" />
+                  <ErrorMessage name="email" component="p" className="text-red-400 text-xs" />
                 </div>
 
                 {/* Contraseña */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-semibold text-gray-700">Contraseña</label>
-                  <div className="flex items-center border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 gap-2 focus-within:border-orange-400 focus-within:bg-white transition">
-                    <Lock className="text-gray-400 w-4 h-4 shrink-0" />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-white/70">Contraseña</label>
+                  <div
+                    className="flex items-center rounded-lg px-4 py-4 gap-3 transition"
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(249,115,22,0.5)",
+                    }}
+                  >
+                    <Lock className="text-white/30 w-5 h-5 shrink-0" />
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="••••••••"
-                      className="flex-1 outline-none text-sm text-gray-700 bg-transparent"
+                      className="flex-1 outline-none text-sm text-white bg-transparent placeholder:text-white/20"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-400 hover:text-gray-600 transition"
+                      className="text-white/30 hover:text-white/60 transition"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
-                  <ErrorMessage name="password" component="p" className="text-red-500 text-xs mt-1" />
+                  <ErrorMessage name="password" component="p" className="text-red-400 text-xs" />
                 </div>
 
                 {/* Recordarme y olvidaste contraseña */}
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                    <Field type="checkbox" name="rememberMe" className="accent-orange-500 w-4 h-4" />
+                  <label className="flex items-center gap-2 text-sm text-white/50 cursor-pointer">
+                    <Field type="checkbox" name="rememberMe" className="accent-orange-400 w-4 h-4" />
                     Recordarme
                   </label>
-                  <a href="/forgot-password" className="text-sm text-orange-500 hover:underline">
+                  <a href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300 transition hover:underline">
                     ¿Olvidaste tu contraseña?
                   </a>
                 </div>
@@ -168,24 +158,32 @@ const LoginForm = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  style={{ background: "linear-gradient(to right, #f97316, #ef4444)" }}
+                  className="flex items-center justify-center gap-2 w-full py-4 rounded-lg text-white font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "linear-gradient(to right, #f97316, #ec4899)" }}
                 >
                   <LogIn className="w-4 h-4" />
                   {isSubmitting ? "Iniciando sesión..." : "Iniciar Sesión"}
                 </button>
 
+                {/* Link a registro */}
+                <p className="text-center text-sm text-white/40">
+                  ¿Ya tenés una cuenta?{" "}
+                  <a href="/registro" className="text-orange-400 font-semibold hover:text-orange-300 transition hover:underline">
+                    Iniciá sesión aquí
+                  </a>
+                </p>
+
                 {/* Separador */}
                 <div className="flex items-center gap-3">
-                  <hr className="flex-1 border-gray-200" />
-                  <span className="text-xs text-gray-400">o continúa con</span>
-                  <hr className="flex-1 border-gray-200" />
+                  <hr className="flex-1 border-white/10" />
+                  <span className="text-xs text-white/30">o registrate con</span>
+                  <hr className="flex-1 border-white/10" />
                 </div>
 
                 {/* Botón Google */}
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 w-full py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                  className="flex items-center justify-center gap-2 w-full py-4 border border-white/10 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium text-white/70 hover:text-white transition"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -195,14 +193,6 @@ const LoginForm = () => {
                   </svg>
                   Google
                 </button>
-
-                {/* Link a registro */}
-                <p className="text-center text-sm text-gray-500">
-                  ¿No tenés una cuenta?{" "}
-                  <a href="/registro" className="text-orange-500 font-semibold hover:underline">
-                    Registrate aquí
-                  </a>
-                </p>
 
               </Form>
             )}
