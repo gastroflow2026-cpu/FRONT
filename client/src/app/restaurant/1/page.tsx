@@ -283,7 +283,7 @@ const RestaurantDetail = () => {
         </div>
       </div>
 
-      {/* Botón de Acción con tu Gradiente Corporativo */}
+    
       <button
         type="button"
         disabled={!isFormValid}

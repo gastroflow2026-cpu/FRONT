@@ -44,7 +44,7 @@ const Features = () => {
               className="group rounded-2xl border border-white/10 bg-gray-50 p-8 shadow-[0_18px_50px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-2 hover:border-orange-200 hover:bg-white hover:shadow-[0_28px_70px_rgba(0,0,0,0.18)]"
             >
               <div className="mb-4 inline-block rounded-xl bg-orange-50 p-3 transition-colors duration-300 group-hover:bg-orange-500 group-hover:text-white">
-                {/* El icono cambia de color al hacer hover sobre la tarjeta */}
+               
                 <feature.icon className="w-8 h-8 text-orange-500 transition-colors duration-300 group-hover:text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
