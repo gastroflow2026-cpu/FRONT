@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import Navbar from '@/components/layout/Nabvar';
+import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Star, MapPin, Utensils } from 'lucide-react';
 
