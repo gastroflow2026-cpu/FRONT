@@ -4,7 +4,9 @@ import { LoginFormValues } from "@/validations/loginSchema";
 
 export const RegisterUser = async (userData: RegisterFormValues) => {
   try {
-    const response = await fetch("/api/register", {
+    const response = await fetch("/auth/signup", {
+      // La ruta proporcionada por Hiram (backend)
+      // Cambiar y utilizar Axios si es necesario para manejar mejor las solicitudes HTTP
       method: "POST",
       headers: {
         "Content-Type": "application/json",

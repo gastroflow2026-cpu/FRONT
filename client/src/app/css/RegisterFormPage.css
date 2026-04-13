@@ -1,105 +1,123 @@
 /* ========================================
-   REGISTER PAGE - Página de registro
+   REGISTER PAGE
    ======================================== */
 
 .register-page {
   position: relative;
   min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #050816 0%, #0b1023 50%, #151936 100%);
+}
+
+/* ========================================
+   CONTENEDOR PRINCIPAL
+   ======================================== */
+
+.register-page__container {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ========================================
+   LÍNEA DIVISORIA CENTRAL
+   ======================================== */
+
+/* ========================================
+   LÍNEA DIVISORIA CENTRAL
+   ======================================== */
+
+.register-page__container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px; /* 🔥 más gruesa */
+  height: 100%;
+
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 15%,
+    rgba(255, 122, 24, 0.6) 50%,
+    /* 🔥 más intensidad */ rgba(255, 255, 255, 0.2) 85%,
+    transparent 100%
+  );
+
+  /* 🔥 glow más fuerte */
+  box-shadow:
+    0 0 8px rgba(255, 122, 24, 0.8),
+    0 0 20px rgba(255, 122, 24, 0.25);
+
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ========================================
+   IZQUIERDA: LOGO
+   ======================================== */
+
+.register-page__image-section {
+  width: 50%;
+  min-height: 100vh;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  overflow: hidden;
+  padding: 2rem;
+}
+
+.register-page__logo-image {
+  display: block;
+  width: 90%;
+  max-width: 800px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5));
 }
 
 /* ========================================
-   FONDO DEGRADADO ANIMADO
+   DERECHA: FORMULARIO
    ======================================== */
 
-.register-page__background {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-  z-index: 0;
-}
+.register-page__form-section {
+  width: 50%;
+  min-height: 100vh;
 
-/* Círculos decorativos con blur */
-.register-page__circle {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
-  animation: float 20s ease-in-out infinite;
-}
-
-.register-page__circle--1 {
-  width: 30rem;
-  height: 30rem;
-  background: linear-gradient(to right, #f97316, #dc2626);
-  top: -10%;
-  right: -10%;
-  animation-delay: 0s;
-}
-
-.register-page__circle--2 {
-  width: 25rem;
-  height: 25rem;
-  background: linear-gradient(to right, #10b981, #14b8a6);
-  bottom: -10%;
-  left: -10%;
-  animation-delay: 5s;
-}
-
-.register-page__circle--3 {
-  width: 20rem;
-  height: 20rem;
-  background: linear-gradient(to right, #fbbf24, #f97316);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation-delay: 10s;
-}
-
-/* Animación de flotación */
-@keyframes float {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -30px) scale(1.1);
-  }
-  66% {
-    transform: translate(-30px, 30px) scale(0.9);
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
 }
 
 /* ========================================
-   BOTÓN VOLVER AL INICIO
+   BOTÓN VOLVER
    ======================================== */
 
 .register-page__back {
   position: absolute;
-  top: 2rem;
-  left: 2rem;
+  top: 1.5rem;
+  left: 1.5rem;
   z-index: 20;
+
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
   padding: 0.75rem 1.25rem;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 9999px;
   color: #374151;
   font-weight: 600;
   text-decoration: none;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
 .register-page__back:hover {
-  transform: translateX(-5px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+  transform: translateX(-4px);
   background: white;
 }
 
@@ -109,165 +127,33 @@
 }
 
 /* ========================================
-   CONTENEDOR PRINCIPAL
+   RESPONSIVE
    ======================================== */
 
-.register-page__container {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 80rem;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  margin: 0 auto;
-}
-
-/* ========================================
-   SECCIÓN DE IMAGEN (solo visible en desktop)
-   ======================================== */
-
-.register-page__image-section {
-  display: none;
-  position: relative;
-  background-image: url("https://images.unsplash.com/photo-1758977403438-1b8546560d31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZXN0YXVyYW50JTIwdGFibGUlMjBlbGVnYW50JTIwZGluaW5nfGVufDF8fHx8MTc3NTcwMTM4MXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral");
-  background-size: cover;
-  background-position: center;
-  border-radius: 1.5rem;
-  overflow: hidden;
-}
-
-.register-page__image-overlay {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.95) 0%,
-    rgba(139, 92, 246, 0.95) 100%
-  );
-  padding: 3rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.register-page__image-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-}
-
-.register-page__image-title--gradient {
-  display: block;
-  background: linear-gradient(to right, #fbbf24, #ffffff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.register-page__image-text {
-  font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 3rem;
-  line-height: 1.6;
-}
-
-/* ========================================
-   BENEFICIOS DECORATIVOS
-   ======================================== */
-
-.register-page__benefits {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.register-page__benefit {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 1rem;
-  padding: 1.25rem;
-  transition: all 0.3s ease;
-}
-
-.register-page__benefit:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(10px);
-}
-
-.register-page__benefit-icon {
-  font-size: 2rem;
-  flex-shrink: 0;
-}
-
-.register-page__benefit-content {
-  flex: 1;
-}
-
-.register-page__benefit-title {
-  font-size: 1.125rem;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 0.25rem;
-}
-
-.register-page__benefit-text {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.5;
-}
-
-/* ========================================
-   SECCIÓN DEL FORMULARIO
-   ======================================== */
-
-.register-page__form-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ========================================
-   RESPONSIVE - Tablet y Desktop
-   ======================================== */
-
-/* Tablet */
-@media (min-width: 768px) {
-  .register-page {
-    padding: 2rem;
-  }
-}
-
-/* Desktop */
-@media (min-width: 1024px) {
+@media (max-width: 1024px) {
   .register-page__container {
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
+    flex-direction: column;
+  }
+
+  .register-page__container::before {
+    display: none;
   }
 
   .register-page__image-section {
-    display: block;
+    width: 100%;
+    min-height: 260px;
+    padding-top: 6rem;
+    padding-bottom: 1rem;
+  }
+
+  .register-page__logo-image {
+    width: 220px;
+    max-width: 220px;
   }
 
   .register-page__form-section {
-    padding: 2rem 0;
-  }
-}
-
-/* Desktop grande */
-@media (min-width: 1280px) {
-  .register-page__image-title {
-    font-size: 3rem;
-  }
-
-  .register-page__image-text {
-    font-size: 1.5rem;
+    width: 100%;
+    min-height: auto;
+    padding: 1.5rem 1rem 2rem;
   }
 }
