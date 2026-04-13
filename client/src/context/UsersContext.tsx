@@ -1,6 +1,7 @@
 "use client"
 import { createContext, useState, ReactNode, useEffect } from "react";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 
 interface LoginValues {
     email: string;
@@ -33,7 +34,6 @@ export const UsersContext = createContext<UsersContextType>({
 })
 
 export const UsersProvider = ({ children }: { children: ReactNode }) => {
-
     const [isLogged, setIsLogged] = useState(() => {
     if (typeof window === "undefined") return null;
     return JSON.parse(localStorage.getItem("user") || "null");
@@ -44,6 +44,8 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         if (!res.data.user) throw new Error("No se recibió el usuario");
 
         setIsLogged(res.data.user);
+        const token = res.data.token;
+        localStorage.setItem("token", JSON.stringify(token));
         localStorage.setItem("user", JSON.stringify(res.data.user));
         return res.status;
     }
@@ -54,13 +56,17 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
+        const token = urlParams.get('token');
+        const userParam = urlParams.get('user');
 
-        if(token){
-            localStorage.setItem("jwtToken", token);
+        if (token && userParam) {
+        const user = JSON.parse(decodeURIComponent(userParam));
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        setIsLogged(user);
         }
-    }, [])
-    
+    }, []);
+
     const logoutUser = (): void => {
         localStorage.removeItem("user");
         setIsLogged(false);
