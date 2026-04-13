@@ -1,4 +1,5 @@
 import "./globals.css";
+import { UsersProvider } from '../context/UsersContext';
 
 export default function RootLayout({
   children,
@@ -7,7 +8,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body suppressHydrationWarning> 
+        <UsersProvider>
+          {children}
+        </UsersProvider>
+      </body>
     </html>
   );
 }
