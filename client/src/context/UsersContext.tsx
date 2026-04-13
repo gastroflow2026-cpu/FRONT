@@ -1,11 +1,12 @@
 "use client"
-import { createContext, useState, ReactNode } from "react";
+import { createContext, useState, ReactNode, useEffect } from "react";
 import axios from "axios";
 
 interface LoginValues {
     email: string;
     password: string;
 }
+
 
 interface RegisterValues {
     email: string;
@@ -19,6 +20,7 @@ interface RegisterValues {
 interface UsersContextType {
     isLogged: any;
     loginUser: (values: LoginValues) => Promise<number>;
+    loginUserGoogle: () => {};
     logoutUser: () => void;
     registerNewUser: (values: RegisterValues) => Promise<number>;
 }
@@ -26,6 +28,7 @@ interface UsersContextType {
 export const UsersContext = createContext<UsersContextType>({
     isLogged: "",
     loginUser: async (values) => 0,
+    loginUserGoogle: async () => {},
     logoutUser: () => {},
     registerNewUser: async (values) => 0,
 })
@@ -46,6 +49,19 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         return res.status;
     }
 
+     const loginUserGoogle = async () => {
+        window.location.href = 'http://localhost:3000/auth/google/login';
+    }
+    
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+
+        if(token){
+            localStorage.setItem("jwtToken", token);
+        }
+    }, [])
+    
     const logoutUser = (): void => {
         localStorage.removeItem("user");
         setIsLogged(false);
@@ -59,6 +75,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     const value: UsersContextType = {
         isLogged,
         loginUser,
+        loginUserGoogle,
         logoutUser,
         registerNewUser,
     }
