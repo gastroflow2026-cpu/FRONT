@@ -7,7 +7,6 @@ interface LoginValues {
     password: string;
 }
 
-
 interface RegisterValues {
     email: string;
     password: string;
@@ -19,7 +18,7 @@ interface RegisterValues {
 
 interface UsersContextType {
     isLogged: any;
-    loginUser: (values: LoginValues) => Promise<number>;
+    loginUser: (values: LoginValues) => {};
     loginUserGoogle: () => {};
     logoutUser: () => void;
     registerNewUser: (values: RegisterValues) => Promise<number>;
@@ -27,7 +26,7 @@ interface UsersContextType {
 
 export const UsersContext = createContext<UsersContextType>({
     isLogged: "",
-    loginUser: async (values) => 0,
+    loginUser: async (values) => {},
     loginUserGoogle: async () => {},
     logoutUser: () => {},
     registerNewUser: async (values) => 0,
@@ -49,7 +48,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         return res.status;
     }
 
-     const loginUserGoogle = async () => {
+    const loginUserGoogle = async () => {
         window.location.href = 'http://localhost:3000/auth/google/login';
     }
     
