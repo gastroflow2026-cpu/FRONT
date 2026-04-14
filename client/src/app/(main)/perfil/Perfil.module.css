@@ -1,0 +1,9 @@
+.profile h2{
+    text-align: center;
+}
+
+.userLayout{
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
