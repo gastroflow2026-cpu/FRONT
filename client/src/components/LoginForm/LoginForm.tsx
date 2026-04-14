@@ -28,7 +28,16 @@ const LoginForm = () => {
         showConfirmButton: false,
       });
       router.push("/");
-    } catch (error) {
+    } catch (error: unknown) {
+      const message = "El correo no está registrado o las credenciales son incorrectas.";
+
+      if (typeof error === "object" && error !== null && "response" in error)
+      await Swal.fire({
+        icon: "error",
+        title: "Error al iniciar sesión",
+        text: message,
+        confirmButtonColor: "#f97316",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -43,7 +52,7 @@ const LoginForm = () => {
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500"
+          className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 cursor-pointer"
         >
           <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
             <ArrowLeft className="w-5 h-5" />
@@ -67,7 +76,7 @@ const LoginForm = () => {
           <button
              type="button"
              onClick={() => router.push("/")}
-             className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500"
+             className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 cursor-pointer"
            >
              <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
                <ArrowLeft className="w-5 h-5" />
@@ -104,6 +113,8 @@ const LoginForm = () => {
             initialValues={loginInitialValues}
             validationSchema={loginValidationSchema}
             onSubmit={handleSubmit}
+            validateOnChange={true}
+            validateOnBlur={true}
           >
             {({ isSubmitting }) => (
               <Form className="flex flex-col gap-5 items-center">
@@ -149,7 +160,7 @@ const LoginForm = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-400 hover:text-orange-400 transition"
+                      className="text-gray-400 hover:text-orange-400 transition cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -163,7 +174,7 @@ const LoginForm = () => {
                     <Field type="checkbox" name="rememberMe" className="accent-orange-400 w-4 h-4" />
                     Recordarme
                   </label>
-                  <a href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300 transition hover:underline">
+                  <a href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300 transition hover:underline cursor-pointer">
                     ¿Olvidaste tu contraseña?
                   </a>
                 </div>
@@ -172,7 +183,7 @@ const LoginForm = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center justify-center gap-5 w-full max-w-xs py-5 rounded-md text-white font-semibold text-lg transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 mt-1"
+                  className="flex items-center justify-center gap-5 w-full max-w-xs py-5 rounded-md text-white font-semibold text-lg transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 mt-1 cursor-pointer"
                   style={{
                     background: "linear-gradient(to right, #f97316, #ec4899)",
                     boxShadow: isSubmitting ? "none" : "0 4px 15px rgba(249,115,22,0.3)",
@@ -209,7 +220,7 @@ const LoginForm = () => {
                 {/* Botón Google */}
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 w-auto max-w-xs py-3 px-5 border-2 border-white/5 bg-white/5 hover:bg-white/10 hover:-translate-y-0.5 rounded-md text-sm font-semibold text-white/70 hover:text-white transition-all"
+                  className="flex items-center justify-center gap-2 w-auto max-w-xs py-3 px-5 border-2 border-white/5 bg-white/5 hover:bg-white/10 hover:-translate-y-0.5 rounded-md text-sm font-semibold text-white/70 hover:text-white transition-all cursor-pointer"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
