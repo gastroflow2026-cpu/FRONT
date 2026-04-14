@@ -16,7 +16,8 @@ export default function RegisterForm() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const {registerNewUser} = useContext(UsersContext)
+  const {registerNewUser} = useContext(UsersContext);
+  const {loginUserGoogle} = useContext(UsersContext)
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: registerInitialValues,
@@ -235,7 +236,8 @@ export default function RegisterForm() {
       </div>
       {/* Botones de redes sociales */}
       <div className="register-form__social"></div>{" "}
-      <button className="register-form__social-button register-form__social-button--google">
+      <button onClick={ async () =>{loginUserGoogle()}} 
+        className="register-form__social-button register-form__social-button--google">
         {" "}
         <svg className="register-form__social-icon" viewBox="0 0 24 24">
           {" "}

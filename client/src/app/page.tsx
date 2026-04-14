@@ -1,5 +1,9 @@
-export default function Home() {
-  return <>
-    <h1>Aqui estara el landing inicial.</h1>
-  </>;
+import Home from '../views/Home';
+
+export default function LandingPage() {
+  return (
+    <main>
+      <Home />
+    </main>
+  );
 }
