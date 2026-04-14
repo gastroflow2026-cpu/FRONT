@@ -25,6 +25,7 @@ const RestaurantDetail = () => {
     name: '',
     email: '',
     phone: '',
+    date: '',
   });
 
   const validateName = (value: string) => {
@@ -55,13 +56,41 @@ const RestaurantDetail = () => {
     if (!value.trim()) {
       return 'Ingresa tu teléfono.';
     }
-
-    if (!/^\d{6,15}$/.test(value)) {
+    if (!/^\d+$/.test(value)) {
       return 'El teléfono debe contener solo números.';
     }
-
+    if (value.length !== 10) {
+      return 'El teléfono debe tener exactamente 10 números.';
+    }
     return '';
   };
+
+  const validateDate = (value: string, timeValue?: string) => {
+  if (!value) {
+    return 'Selecciona una fecha.';
+  }
+  if (value < minReservationDate) {
+    return 'No se puede reservar en fechas pasadas.';
+  }
+  // Validar hora si la fecha es hoy
+  if (value === minReservationDate && timeValue) {
+    const match = timeValue.match(/(\d+):(\d+) (AM|PM)/i);
+    if (match) {
+      let hour = parseInt(match[1], 10);
+      const minute = parseInt(match[2], 10);
+      const ampm = match[3];
+      if (ampm && ampm.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+      if (ampm && ampm.toUpperCase() === 'AM' && hour === 12) hour = 0;
+      const selectedTotal = hour * 60 + minute;
+      const now = new Date();
+      const nowTotal = now.getHours() * 60 + now.getMinutes();
+      if (selectedTotal <= nowTotal) {
+        return 'No se puede reservar en una hora pasada.';
+      }
+    }
+  }
+  return '';
+};
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const sanitizedValue = event.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '');
@@ -96,24 +125,28 @@ const RestaurantDetail = () => {
       ...currentValues,
       phone: sanitizedValue,
     }));
+    // Validación en tiempo real
     setFormErrors((currentErrors) => ({
       ...currentErrors,
       phone: validatePhone(sanitizedValue),
     }));
   };
 
-  const handleBlur = (field: 'name' | 'email' | 'phone') => {
-    const validators = {
-      name: validateName,
-      email: validateEmail,
-      phone: validatePhone,
-    };
 
-    setFormErrors((currentErrors) => ({
-      ...currentErrors,
-      [field]: validators[field](formValues[field]),
-    }));
+
+  const handleBlur = (field: 'name' | 'email' | 'phone' | 'date' | 'time') => {
+  const validators = {
+    name: validateName,
+    email: validateEmail,
+    phone: validatePhone,
+    date: (v: string) => validateDate(v, formValues.time),
+    time: (v: string) => validateDate(formValues.date, v),
   };
+  setFormErrors((currentErrors) => ({
+    ...currentErrors,
+    [field]: validators[field](formValues[field]),
+  }));
+};
 
   const updateGuests = (delta: number) => {
     setFormValues((currentValues) => ({
@@ -123,11 +156,11 @@ const RestaurantDetail = () => {
   };
 
   const isFormValid =
-    !validateName(formValues.name) &&
-    !validateEmail(formValues.email) &&
-    !validatePhone(formValues.phone) &&
-    Boolean(formValues.date) &&
-    formValues.date >= minReservationDate;
+  !validateName(formValues.name) &&
+  !validateEmail(formValues.email) &&
+  !validatePhone(formValues.phone) &&
+  Boolean(formValues.date) &&
+  !validateDate(formValues.date, formValues.time);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -137,13 +170,13 @@ const RestaurantDetail = () => {
         {/* Banner del Restaurante */}
         <section className="relative h-[40vh] w-full">
           <img 
-            src="https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=1200" 
+            src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop" 
             className="w-full h-full object-cover"
             alt="Restaurante"
           />
           <div className="absolute inset-0 bg-black/40 flex items-end">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">La Parrilla del Sol {id}</h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">La Dolce Vitta {id}</h1>
               <div className="flex flex-wrap items-center gap-4 text-white">
                 <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
                   <Star size={16} className="text-orange-400 fill-orange-400" /> 4.8
@@ -152,7 +185,7 @@ const RestaurantDetail = () => {
                   <MapPin size={16} /> Palermo, CABA
                 </span>
                 <span className="flex items-center gap-1">
-                  <Utensils size={16} /> Parrilla
+                  <Utensils size={16} /> Italiana
                 </span>
               </div>
             </div>
@@ -167,7 +200,7 @@ const RestaurantDetail = () => {
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
               <h2 className="mb-4 text-2xl font-bold text-slate-900">Sobre nosotros</h2>
               <p className="text-gray-600 leading-relaxed">
-                Aquí irá la descripción que traigamos del backend. Por ahora, estamos maquetando el espacio para que la experiencia visual sea perfecta.
+                La Dolce Vita ofrece una experiencia italiana auténtica en el corazón de Palermo. Con pastas amasadas a mano y recetas transmitidas por generaciones, cada plato es un viaje a las raíces de Italia.
               </p>
             </div>
             
@@ -182,7 +215,7 @@ const RestaurantDetail = () => {
           {/* Columna Derecha: Widget de Reserva */}
           <div className="lg:col-span-1">
   <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 sticky top-24">
-    <h3 className="mb-6 text-xl font-bold text-slate-900">Reserva tu mesa</h3>
+    <h3 className="mb-6 text-xl font-bold text-slate-900">Reserva tu mesa</h3> 
     
     <div className="space-y-6">
 
@@ -227,51 +260,66 @@ const RestaurantDetail = () => {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-semibold text-slate-900">Fecha</label>
-        <input 
-          type="date" 
-          min={minReservationDate}
-          value={formValues.date}
-          onChange={(event) =>
-            setFormValues((currentValues) => ({
-              ...currentValues,
-              date: event.target.value,
-            }))
-          }
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-gastro-coral transition-all"
-        />
-      </div>
+       <div>
+  <label className="mb-2 block text-sm font-semibold text-slate-900">Fecha</label>
+  <input 
+    type="date" 
+    min={minReservationDate}
+    value={formValues.date}
+    onChange={(event) => {
+      const value = event.target.value;
+      setFormValues((currentValues) => ({
+        ...currentValues,
+        date: value,
+      }));
+      setFormErrors((currentErrors) => ({
+        ...currentErrors,
+        date: validateDate(value, formValues.time),
+      }));
+    }}
+    onBlur={() => handleBlur('date')}
+    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-gastro-coral transition-all"
+  />
+  {formErrors.date && <p className="mt-2 text-sm text-rose-500">{formErrors.date}</p>}
+</div>
 
       {/* Selección de Hora */}
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-slate-900">Hora</label>
-        <select
-          value={formValues.time}
-          onChange={(event) =>
-            setFormValues((currentValues) => ({
-              ...currentValues,
-              time: event.target.value,
-            }))
-          }
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-gastro-coral transition-all"
-        >
-          <option>12:00 PM</option>
-          <option>12:30 PM</option>
-          <option>13:00 PM</option>
-          <option>13:30 PM</option>
-          <option>14:00 PM</option>
-          <option>14:30 PM</option>
-          <option>15:00 PM</option>
-          <option>20:00 PM</option>
-          <option>20:30 PM</option>
-          <option>21:00 PM</option>
-          <option>21:30 PM</option>
-          <option>22:00 PM</option>
-          <option>22:30 PM</option>
-          <option>23:00 PM</option>
-          <option>23:30 PM</option>
-        </select>
-      </div>
+   <div>
+  <label className="mb-2 block text-sm font-semibold text-slate-900">Hora</label>
+  <select
+    value={formValues.time}
+    onChange={(event) => {
+      const value = event.target.value;
+      setFormValues((currentValues) => ({
+        ...currentValues,
+        time: value,
+      }));
+      setFormErrors((currentErrors) => ({
+        ...currentErrors,
+        date: validateDate(formValues.date, value),
+      }));
+    }}
+    onBlur={() => handleBlur('time')}
+    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-gastro-coral transition-all"
+  >
+    <option>12:00 PM</option>
+    <option>12:30 PM</option>
+    <option>13:00 PM</option>
+    <option>13:30 PM</option>
+    <option>14:00 PM</option>
+    <option>14:30 PM</option>
+    <option>15:00 PM</option>
+    <option>20:00 PM</option>
+    <option>20:30 PM</option>
+    <option>21:00 PM</option>
+    <option>21:30 PM</option>
+    <option>22:00 PM</option>
+    <option>22:30 PM</option>
+    <option>23:00 PM</option>
+    <option>23:30 PM</option>
+  </select>
+</div>
+ </div>
 
       {/* Cantidad de Personas */}
       <div>

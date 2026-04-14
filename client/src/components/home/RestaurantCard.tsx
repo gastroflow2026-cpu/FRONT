@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, MapPin, Utensils } from 'lucide-react';
+import { Star, MapPin, Utensils, Zap } from 'lucide-react';
 
 
 interface RestaurantCardProps {
@@ -11,9 +11,10 @@ interface RestaurantCardProps {
   category: string;
   rating: number;
   location: string;
+  comingSoon: boolean;
 }
 
-const RestaurantCard = ({ id, name, image, category, rating, location }: RestaurantCardProps) => {
+const RestaurantCard = ({ id, name, image, category, rating, location, comingSoon }: RestaurantCardProps) => {
   return (
     <div className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 group cursor-pointer border border-gray-100">
       {/* Contenedor de Imagen */}
@@ -28,6 +29,14 @@ const RestaurantCard = ({ id, name, image, category, rating, location }: Restaur
           <Utensils size={12} className="text-orange-500" />
           {category}
         </div>
+        {/* Badge de Próximamente solo para los que no son La Dolce Vitta */}
+        {comingSoon && name !== 'La Dolce Vitta' && (
+          <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1 shadow-sm">
+            <Zap size={12} />
+            PRÓXIMAMENTE
+          </div>
+        )}
+
       </div>
 
       {/* Contenido */}
@@ -46,15 +55,25 @@ const RestaurantCard = ({ id, name, image, category, rating, location }: Restaur
           <MapPin size={14} />
           {location}
         </div>
+      
 
-        <Link href={`/restaurant/${id}`}>
-          <button className="w-full py-3 bg-gray-50 text-gray-900 font-semibold rounded-xl group-hover:bg-gradient-to-r group-hover:from-gastro-coral group-hover:to-gastro-magenta group-hover:text-white transition-all duration-300 cursor-pointer">
-            Ver Detalles
-          </button>
-        </Link>
+        {/* Renderizado Condicional del Botón personalizado */}
+        {name === 'La Dolce Vitta' ? (
+          <Link href={`/restaurant/${id}`}>
+            <button className="w-full py-3 bg-gray-50 text-gray-900 font-semibold rounded-xl group-hover:bg-linear-to-r group-hover:from-gastro-coral group-hover:to-gastro-magenta group-hover:text-white transition-all duration-300 cursor-pointer">
+              Ver Detalles
+            </button>
+          </Link>
+        ) : (
+          <div className="w-full py-3 bg-gray-100 text-gray-500 font-semibold rounded-xl text-center flex items-center justify-center gap-2 border border-gray-200">
+            <Zap size={16} />
+            Próximamente
+          </div>
+        )}
       </div>
     </div>
   );
+
 };
 
 export default RestaurantCard;
