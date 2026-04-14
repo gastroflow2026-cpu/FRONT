@@ -27,9 +27,10 @@ const RestaurantDetail = () => {
     guests: 2,
   });
   const [formErrors, setFormErrors] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    name: '',
+    email: '',
+    phone: '',
+    date: '',
   });
 
   useEffect(() => {
@@ -80,13 +81,41 @@ const RestaurantDetail = () => {
     if (!value.trim()) {
       return "Ingresa tu teléfono.";
     }
-
-    if (!/^\d{6,15}$/.test(value)) {
-      return "El teléfono debe contener solo números.";
+    if (!/^\d+$/.test(value)) {
+      return 'El teléfono debe contener solo números.';
     }
-
-    return "";
+    if (value.length !== 10) {
+      return 'El teléfono debe tener exactamente 10 números.';
+    }
+    return '';
   };
+
+  const validateDate = (value: string, timeValue?: string) => {
+  if (!value) {
+    return 'Selecciona una fecha.';
+  }
+  if (value < minReservationDate) {
+    return 'No se puede reservar en fechas pasadas.';
+  }
+  // Validar hora si la fecha es hoy
+  if (value === minReservationDate && timeValue) {
+    const match = timeValue.match(/(\d+):(\d+) (AM|PM)/i);
+    if (match) {
+      let hour = parseInt(match[1], 10);
+      const minute = parseInt(match[2], 10);
+      const ampm = match[3];
+      if (ampm && ampm.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+      if (ampm && ampm.toUpperCase() === 'AM' && hour === 12) hour = 0;
+      const selectedTotal = hour * 60 + minute;
+      const now = new Date();
+      const nowTotal = now.getHours() * 60 + now.getMinutes();
+      if (selectedTotal <= nowTotal) {
+        return 'No se puede reservar en una hora pasada.';
+      }
+    }
+  }
+  return '';
+};
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const sanitizedValue = event.target.value.replace(
@@ -124,24 +153,28 @@ const RestaurantDetail = () => {
       ...currentValues,
       phone: sanitizedValue,
     }));
+    // Validación en tiempo real
     setFormErrors((currentErrors) => ({
       ...currentErrors,
       phone: validatePhone(sanitizedValue),
     }));
   };
 
-  const handleBlur = (field: "name" | "email" | "phone") => {
-    const validators = {
-      name: validateName,
-      email: validateEmail,
-      phone: validatePhone,
-    };
 
-    setFormErrors((currentErrors) => ({
-      ...currentErrors,
-      [field]: validators[field](formValues[field]),
-    }));
+
+  const handleBlur = (field: 'name' | 'email' | 'phone' | 'date' | 'time') => {
+  const validators = {
+    name: validateName,
+    email: validateEmail,
+    phone: validatePhone,
+    date: (v: string) => validateDate(v, formValues.time),
+    time: (v: string) => validateDate(formValues.date, v),
   };
+  setFormErrors((currentErrors) => ({
+    ...currentErrors,
+    [field]: validators[field](formValues[field]),
+  }));
+};
 
   const updateGuests = (delta: number) => {
     setFormValues((currentValues) => ({
@@ -151,11 +184,11 @@ const RestaurantDetail = () => {
   };
 
   const isFormValid =
-    !validateName(formValues.name) &&
-    !validateEmail(formValues.email) &&
-    !validatePhone(formValues.phone) &&
-    Boolean(formValues.date) &&
-    formValues.date >= minReservationDate;
+  !validateName(formValues.name) &&
+  !validateEmail(formValues.email) &&
+  !validatePhone(formValues.phone) &&
+  Boolean(formValues.date) &&
+  !validateDate(formValues.date, formValues.time);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -164,16 +197,14 @@ const RestaurantDetail = () => {
       <main className="grow pt-20">
         {/* Banner del Restaurante */}
         <section className="relative h-[40vh] w-full">
-          <img
-            src="https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=1200"
+          <img 
+            src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop" 
             className="w-full h-full object-cover"
             alt="Restaurante"
           />
           <div className="absolute inset-0 bg-black/40 flex items-end">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                La Parrilla del Sol {id}
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">La Bella Vita {id}</h1>
               <div className="flex flex-wrap items-center gap-4 text-white">
                 <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
                   <Star size={16} className="text-orange-400 fill-orange-400" />{" "}
@@ -183,7 +214,7 @@ const RestaurantDetail = () => {
                   <MapPin size={16} /> Palermo, CABA
                 </span>
                 <span className="flex items-center gap-1">
-                  <Utensils size={16} /> Parrilla
+                  <Utensils size={16} /> Italiana
                 </span>
               </div>
             </div>
@@ -199,9 +230,7 @@ const RestaurantDetail = () => {
                 Sobre nosotros
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Aquí irá la descripción que traigamos del backend. Por ahora,
-                estamos maquetando el espacio para que la experiencia visual sea
-                perfecta.
+                La Bella Vita ofrece una experiencia italiana auténtica en el corazón de Palermo. Con pastas amasadas a mano y recetas transmitidas por generaciones, cada plato es un viaje a las raíces de Italia.
               </p>
             </div>
 

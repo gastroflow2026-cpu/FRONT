@@ -4,11 +4,12 @@ import RestaurantCard from './RestaurantCard';
 const MOCK_RESTAURANTS = [
   {
     id: "1",
-    name: "La Parrilla del Sol",
-    image: "https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=800&auto=format&fit=crop",
-    category: "Parrilla",
+    name: "La Bella Vita",
+    image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop",
+    category: "Italiana",
     rating: 4.8,
-    location: "Palermo, CABA"
+    location: "Palermo, CABA",
+    comingSoon: true
   },
   {
     id: "2",
@@ -16,15 +17,17 @@ const MOCK_RESTAURANTS = [
     image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=800&auto=format&fit=crop",
     category: "Japonesa",
     rating: 4.5,
-    location: "Recoleta, CABA"
+    location: "Recoleta, CABA",
+    comingSoon: true
   },
   {
     id: "3",
-    name: "Pasta & Amore",
-    image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop",
-    category: "Italiana",
+    name: "La Parrilla del Sol",
+    image: "https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=800&auto=format&fit=crop",
+    category: "Parrilla",
     rating: 4.7,
-    location: "Belgrano, CABA"
+    location: "Belgrano, CABA",
+    comingSoon: true
   }
 ];
 
