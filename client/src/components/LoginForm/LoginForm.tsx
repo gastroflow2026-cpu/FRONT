@@ -1,24 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
 import Swal from "sweetalert2";
 import Image from "next/image";
 import { loginInitialValues, loginValidationSchema } from "@/validations/loginSchema";
-import { LoginUser } from "@/services/auth.services";
+import { UsersContext } from "../../context/UsersContext";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const {loginUser, loginUserGoogle} = useContext(UsersContext)
+
 
   const handleSubmit = async (
     values: typeof loginInitialValues,
     { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
   ) => {
     try {
-      await LoginUser(values);
+      loginUser(values);
       await Swal.fire({
         icon: "success",
         title: "¡Bienvenido!",
@@ -208,6 +210,7 @@ const LoginForm = () => {
 
                 {/* Botón Google */}
                 <button
+                  onClick={async () =>{loginUserGoogle()}}
                   type="button"
                   className="flex items-center justify-center gap-2 w-auto max-w-xs py-3 px-5 border-2 border-white/5 bg-white/5 hover:bg-white/10 hover:-translate-y-0.5 rounded-md text-sm font-semibold text-white/70 hover:text-white transition-all"
                 >

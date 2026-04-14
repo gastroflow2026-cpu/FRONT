@@ -1,12 +1,12 @@
 "use client"
 import { createContext, useState, ReactNode, useEffect } from "react";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 
 interface LoginValues {
     email: string;
     password: string;
 }
-
 
 interface RegisterValues {
     email: string;
@@ -19,7 +19,7 @@ interface RegisterValues {
 
 interface UsersContextType {
     isLogged: any;
-    loginUser: (values: LoginValues) => Promise<number>;
+    loginUser: (values: LoginValues) => {};
     loginUserGoogle: () => {};
     logoutUser: () => void;
     registerNewUser: (values: RegisterValues) => Promise<number>;
@@ -27,14 +27,13 @@ interface UsersContextType {
 
 export const UsersContext = createContext<UsersContextType>({
     isLogged: "",
-    loginUser: async (values) => 0,
+    loginUser: async (values) => {},
     loginUserGoogle: async () => {},
     logoutUser: () => {},
     registerNewUser: async (values) => 0,
 })
 
 export const UsersProvider = ({ children }: { children: ReactNode }) => {
-
     const [isLogged, setIsLogged] = useState(() => {
     if (typeof window === "undefined") return null;
     return JSON.parse(localStorage.getItem("user") || "null");
@@ -45,23 +44,29 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         if (!res.data.user) throw new Error("No se recibió el usuario");
 
         setIsLogged(res.data.user);
+        const token = res.data.token;
+        localStorage.setItem("token", JSON.stringify(token));
         localStorage.setItem("user", JSON.stringify(res.data.user));
         return res.status;
     }
 
-     const loginUserGoogle = async () => {
+    const loginUserGoogle = async () => {
         window.location.href = 'http://localhost:3000/auth/google/login';
     }
     
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
+        const token = urlParams.get('token');
+        const userParam = urlParams.get('user');
 
-        if(token){
-            localStorage.setItem("jwtToken", token);
+        if (token && userParam) {
+        const user = JSON.parse(decodeURIComponent(userParam));
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        setIsLogged(user);
         }
-    }, [])
-    
+    }, []);
+
     const logoutUser = (): void => {
         localStorage.removeItem("user");
         setIsLogged(false);

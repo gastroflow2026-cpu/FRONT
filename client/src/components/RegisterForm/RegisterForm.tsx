@@ -236,9 +236,7 @@ export default function RegisterForm() {
       </div>
       {/* Botones de redes sociales */}
       <div className="register-form__social"></div>{" "}
-      <button onClick={ async () =>{
-        await loginUserGoogle()
-      }} 
+      <button onClick={ async () =>{loginUserGoogle()}} 
         className="register-form__social-button register-form__social-button--google">
         {" "}
         <svg className="register-form__social-icon" viewBox="0 0 24 24">
