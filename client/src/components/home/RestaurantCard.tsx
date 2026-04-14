@@ -29,8 +29,8 @@ const RestaurantCard = ({ id, name, image, category, rating, location, comingSoo
           <Utensils size={12} className="text-orange-500" />
           {category}
         </div>
-        {/* Badge de Próximamente solo para los que no son La Dolce Vitta */}
-        {comingSoon && name !== 'La Dolce Vitta' && (
+        {/* Badge de Próximamente solo para los que no son La Bella Vita */}
+        {comingSoon && name !== 'La Bella Vita' && (
           <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1 shadow-sm">
             <Zap size={12} />
             PRÓXIMAMENTE
@@ -58,7 +58,7 @@ const RestaurantCard = ({ id, name, image, category, rating, location, comingSoo
       
 
         {/* Renderizado Condicional del Botón personalizado */}
-        {name === 'La Dolce Vitta' ? (
+        {name === 'La Bella Vita' ? (
           <Link href={`/restaurant/${id}`}>
             <button className="w-full py-3 bg-gray-50 text-gray-900 font-semibold rounded-xl group-hover:bg-linear-to-r group-hover:from-gastro-coral group-hover:to-gastro-magenta group-hover:text-white transition-all duration-300 cursor-pointer">
               Ver Detalles

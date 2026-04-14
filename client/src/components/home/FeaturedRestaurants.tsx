@@ -4,7 +4,7 @@ import RestaurantCard from './RestaurantCard';
 const MOCK_RESTAURANTS = [
   {
     id: "1",
-    name: "La Dolce Vitta",
+    name: "La Bella Vita",
     image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop",
     category: "Italiana",
     rating: 4.8,
