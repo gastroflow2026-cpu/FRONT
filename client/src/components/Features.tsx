@@ -32,8 +32,8 @@ const Features = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Llevamos tu experiencia al siguiente nivel
           </h2>
-          <p className="text-slate-300 max-w-2xl mx-auto text-lg">
-            Descubre por qué miles de personas eligen GastroFlow para planificar sus salidas gastronómicas.
+          <p className="text-color-black max-w-2xl mx-auto text-lg">
+           <strong> Descubre por qué miles de personas eligen GastroFlow para planificar sus salidas gastronómicas. </strong> 
           </p>
         </div>
 

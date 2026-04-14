@@ -196,7 +196,7 @@ const LoginForm = () => {
                 {/* Link a registro */}
                 <p className="text-center text-sm text-white/40">
                   ¿No tenés una cuenta?{" "}
-                  <a href="/registro" className="text-orange-400 font-semibold hover:text-orange-300 transition hover:underline">
+                  <a href="/register" className="text-orange-400 font-semibold hover:text-orange-300 transition hover:underline">
                     Registrate aquí
                   </a>
                 </p>

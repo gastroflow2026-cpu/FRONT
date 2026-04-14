@@ -48,7 +48,7 @@ const RestaurantCard = ({ id, name, image, category, rating, location }: Restaur
         </div>
 
         <Link href={`/restaurant/${id}`}>
-          <button className="w-full py-3 bg-gray-50 text-gray-900 font-semibold rounded-xl group-hover:bg-gradient-to-r group-hover:from-gastro-coral group-hover:to-gastro-magenta group-hover:text-white transition-all duration-300">
+          <button className="w-full py-3 bg-gray-50 text-gray-900 font-semibold rounded-xl group-hover:bg-gradient-to-r group-hover:from-gastro-coral group-hover:to-gastro-magenta group-hover:text-white transition-all duration-300 cursor-pointer">
             Ver Detalles
           </button>
         </Link>
