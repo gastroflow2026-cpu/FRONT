@@ -1,17 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 // Importamos el logo con fondo oscuro para este Navbar
 import Logo from '../assets/logo gastro f.webp'; // Asegúrate de que este es el logo correcto
+import { UsersContext } from '@/context/UsersContext';
 
 const Navbar = () => {
   // Estado para el menú móvil
   const [isOpen, setIsOpen] = useState(false);
+  const {isLogged, logoutUser} = useContext(UsersContext);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  // Mientras no está montado en el cliente, renderiza lo mismo que el servidor
+ 
 
   // Variable de prueba para logueado (cambia a true para probar ese estado)
-  const isLoggedIn = false;
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#090b12]/95 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
@@ -48,12 +56,12 @@ const Navbar = () => {
 
           {/* LADO DERECHO: BOTONES / USUARIO (Escritorio) */}
           <div className="hidden md:flex items-center space-x-4">
-            {isLoggedIn ? (
+            {isLogged && mounted  ? (
               /* Renderizado si está LOGUEADO */
               <div className="flex items-center space-x-3">
                 {/* CAMBIO 3: Texto de "Hola" en gris claro y nombre en blanco */}
-                <span className="text-gray-300">Hola, <span className="font-semibold text-white">Usuario!</span></span>
-                <button className="text-gray-400 hover:text-white transition">
+                <span className="text-gray-300">Hola, <span className="font-semibold text-white">{isLogged?.name}!</span></span>
+                <button onClick={ async () =>{logoutUser()} }  className="text-gray-400 hover:text-white transition">
                   Cerrar Sesión
                 </button>
               </div>
@@ -104,7 +112,7 @@ const Navbar = () => {
           </div>
           {/* Botones móviles */}
           <div className="px-5 py-4 border-t border-gray-800 flex flex-col space-y-3">
-            {isLoggedIn ? (
+            {isLogged ? (
               <button className="text-gray-400 hover:text-white transition w-full text-left px-3 py-2">
                 Cerrar Sesión
               </button>

@@ -34,10 +34,10 @@ const FeaturedRestaurants = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h2 className="text-3xl md:text-4xl font-bold text-black mb-2">
               Restaurantes Destacados
             </h2>
-            <p className="text-slate-300">
+            <p className="text-black">
               Las mejores mesas seleccionadas especialmente para vos.
             </p>
           </div>
