@@ -46,7 +46,7 @@ const Navbar = () => {
             <Link href="/" className="text-white hover:text-orange-400 font-medium transition duration-150">
               Inicio
             </Link>
-            <Link href="/restaurantes" className="text-white hover:text-orange-400 font-medium transition duration-150">
+            <Link href="/restaurants" className="text-white hover:text-orange-400 font-medium transition duration-150">
               Restaurantes
             </Link>
             <Link href="/reservas" className="text-white hover:text-orange-400 font-medium transition duration-150">

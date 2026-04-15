@@ -23,7 +23,7 @@ const MOCK_RESTAURANTS = [
   {
     id: "3",
     name: "La Parrilla del Sol",
-    image: "https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=800&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?q=80&w=800&auto=format&fit=crop",
     category: "Parrilla",
     rating: 4.7,
     location: "Belgrano, CABA",
