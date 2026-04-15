@@ -1,16 +1,12 @@
 "use client";
 import { RegisterUser } from "@/services/auth.services";
-import {
-  RegisterFormValues,
-  registerInitialValues,
-  registerValidationSchema,
-} from "@/validations/registerSchema";
+import { RegisterFormValues, registerInitialValues, registerValidationSchema } from "@/validations/registerSchema";
 import { useFormik } from "formik";
 import "./RegisterForm.css";
 import { Lock, Mail, User, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useContext, useState } from "react";
-import { UsersContext } from '../../context/UsersContext';
-import Swal from 'sweetalert2';
+import { UsersContext } from "../../context/UsersContext";
+import Swal from "sweetalert2";
 
 export default function RegisterForm() {
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -18,8 +14,8 @@ export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const {registerNewUser} = useContext(UsersContext);
-  const {loginUserGoogle} = useContext(UsersContext)
+  const { registerNewUser } = useContext(UsersContext);
+  const { registerUserGoogle } = useContext(UsersContext);
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: registerInitialValues,
@@ -35,34 +31,36 @@ export default function RegisterForm() {
         setErrors(newErrors);
         return;
       }
+
       const res = await registerNewUser(values);
-      if(res === 201) {  
-          Swal.fire({
-              theme: 'dark',
-              title: 'Éxito!',
-              text: 'Usuario registrado correctamente',
-              icon: 'success'
-          });
+
+      if (res === 201) {
+        Swal.fire({
+          theme: "dark",
+          title: "Éxito!",
+          text: "Usuario registrado correctamente",
+          icon: "success",
+        });
+
+        resetForm();
+        return;
       }
-      else if(res === 400){
-           Swal.fire({
-              theme: 'dark',
-              title: 'Éxito!',
-              text: 'Usuario registrado correctamente',
-              icon: 'success'
-          });
-        }
-        else {
-            Swal.fire({
-                theme: 'dark',
-                title: 'Error!',
-                text: 'Inténtelo nuevamente',
-                icon: 'error',
-                
-            });
-            
-        };
-      resetForm();
+      if (res === 400) {
+        Swal.fire({
+          theme: "dark",
+          title: "Error!!",
+          text: "El email ya está registrado",
+          icon: "success",
+        });
+        return;
+      }
+
+      Swal.fire({
+        theme: "dark",
+        title: "Error!",
+        text: "Inténtelo nuevamente",
+        icon: "error",
+      });
     },
   });
 
@@ -72,9 +70,7 @@ export default function RegisterForm() {
         <h1 className="register-form__logo">
           <span className="register-form__logo-text">GastroFlow</span>
         </h1>
-        <p className="register-form__subtitle">
-          Crea tu cuenta y descubre los mejores restaurantes
-        </p>
+        <p className="register-form__subtitle">Crea tu cuenta y descubre los mejores restaurantes</p>
       </div>
       <form className="register-form__form" onSubmit={formik.handleSubmit}>
         {/* NOMBRE */}
@@ -150,7 +146,7 @@ export default function RegisterForm() {
         {/* PASSWORD */}
         <div className="register-form__field">
           <label className="register-form__label">Contraseña</label>
-          <div className="register-form__input-wrapper" style={{ position: 'relative' }}>
+          <div className="register-form__input-wrapper" style={{ position: "relative" }}>
             <Lock className="register-form__input-icon" />
             <input
               className="register-form__input"
@@ -167,14 +163,14 @@ export default function RegisterForm() {
               tabIndex={-1}
               className="register-form__eye-btn"
               style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
               }}
               onClick={() => setShowPassword((prev) => !prev)}
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
@@ -187,11 +183,11 @@ export default function RegisterForm() {
             <div className="register-form__error">{formik.errors.password}</div>
           )}
         </div>
-        
+
         {/* CONFIRM PASSWORD (si lo tenés en schema) */}
         <div className="register-form__field">
           <label className="register-form__label">Confirmar Contraseña</label>
-          <div className="register-form__input-wrapper" style={{ position: 'relative' }}>
+          <div className="register-form__input-wrapper" style={{ position: "relative" }}>
             <Lock className="register-form__input-icon" />
             <input
               className="register-form__input"
@@ -208,14 +204,14 @@ export default function RegisterForm() {
               tabIndex={-1}
               className="register-form__eye-btn"
               style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
               }}
               onClick={() => setShowConfirmPassword((prev) => !prev)}
               aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
@@ -225,9 +221,7 @@ export default function RegisterForm() {
           </div>
 
           {formik.errors.confirmPassword && formik.touched.confirmPassword && (
-            <div className="register-form__error">
-              {formik.errors.confirmPassword}
-            </div>
+            <div className="register-form__error">{formik.errors.confirmPassword}</div>
           )}
         </div>
         {/* Términos y condiciones */}
@@ -252,9 +246,7 @@ export default function RegisterForm() {
             </span>
           </label>
           {/* Mensaje de error */}
-          {errors.terms && (
-            <p className="register-form__error">{errors.terms}</p>
-          )}
+          {errors.terms && <p className="register-form__error">{errors.terms}</p>}
         </div>
         <button type="submit" className="register-form__submit">
           <span className="register-form__submit-text">
@@ -272,14 +264,16 @@ export default function RegisterForm() {
       </form>
       {/* Separador */}{" "}
       <div className="register-form__divider">
-        <span className="register-form__divider-text">
-          o regístrate con
-        </span>{" "}
+        <span className="register-form__divider-text">o regístrate con</span>{" "}
       </div>
       {/* Botones de redes sociales */}
       <div className="register-form__social"></div>{" "}
-      <button onClick={ async () =>{loginUserGoogle()}} 
-        className="register-form__social-button register-form__social-button--google">
+      <button
+        onClick={async () => {
+          registerUserGoogle();
+        }}
+        className="register-form__social-button register-form__social-button--google"
+      >
         {" "}
         <svg className="register-form__social-icon" viewBox="0 0 24 24">
           {" "}
