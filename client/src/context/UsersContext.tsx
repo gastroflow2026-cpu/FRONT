@@ -49,7 +49,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         const user = res.data.user;
         localStorage.setItem("token", JSON.stringify(token));
         localStorage.setItem("name", user.name);
-        setIsLogged(user);
+        setIsLogged(user.name);
         return res.status;
     }
 
@@ -86,8 +86,8 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const registerNewUser = async (values: RegisterValues): Promise<number> => {
-        const res = await axios.post("http://localhost:3000/auth/signup", values);
-        return res.status;
+            const res = await axios.post("http://localhost:3000/auth/signup", values);
+            return res.status;
     }
 
     const value: UsersContextType = {

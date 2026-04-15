@@ -20,7 +20,7 @@ const LoginForm = () => {
     { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
   ) => {
     try {
-      loginUser(values);
+      await loginUser(values);
       await Swal.fire({
         icon: "success",
         title: "¡Bienvenido!",
