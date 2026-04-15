@@ -7,7 +7,7 @@ import {
 } from "@/validations/registerSchema";
 import { useFormik } from "formik";
 import "./RegisterForm.css";
-import { Lock, Mail, User, UserPlus } from "lucide-react";
+import { Lock, Mail, User, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useContext, useState } from "react";
 import { UsersContext } from '../../context/UsersContext';
 import Swal from 'sweetalert2';
@@ -16,6 +16,8 @@ export default function RegisterForm() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {registerNewUser} = useContext(UsersContext);
   const {loginUserGoogle} = useContext(UsersContext)
 
@@ -141,20 +143,37 @@ export default function RegisterForm() {
         {/* PASSWORD */}
         <div className="register-form__field">
           <label className="register-form__label">Contraseña</label>
-
-          <div className="register-form__input-wrapper">
+          <div className="register-form__input-wrapper" style={{ position: 'relative' }}>
             <Lock className="register-form__input-icon" />
-
             <input
               className="register-form__input"
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="register-form__eye-btn"
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {formik.errors.password && formik.touched.password && (
@@ -165,20 +184,37 @@ export default function RegisterForm() {
         {/* CONFIRM PASSWORD (si lo tenés en schema) */}
         <div className="register-form__field">
           <label className="register-form__label">Confirmar Contraseña</label>
-
-          <div className="register-form__input-wrapper">
+          <div className="register-form__input-wrapper" style={{ position: 'relative' }}>
             <Lock className="register-form__input-icon" />
-
             <input
               className="register-form__input"
               id="confirmPassword"
               name="confirmPassword"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               placeholder="••••••••"
               value={formik.values.confirmPassword}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="register-form__eye-btn"
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {formik.errors.confirmPassword && formik.touched.confirmPassword && (

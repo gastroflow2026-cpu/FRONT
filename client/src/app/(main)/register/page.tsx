@@ -1,4 +1,7 @@
+"use client";
+
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import "../../css/RegisterFormPage.css";
 import RegisterForm from "@/components/RegisterForm/RegisterForm";
 
@@ -11,10 +14,17 @@ export default function Register() {
         <div className="register-page__circle register-page__circle--3"></div>
       </div>
 
-      <a href="/" className="register-page__back">
-        <ArrowLeft className="register-page__back-icon" />
-        <span>Volver al inicio</span>
-      </a>
+      {/* BOTÓN VOLVER UNIFICADO */}
+      <Link
+        href="/"
+        className="register-back-btn group"
+        style={{ zIndex: 20, position: 'absolute', top: '1.5rem', left: '1.5rem' }}
+      >
+        <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
+          <ArrowLeft className="w-5 h-5" />
+          Volver al inicio
+        </span>
+      </Link>
 
       <div className="register-page__container">
         {/* IZQUIERDA */}
