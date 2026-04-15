@@ -38,12 +38,11 @@ export default function Perfil() {
   };
 
   const reserva = [
-    res1, res2
+    res1, res2, res1, res2
   ]
 
   return (
     <div className={styles.profile}>
-      <h2>Perfil de usuario</h2>
       <div className={styles.userLayout}>
         <UserInfo user={user} />
         <ReservationsList reserva={reserva} />

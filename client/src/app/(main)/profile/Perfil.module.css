@@ -1,9 +1,15 @@
-.profile h2{
-    text-align: center;
+.profile {
+  width: 100vw;
+  height: 100vh;
+  background-color: #F5E8D0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
-.userLayout{
-    display: flex;
-    justify-content: center;
-    gap: 30px;
+.userLayout {
+  display: flex;
+  justify-content: start;
+  gap: 30px;
 }
