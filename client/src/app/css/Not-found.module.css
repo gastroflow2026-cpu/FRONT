@@ -1,8 +1,45 @@
 .notFound {
-  background-color: #f5e8d0;
+  background-color: white;
   width: 100vw;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+}
+
+.notFoundIcon{
+  font-size: 250px;
+  margin-bottom: 20px;
+}
+
+.notFound h1{
+  font-weight: 500;
+  font-size: 20px;
+}
+
+.notFound p{
+  font-weight: 300;
+}
+
+.notFound button{
+  border: 2px solid black;
+  margin-top: 25px;
+  width: 130px;
+  height: 40px;
+  display: flex;
+  justify-content: center;align-items: center;
+  border-radius: 10px;
+  background-color: #1c2230;
+  color: white;
+  font-weight: 500;
+  letter-spacing: 2px;
+  transition: all 300ms;
+}
+
+.notFound button:hover{
+  background-color: white;
+  cursor: pointer;
+  color: #1c2230;
+  box-shadow: 0 0 5px #6D4312ff;
 }
