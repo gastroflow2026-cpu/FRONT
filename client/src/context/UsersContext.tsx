@@ -49,7 +49,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     const user = res.data.user;
     localStorage.setItem("token", JSON.stringify(token));
     localStorage.setItem("name", user.name);
-    setIsLogged(user.name);
+    setIsLogged({name: user.name});
     return res.status;
   };
 

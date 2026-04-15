@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Star, MapPin, Utensils } from "lucide-react";
 import { reservationSchema } from "@/validations/reservationSchema";
+import { UsersContext } from "@/context/UsersContext";
+import { useRouter } from 'next/navigation';
+import Swal from "sweetalert2";
 
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -87,12 +90,17 @@ const RestaurantDetail = () => {
     formValues.email !== "" && 
     formValues.phone !== "" && 
     formValues.date !== "";
-
+    
+    const router = useRouter()
+    const {isLogged} = useContext(UsersContext)
+    
   const handleConfirmReservation = async () => {
     try {
-      await reservationSchema.validate(formValues);
-      console.log("Reserva válida enviando al backend:", formValues);
+      //await reservationSchema.validate(formValues);
+      //console.log("Reserva válida enviando al backend:", formValues);
       // Aquí iría tu lógica de axios.post
+
+
     } catch (err: any) {
       console.error("Error de validación final:", err.errors);
     }
@@ -241,7 +249,17 @@ const RestaurantDetail = () => {
 
                 <button
                   type="button"
-                  onClick={handleConfirmReservation}
+                  onClick={() => {
+                    if(isLogged){
+                      Swal.fire({
+                        icon: "success",
+                        title: "Reserva Exitosa",
+                        text: "¡Buen provecho!",
+                      })}
+                      else{
+                        router.push('/login');
+                      }
+                  }}
                   disabled={!isFormValid}
                   className="w-full rounded-xl bg-linear-to-r from-orange-500 to-pink-600 py-4 font-bold text-white transition-all shadow-lg enabled:hover:scale-[1.02] disabled:opacity-50"
                 >Confirmar Reserva</button>
