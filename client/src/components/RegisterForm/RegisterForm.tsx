@@ -36,16 +36,23 @@ export default function RegisterForm() {
         return;
       }
       const res = await registerNewUser(values);
-      if(res === 201){
-            if(res === 201) {  
-                Swal.fire({
-                    theme: 'dark',
-                    title: 'Éxito!',
-                    text: 'Usuario registrado correctamente',
-                    icon: 'success'
-                });
-            }
-        }else {
+      if(res === 201) {  
+          Swal.fire({
+              theme: 'dark',
+              title: 'Éxito!',
+              text: 'Usuario registrado correctamente',
+              icon: 'success'
+          });
+      }
+      else if(res === 400){
+           Swal.fire({
+              theme: 'dark',
+              title: 'Éxito!',
+              text: 'Usuario registrado correctamente',
+              icon: 'success'
+          });
+        }
+        else {
             Swal.fire({
                 theme: 'dark',
                 title: 'Error!',

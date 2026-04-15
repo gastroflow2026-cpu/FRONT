@@ -1,8 +1,13 @@
+"use client"
 import Image from 'next/image';
 import BannerImg from '../assets/imagen de fondo de restaurant 4.png';
-
+import { UsersContext } from '@/context/UsersContext';
+import { useContext } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Hero = () => {
+  const {isLogged} = useContext(UsersContext);
+  const router = useRouter();
   return (
     <section className="relative h-[80vh] w-full flex items-center justify-center overflow-hidden">
    
@@ -25,7 +30,13 @@ const Hero = () => {
         <p className="text-lg md:text-xl mb-8 text-gray-200">
           Reserva en los mejores restaurantes y gestiona tus pedidos en tiempo real.
         </p>
-        <button className="bg-gradient-to-r from-[#FF7A45] to-[#FF3F7E] hover:scale-105 transition-transform text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg">
+        <button onClick={() => {
+          if(isLogged){
+            document.getElementById('restaurantes-destacados')?.scrollIntoView({ behavior: 'smooth' });
+          }else{
+            router.push('/login');
+          }
+        }} className="bg-gradient-to-r from-[#FF7A45] to-[#FF3F7E] hover:scale-105 transition-transform text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg">
           Reservar Ahora
         </button>
       </div>
