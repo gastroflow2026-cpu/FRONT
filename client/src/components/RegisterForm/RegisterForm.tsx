@@ -43,8 +43,7 @@ export default function RegisterForm() {
                     icon: 'success'
                 });
             }
-        }
-        else {
+        }else {
             Swal.fire({
                 theme: 'dark',
                 title: 'Error!',
