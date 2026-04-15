@@ -48,9 +48,9 @@ export default function RegisterForm() {
       if (res === 400) {
         Swal.fire({
           theme: "dark",
-          title: "Error!!",
+          title: "Error!",
           text: "El email ya está registrado",
-          icon: "success",
+          icon: "error",
         });
         return;
       }
