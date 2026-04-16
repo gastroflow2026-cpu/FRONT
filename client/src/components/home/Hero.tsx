@@ -36,7 +36,7 @@ const Hero = () => {
           }else{
             router.push('/login');
           }
-        }} className="bg-gradient-to-r from-[#FF7A45] to-[#FF3F7E] hover:scale-105 transition-transform text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg">
+        }} className="bg-linear-to-r from-[#FF7A45] to-[#FF3F7E] hover:scale-105 transition-transform text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg">
           Reservar Ahora
         </button>
       </div>

@@ -46,10 +46,10 @@ const Navbar = () => {
             <Link href="/" className="text-white hover:text-orange-400 font-medium transition duration-150">
               Inicio
             </Link>
-            <Link href="/restaurantes" className="text-white hover:text-orange-400 font-medium transition duration-150">
+            <Link href="/restaurants" className="text-white hover:text-orange-400 font-medium transition duration-150">
               Restaurantes
             </Link>
-            <Link href="/reservas" className="text-white hover:text-orange-400 font-medium transition duration-150">
+            <Link href="/reservations" className="text-white hover:text-orange-400 font-medium transition duration-150">
               Mis Reservas
             </Link>
           </div>
@@ -107,8 +107,8 @@ const Navbar = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {/* CAMBIO 7: Texto blanco para los links móviles */}
             <Link href="/" className="block text-white hover:bg-gray-900 hover:text-orange-400 px-3 py-2 rounded-md font-medium">Inicio</Link>
-            <Link href="/restaurantes" className="block text-white hover:bg-gray-900 hover:text-orange-400 px-3 py-2 rounded-md font-medium">Restaurantes</Link>
-            <Link href="/reservas" className="block text-white hover:bg-gray-900 hover:text-orange-400 px-3 py-2 rounded-md font-medium">Mis Reservas</Link>
+            <Link href="/restaurants" className="block text-white hover:bg-gray-900 hover:text-orange-400 px-3 py-2 rounded-md font-medium">Restaurantes</Link>
+            <Link href="/reservations" className="block text-white hover:bg-gray-900 hover:text-orange-400 px-3 py-2 rounded-md font-medium">Mis Reservas</Link>
           </div>
           {/* Botones móviles */}
           <div className="px-5 py-4 border-t border-gray-800 flex flex-col space-y-3">
