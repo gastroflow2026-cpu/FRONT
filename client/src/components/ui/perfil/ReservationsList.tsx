@@ -10,7 +10,7 @@ export default function ReservList({ reserva }: { reserva: Reserva[] }) {
       <h3>Historial de Reservas</h3>
       <div className={style.cardsGrid}>
         {reserva.map((res: Reserva) => (
-          <div className={style.reservCard}>
+          <div className={style.reservCard} key={res.id}>
 
             {/* Sección Superior */}
             <div className={style.cardSection}>
