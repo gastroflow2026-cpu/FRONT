@@ -7,6 +7,7 @@ import Logo from '../assets/logo gastro f.webp';
 import { UsersContext } from '@/context/UsersContext';
 import { Search } from 'lucide-react'; 
 import { ALL_RESTAURANTS } from '@/app/data/restaurants.data';
+import { Restaurant } from '@/app/data/restaurants.data';
 
 
 const Navbar = () => {
@@ -16,7 +17,7 @@ const Navbar = () => {
   
   // Estados para la búsqueda global
   const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Restaurant[]>([]);
 
   useEffect(() => {
     setMounted(true);
