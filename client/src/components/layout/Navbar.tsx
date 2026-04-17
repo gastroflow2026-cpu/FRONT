@@ -6,15 +6,9 @@ import Image from 'next/image';
 import Logo from '../assets/logo gastro f.webp'; 
 import { UsersContext } from '@/context/UsersContext';
 import { Search } from 'lucide-react'; 
+import { ALL_RESTAURANTS } from '@/app/data/restaurants.data';
+import { Restaurant } from '@/app/data/restaurants.data';
 
-const ALL_RESTAURANTS = [
-  { id: "1", name: "La Bella Vita", description: "Italiana", location: "Palermo, CABA", image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop" },
-  { id: "2", name: "Sushi Master", description: "Japonesa", location: "Recoleta, CABA", image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=800&auto=format&fit=crop" },
-  { id: "3", name: "La Parrilla del Sol", description: "Parrilla", location: "Belgrano, CABA", image: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?q=80&w=800&auto=format&fit=crop" },
-  { id: "4", name: "Burger House", description: "Hamburguesas", location: "Chacarita, CABA", image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=800&auto=format&fit=crop" },
-  { id: "5", name: "Green Eat", description: "Saludable", location: "San Telmo, CABA", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop" },
-  { id: "6", name: "Tacos El Rey", description: "Mexicana", location: "Nuñez, CABA", image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?q=80&w=800&auto=format&fit=crop" },
-];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,7 +17,7 @@ const Navbar = () => {
   
   // Estados para la búsqueda global
   const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Restaurant[]>([]);
 
   useEffect(() => {
     setMounted(true);
