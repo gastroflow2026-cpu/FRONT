@@ -12,12 +12,15 @@ import { useRouter } from 'next/navigation';
 import Swal from "sweetalert2";
 
 const RestaurantDetail = () => {
+  
   const [categories, setCategories] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const params = useParams();
   const { id } = params;
+
+  
 
   // Fecha mínima para el atributo 'min' del input date
   const today = new Date();
@@ -41,6 +44,7 @@ const RestaurantDetail = () => {
     guests: "",
   });
 
+  // EFECTO 1: Carga de Menú
   useEffect(() => {
     const fetchMenu = async () => {
       try {
@@ -58,6 +62,21 @@ const RestaurantDetail = () => {
     };
     fetchMenu();
   }, []);
+
+  // EFECTO 2: Persistencia de datos - Recuperar si existen
+  useEffect(() => {
+    const savedBookingData = localStorage.getItem('gastroflow_temp_booking');
+    if (savedBookingData) {
+      const parsedData = JSON.parse(savedBookingData);
+      // Solo restaurar si es para este restaurante
+      if (parsedData.restaurantId === id) {
+        setFormValues(prev => ({ ...prev, ...parsedData.bookingDetails }));
+        console.log("Datos de reserva recuperados exitosamente");
+        // Limpiar LocalStorage inmediatamente después de restaurar
+        localStorage.removeItem('gastroflow_temp_booking');
+      }
+    }
+  }, [id]);
 
   // Handler para validar campos individuales con Yup
   const validateField = async (name: string, value: any, allValues: any) => {
@@ -91,18 +110,44 @@ const RestaurantDetail = () => {
     formValues.phone !== "" && 
     formValues.date !== "";
     
-    const router = useRouter()
-    const {isLogged} = useContext(UsersContext)
+  const router = useRouter();
+  const { isLogged } = useContext(UsersContext);
     
   const handleConfirmReservation = async () => {
     try {
-      //await reservationSchema.validate(formValues);
-      //console.log("Reserva válida enviando al backend:", formValues);
-      // Aquí iría tu lógica de axios.post
-
-
+      // Validar formulario completo con Yup
+      await reservationSchema.validate(formValues, { abortEarly: false });
+      
+      if (!isLogged) {
+        // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
+        console.log("Usuario no logueado, guardando datos temporalmente");
+        const dataToSave = {
+          restaurantId: id,
+          bookingDetails: formValues
+        };
+        localStorage.setItem('gastroflow_temp_booking', JSON.stringify(dataToSave));
+        router.push('/login');
+      } else {
+        // Si ESTÁ logueado, mostrar alerta de éxito
+        Swal.fire({
+          icon: "success",
+          title: "¡Reserva Exitosa!",
+          text: `Tu mesa para ${formValues.guests} personas el ${formValues.date} ha sido confirmada.`,
+          confirmButtonText: "¡Buen provecho!",
+          confirmButtonColor: "#ff7e5f"
+        });
+        // Aquí iría la lógica de axios.post al backend para crear la reserva
+        console.log("Reserva válida enviando al backend:", formValues);
+      }
     } catch (err: any) {
-      console.error("Error de validación final:", err.errors);
+      console.error("Error de validación final:", err.errors ?? err.message);
+      // SweetAlert para mostrar la validación general
+      Swal.fire({
+        icon: "error",
+        title: "Formulario incompleto",
+        text: "Por favor verifica que todos los campos sean válidos",
+        confirmButtonColor: "#ff7e5f"
+      });
     }
   };
 
@@ -249,17 +294,7 @@ const RestaurantDetail = () => {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    if(isLogged){
-                      Swal.fire({
-                        icon: "success",
-                        title: "Reserva Exitosa",
-                        text: "¡Buen provecho!",
-                      })}
-                      else{
-                        router.push('/login');
-                      }
-                  }}
+                  onClick={handleConfirmReservation}
                   disabled={!isFormValid}
                   className="w-full rounded-xl bg-linear-to-r from-orange-500 to-pink-600 py-4 font-bold text-white transition-all shadow-lg enabled:hover:scale-[1.02] disabled:opacity-50"
                 >Confirmar Reserva</button>
