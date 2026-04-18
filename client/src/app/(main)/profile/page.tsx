@@ -3,6 +3,7 @@ import UserInfo from "@/components/ui/perfil/UserInfo";
 import styles from "./Perfil.module.css";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
+import { Password } from "@/components/ui/perfil/Password";
 
 export default function Perfil() {
 
@@ -40,6 +41,7 @@ export default function Perfil() {
       <div className={styles.profile}>
         <div className={styles.userLayout}>
           <UserInfo user={user} />
+          <Password />
           {/* <ReservationsList reserva={reserva} /> */}
         </div>
       </div>
