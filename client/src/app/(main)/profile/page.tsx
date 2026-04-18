@@ -1,16 +1,11 @@
 import ReservationsList from "@/components/ui/perfil/ReservationsList";
 import UserInfo from "@/components/ui/perfil/UserInfo";
 import styles from "./Perfil.module.css";
+import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/layout/Navbar";
 
 export default function Perfil() {
-  // const user = await getUser()
-  // const historial = await getReservations()
 
-  /* if (!user) {
-        return home
-    } else {
-        return user info
-    }*/
 
   const user = {
     id: 1,
@@ -37,17 +32,18 @@ export default function Perfil() {
     total: "20 USD",
   };
 
-  const reserva = [
-    res1, res2
-  ]
+  const reserva = [res1, res2];
 
   return (
-    <div className={styles.profile}>
-      <h2>Perfil de usuario</h2>
-      <div className={styles.userLayout}>
-        <UserInfo user={user} />
-        <ReservationsList reserva={reserva} />
+    <>
+    <Navbar></Navbar>
+      <div className={styles.profile}>
+        <div className={styles.userLayout}>
+          <UserInfo user={user} />
+          {/* <ReservationsList reserva={reserva} /> */}
+        </div>
       </div>
-    </div>
+    <Footer></Footer>
+    </>
   );
 }
