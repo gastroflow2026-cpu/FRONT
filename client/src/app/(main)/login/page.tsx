@@ -1,7 +1,7 @@
-export default function Login() {
-  return (
-    <>
-      <h1>Inicio de sesion.</h1>
-    </>
-  );
-}
+import LoginForm from "@/components/LoginForm/LoginForm";
+
+const LoginPage = () => {
+  return <LoginForm />;
+};
+
+export default LoginPage;
