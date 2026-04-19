@@ -11,6 +11,8 @@ import { UsersContext } from "@/context/UsersContext";
 import { useRouter } from 'next/navigation';
 import Swal from "sweetalert2";
 import { ALL_RESTAURANTS } from "@/app/data/restaurants.data"; 
+import TableGrid from "@/components/features/table.grid";
+import { Table } from "@/app/data/restaurants.data";
 
 const RestaurantDetail = () => {
   
@@ -23,6 +25,8 @@ const RestaurantDetail = () => {
 const restaurantId = Array.isArray(id) ? id[0] : id;
   const restaurant = ALL_RESTAURANTS.find(r => String(r.id) === String(restaurantId));
   if (!restaurant) return <div>Restaurante no encontrado</div>;
+
+  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   
 
   // Fecha mínima para el atributo 'min' del input date
@@ -111,7 +115,8 @@ const restaurantId = Array.isArray(id) ? id[0] : id;
     formValues.name !== "" && 
     formValues.email !== "" && 
     formValues.phone !== "" && 
-    formValues.date !== "";
+    formValues.date !== "" &&
+    selectedTable !== null;
     
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
@@ -120,13 +125,19 @@ const restaurantId = Array.isArray(id) ? id[0] : id;
     try {
       // Validar formulario completo con Yup
       await reservationSchema.validate(formValues, { abortEarly: false });
+
+      const finalBookingData = {
+    ...formValues,
+    tableId: selectedTable?.id,
+    tableNumber: selectedTable?.number
+  };
       
       if (!isLogged) {
         // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
         console.log("Usuario no logueado, guardando datos temporalmente");
         const dataToSave = {
           restaurantId: restaurantId,
-          bookingDetails: formValues
+          bookingDetails: finalBookingData
         };
         localStorage.setItem('gastroflow_temp_booking', JSON.stringify(dataToSave));
         router.push('/login');
@@ -155,6 +166,11 @@ const restaurantId = Array.isArray(id) ? id[0] : id;
       });
     }
   };
+
+  // Filtrar mesas según la cantidad de comensales
+  const filteredTables = (restaurant.tables || []).filter(
+    (t) => t.status === 'decorative' || (t.capacity >= formValues.guests && t.type === 'table')
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -229,12 +245,14 @@ const restaurantId = Array.isArray(id) ? id[0] : id;
                               {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(item.price)}
                             </div>
                           </div>
+                          
                         ))}
                       </div>
                     </div>
                   );
                 })
               )}
+              
             </div>
           </div>
 
@@ -288,6 +306,7 @@ const restaurantId = Array.isArray(id) ? id[0] : id;
                   {formErrors.time && <p className="mt-1 text-xs text-rose-500">{formErrors.time}</p>}
                 </div>
 
+
                 {/* Comensales */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">Comensales</label>
@@ -297,6 +316,29 @@ const restaurantId = Array.isArray(id) ? id[0] : id;
                     <button type="button" onClick={() => updateGuests(1)} className="h-10 w-10 rounded-lg bg-white shadow-sm font-bold text-slate-900 hover:text-gastro-coral">+</button>
                   </div>
                   {formErrors.guests && <p className="mt-1 text-xs text-rose-500">{formErrors.guests}</p>}
+                </div>
+
+                {/* Selección de mesa (filtrada por comensales) */}
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Selecciona tu mesa</label>
+                  <TableGrid
+                    tables={filteredTables}
+                    selectedTableId={selectedTable?.id || null}
+                    onTableSelect={setSelectedTable}
+                  />
+                  {selectedTable && (
+                    <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl flex justify-between items-center">
+                      <p className="text-orange-800 text-xs font-medium">
+                        Has seleccionado la <strong>Mesa {selectedTable.number}</strong> (Capacidad: {selectedTable.capacity} personas)
+                      </p>
+                      <button
+                        onClick={() => setSelectedTable(null)}
+                        className="text-orange-600 text-xs underline font-bold"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
