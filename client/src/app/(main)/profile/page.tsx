@@ -1,17 +1,17 @@
-import ReservationsList from "@/components/ui/perfil/ReservationsList";
-import UserInfo from "@/components/ui/perfil/UserInfo";
+import ReservationsList from "@/components/perfil/ReservationsList";
+import UserInfo from "@/components/perfil/UserInfo";
 import styles from "./Perfil.module.css";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
-import { Password } from "@/components/ui/perfil/Password";
+import { Password } from "@/components/perfil/Password";
 
 export default function Perfil() {
 
 
   const user = {
     id: 1,
-    name: "User",
-    email: "user@gmail.com",
+    name: "Pedro",
+    email: "pedro@gmail.com",
     phone: "+00 111 222 3333",
   };
 
@@ -36,6 +36,15 @@ export default function Perfil() {
   const reserva = [res1, res2];
 
   return (
+<<<<<<< HEAD
+    <main className={styles.profile}>
+      <h2>Panel de Usuario</h2>
+      <div className={styles.userLayout}>
+        <UserInfo user={user} />
+        <ReservationsList reserva={reserva} />
+      </div>
+    </main>
+=======
     <>
     <Navbar></Navbar>
       <div className={styles.profile}>
@@ -47,5 +56,6 @@ export default function Perfil() {
       </div>
     <Footer></Footer>
     </>
+>>>>>>> dev
   );
 }

@@ -1,0 +1,64 @@
+.card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 1rem;
+  transition: box-shadow 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.customerName {
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.confirmada {
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+.pendiente {
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+.cancelada {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
