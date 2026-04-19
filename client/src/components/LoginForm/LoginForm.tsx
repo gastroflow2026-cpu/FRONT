@@ -20,7 +20,7 @@ const LoginForm = () => {
     { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
   ) => {
     try {
-      loginUser(values);
+      await loginUser(values);
       await Swal.fire({
         icon: "success",
         title: "¡Bienvenido!",
@@ -54,7 +54,7 @@ const LoginForm = () => {
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 cursor-pointer"
+          className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-linear-to-r from-orange-500 to-pink-500 cursor-pointer"
         >
           <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
             <ArrowLeft className="w-5 h-5" />
@@ -78,7 +78,7 @@ const LoginForm = () => {
           <button
              type="button"
              onClick={() => router.push("/")}
-             className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 cursor-pointer"
+             className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-linear-to-r from-orange-500 to-pink-500 cursor-pointer"
            >
              <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
                <ArrowLeft className="w-5 h-5" />
@@ -90,7 +90,7 @@ const LoginForm = () => {
 
         {/* Card */}
         <div
-          className="w-full max-w-lg min-h-[600px] rounded-2xl px-12 py-14 flex flex-col justify-center"
+          className="w-full max-w-lg min-h-150 rounded-2xl px-12 py-14 flex flex-col justify-center"
           style={{
             background: "rgba(10, 14, 30, 0.85)",
             boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",

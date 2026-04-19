@@ -1,4 +1,5 @@
 .profile {
+<<<<<<< HEAD
   min-height: 100vh;
   width: 100%; 
   margin: 0;
@@ -11,10 +12,18 @@
 
 .profile h2{
     text-align: center;
+=======
+  width: 100vw;
+  height: 70vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+>>>>>>> dev
 }
 
-.userLayout{
-    display: flex;
-    justify-content: center;
-    gap: 30px;
+.userLayout {
+  display: flex;
+  justify-content: start;
+  gap: 30px;
 }

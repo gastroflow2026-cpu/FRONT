@@ -7,17 +7,19 @@ import {
 } from "@/validations/registerSchema";
 import { useFormik } from "formik";
 import "./RegisterForm.css";
-import { Lock, Mail, User, UserPlus } from "lucide-react";
+import { Lock, Mail, User, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useContext, useState } from "react";
-import { UsersContext } from '../../context/UsersContext';
-import Swal from 'sweetalert2';
+import { UsersContext } from "../../context/UsersContext";
+import Swal from "sweetalert2";
 
 export default function RegisterForm() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const {registerNewUser} = useContext(UsersContext);
-  const {loginUserGoogle} = useContext(UsersContext)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { registerNewUser } = useContext(UsersContext);
+  const { registerUserGoogle } = useContext(UsersContext);
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: registerInitialValues,
@@ -33,28 +35,36 @@ export default function RegisterForm() {
         setErrors(newErrors);
         return;
       }
+
       const res = await registerNewUser(values);
-      if(res === 201){
-            if(res === 201) {  
-                Swal.fire({
-                    theme: 'dark',
-                    title: 'Éxito!',
-                    text: 'Usuario registrado correctamente',
-                    icon: 'success'
-                });
-            }
-        }
-        else {
-            Swal.fire({
-                theme: 'dark',
-                title: 'Error!',
-                text: 'Inténtelo nuevamente',
-                icon: 'error',
-                
-            });
-            
-        };
-      resetForm();
+
+      if (res === 201) {
+        Swal.fire({
+          theme: "dark",
+          title: "Éxito!",
+          text: "Usuario registrado correctamente",
+          icon: "success",
+        });
+
+        resetForm();
+        return;
+      }
+      if (res === 400) {
+        Swal.fire({
+          theme: "dark",
+          title: "Error!",
+          text: "El email ya está registrado",
+          icon: "error",
+        });
+        return;
+      }
+
+      Swal.fire({
+        theme: "dark",
+        title: "Error!",
+        text: "Inténtelo nuevamente",
+        icon: "error",
+      });
     },
   });
 
@@ -89,7 +99,9 @@ export default function RegisterForm() {
           </div>
 
           {formik.errors.first_name && formik.touched.first_name && (
-            <div className="register-form__error">{formik.errors.first_name}</div>
+            <div className="register-form__error">
+              {formik.errors.first_name}
+            </div>
           )}
         </div>
 
@@ -113,9 +125,60 @@ export default function RegisterForm() {
           </div>
 
           {formik.errors.last_name && formik.touched.last_name && (
-            <div className="register-form__error">{formik.errors.last_name}</div>
+            <div className="register-form__error">
+              {formik.errors.last_name}
+            </div>
           )}
         </div>
+
+        {/*CIUDAD*/}
+        <div className="register-form__field">
+          <label className="register-form__label">Ciudad</label>
+
+          <div className="register-form__input-wrapper">
+            <User className="register-form__input-icon" />
+
+            <input
+              className="register-form__input"
+              id="city"
+              name="city"
+              type="text"
+              placeholder="Ciudad"
+              value={formik.values.city}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </div>
+
+          {formik.errors.city && formik.touched.city && (
+            <div className="register-form__error">{formik.errors.city}</div>
+          )}
+        </div>
+
+        {/*PAIS*/}
+        <div className="register-form__field">
+          <label className="register-form__label">Pais</label>
+
+          <div className="register-form__input-wrapper">
+            <User className="register-form__input-icon" />
+
+            <input
+              className="register-form__input"
+              id="country"
+              name="country"
+              type="text"
+              placeholder="Ciudad"
+              value={formik.values.country}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </div>
+
+          {formik.errors.country && formik.touched.country && (
+            <div className="register-form__error">{formik.errors.country}</div>
+          )}
+        </div>
+
         {/* EMAIL */}
         <div className="register-form__field">
           <label className="register-form__label">Email</label>
@@ -142,44 +205,90 @@ export default function RegisterForm() {
         {/* PASSWORD */}
         <div className="register-form__field">
           <label className="register-form__label">Contraseña</label>
-
-          <div className="register-form__input-wrapper">
+          <div
+            className="register-form__input-wrapper"
+            style={{ position: "relative" }}
+          >
             <Lock className="register-form__input-icon" />
-
             <input
               className="register-form__input"
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="register-form__eye-btn"
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={
+                showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+              }
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {formik.errors.password && formik.touched.password && (
             <div className="register-form__error">{formik.errors.password}</div>
           )}
         </div>
-        
+
         {/* CONFIRM PASSWORD (si lo tenés en schema) */}
         <div className="register-form__field">
           <label className="register-form__label">Confirmar Contraseña</label>
-
-          <div className="register-form__input-wrapper">
+          <div
+            className="register-form__input-wrapper"
+            style={{ position: "relative" }}
+          >
             <Lock className="register-form__input-icon" />
-
             <input
               className="register-form__input"
               id="confirmPassword"
               name="confirmPassword"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               placeholder="••••••••"
               value={formik.values.confirmPassword}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="register-form__eye-btn"
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              aria-label={
+                showConfirmPassword
+                  ? "Ocultar contraseña"
+                  : "Mostrar contraseña"
+              }
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {formik.errors.confirmPassword && formik.touched.confirmPassword && (
@@ -236,8 +345,12 @@ export default function RegisterForm() {
       </div>
       {/* Botones de redes sociales */}
       <div className="register-form__social"></div>{" "}
-      <button onClick={ async () =>{loginUserGoogle()}} 
-        className="register-form__social-button register-form__social-button--google">
+      <button
+        onClick={async () => {
+          registerUserGoogle();
+        }}
+        className="register-form__social-button register-form__social-button--google"
+      >
         {" "}
         <svg className="register-form__social-icon" viewBox="0 0 24 24">
           {" "}

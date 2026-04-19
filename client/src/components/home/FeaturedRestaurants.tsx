@@ -23,7 +23,7 @@ const MOCK_RESTAURANTS = [
   {
     id: "3",
     name: "La Parrilla del Sol",
-    image: "https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=800&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?q=80&w=800&auto=format&fit=crop",
     category: "Parrilla",
     rating: 4.7,
     location: "Belgrano, CABA",
@@ -33,7 +33,7 @@ const MOCK_RESTAURANTS = [
 
 const FeaturedRestaurants = () => {
   return (
-    <section className="py-20 bg-transparent">
+    <section id="restaurantes-destacados" className="py-20 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-12">
           <div>
