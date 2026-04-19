@@ -1,25 +1,10 @@
 .profile {
-<<<<<<< HEAD
-  min-height: 100vh;
-  width: 100%; 
-  margin: 0;
-  padding: 40px 20px;
-  background: rgb(34, 33, 33);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.profile h2{
-    text-align: center;
-=======
   width: 100vw;
   height: 70vh;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
->>>>>>> dev
 }
 
 .userLayout {
@@ -27,3 +12,4 @@
   justify-content: start;
   gap: 30px;
 }
+
