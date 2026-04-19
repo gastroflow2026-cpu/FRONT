@@ -1,6 +1,6 @@
 .card {
-  width: 380px;
-  height: auto;
+  width: 100%;
+  max-width: 380px;
   background: #0B0F20;
   border-radius: 25px;
   color: white;
@@ -9,7 +9,6 @@
   align-items: center;
   padding-top: 30px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 .avatar {
@@ -19,31 +18,24 @@
   background-color: #cfcfcf;
   border: 5px solid #fb7050;
   position: relative;
-  transition: all 300ms;
+  transition: 0.3s;
 }
 
-.avatar:hover{
+.avatar:hover {
   box-shadow: 0 0 9px white;
 }
 
 .avatar button {
   position: absolute;
-  bottom: 6;
-  right: 6;
+  bottom: 6px;
+  right: 6px;
   background-color: #fb7050;
   border-radius: 50%;
   width: 27px;
   height: 27px;
-  color: #1b1919ee;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.avatar button:hover{
-  cursor: pointer;
-  background-color: white;
-  color: #0B0F20;
 }
 
 .name {
@@ -62,8 +54,6 @@
 .infoRow {
   height: 70px;
   display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
   border-top: 2px solid #fb7050;
 }
@@ -82,14 +72,44 @@
 
 .label {
   font-size: 11px;
-  letter-spacing: 1px;
   opacity: 0.7;
   margin-bottom: 5px;
-  color: #F2EFDF;
 }
 
 .value {
   font-size: 13px;
+}
 
-    color: #F2EFDF;
+@media (max-width: 768px) {
+  .card {
+    padding-top: 20px;
+    border-radius: 20px;
+  }
+
+  .avatar {
+    width: 140px;
+    height: 140px;
+    border-width: 4px;
+  }
+
+  .name {
+    font-size: 20px;
+  }
+
+  .role {
+    font-size: 11px;
+    margin-bottom: 20px;
+  }
+
+  .infoRow {
+    height: 60px;
+  }
+
+  .label {
+    font-size: 10px;
+  }
+
+  .value {
+    font-size: 12px;
+  }
 }

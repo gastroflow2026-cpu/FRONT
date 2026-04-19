@@ -1,4 +1,6 @@
-export  const reservations: Reservation[] = [
+import { Reserva } from "@/types/Reservation";
+
+export const reservations: Reserva[] = [
     {
       id: "1",
       date: "2026-04-18",
