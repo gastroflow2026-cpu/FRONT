@@ -1,9 +1,9 @@
-import ReservationsList from "@/components/ui/perfil/ReservationsList";
-import UserInfo from "@/components/ui/perfil/UserInfo";
+import ReservationsList from "@/components/perfil/ReservationsList";
+import UserInfo from "@/components/perfil/UserInfo";
 import styles from "./Perfil.module.css";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
-import { Password } from "@/components/ui/perfil/Password";
+import { Password } from "@/components/perfil/Password";
 
 export default function Perfil() {
 
