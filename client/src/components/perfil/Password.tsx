@@ -7,8 +7,7 @@ import { useState } from "react";
 
 export const Password = () => {
   const { form, errors, isLoading, handleChange, handleSubmit } = usePasswordForm();
-  
-  // Estados independientes para la visibilidad
+
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 

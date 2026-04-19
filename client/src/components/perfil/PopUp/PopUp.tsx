@@ -23,8 +23,8 @@ export const PopUp: React.FC<PopUpProps> = ({ setShowPop }) => {
     <div className={styles.popupOverlay}>
       <div className={styles.popup}>
         <IoCloseCircleSharp onClick={() => setShowPop(false)} />
-
         <form action="#" className={styles.form}>
+        <h4>Actualizar foto</h4>
           <div className={styles.avatar}>
             {preview ? (
               <Image
