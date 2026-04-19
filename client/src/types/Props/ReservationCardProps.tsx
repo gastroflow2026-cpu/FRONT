@@ -1,4 +1,4 @@
-interface ReservationCardProps {
+export interface ReservationCardProps {
   reservation: {
     id: string;
     customerName: string;
