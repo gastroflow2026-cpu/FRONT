@@ -1,7 +1,7 @@
 .card {
   width: 380px;
   height: auto;
-  background: #1b1919ee;
+  background: #0B0F20;
   border-radius: 25px;
   color: white;
   display: flex;
@@ -13,12 +13,17 @@
 }
 
 .avatar {
-  width: 150px;
-  height: 150px;
+  width: 155px;
+  height: 155px;
   border-radius: 50%;
   background-color: #cfcfcf;
-  border: 3px solid #fb7050;
+  border: 5px solid #fb7050;
   position: relative;
+  transition: all 300ms;
+}
+
+.avatar:hover{
+  box-shadow: 0 0 9px white;
 }
 
 .avatar button {
@@ -37,6 +42,8 @@
 
 .avatar button:hover{
   cursor: pointer;
+  background-color: white;
+  color: #0B0F20;
 }
 
 .name {
@@ -58,7 +65,7 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  border-top: 2px solid #F2EFDF;
+  border-top: 2px solid #fb7050;
 }
 
 .half {
@@ -70,7 +77,7 @@
 }
 
 .half:first-child {
-  border-right: 2px solid #F2EFDF;
+  border-right: 2px solid #fb7050;
 }
 
 .label {

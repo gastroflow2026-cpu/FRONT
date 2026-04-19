@@ -3,7 +3,9 @@ import * as Yup from "yup";
 //Definiciones de Interfas
 export interface RegisterFormValues {
   first_name: string;
-  last_name:string;
+  last_name: string;
+  city: string;
+  country: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -13,6 +15,8 @@ export interface RegisterFormValues {
 export const registerInitialValues: RegisterFormValues = {
   first_name: "",
   last_name: "",
+  city: "",
+  country: "",
   email: "",
   password: "",
   confirmPassword: "",
@@ -21,7 +25,9 @@ export const registerInitialValues: RegisterFormValues = {
 //Esquema de validaciones
 export const registerValidationSchema = Yup.object({
   first_name: Yup.string().required("Nombre Requerido"),
-  last_name:  Yup.string().required("Apellido Requerido"),
+  last_name: Yup.string().required("Apellido Requerido"),
+  city: Yup.string(),
+  Country: Yup.string(),
   email: Yup.string()
     .email("Formato de Correo Invalido")
     .required("Correo obligatorio"),
@@ -30,5 +36,5 @@ export const registerValidationSchema = Yup.object({
     .required("Contraseña Requerida"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")])
-    .required("Confirmación Requerida")
+    .required("Confirmación Requerida"),
 });
