@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { MenuItemCard } from "./MenuItemCard";
 import { MenuItemFormDialog } from "./MenuItemDialog";
+import { EditMenuItemDialog } from "./EditMenuItemDialog";
 import Swal from "sweetalert2";
 import styles from "./Menu.module.css";
 import { MenuItem } from "@/types/MenuItem";
-
 
 export function Menu() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
@@ -37,15 +37,16 @@ export function Menu() {
     },
   ]);
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<MenuItem | null>(null);
 
   const handleEdit = (id: string) => {
-    Swal.fire({
-      title: "Editar Plato",
-      text: "Funcionalidad de edición próximamente disponible",
-      icon: "info",
-      confirmButtonColor: "#ea580c",
-    });
+    const item = menuItems.find((i) => i.id === id);
+    if (item) {
+      setItemToEdit(item);
+      setIsEditDialogOpen(true);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -100,13 +101,29 @@ export function Menu() {
     };
 
     setMenuItems((prev) => [...prev, item]);
-    setIsDialogOpen(false); // Cerramos el modal tras crear
+    setIsCreateDialogOpen(false);
 
     Swal.fire({
       icon: "success",
       title: "Platillo creado",
       text: `${item.name} ha sido agregado al menú exitosamente.`,
       confirmButtonColor: "#ea580c",
+    });
+  };
+
+  const handleUpdateItem = (updatedItem: MenuItem) => {
+    setMenuItems((prev) =>
+      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+    );
+    setIsEditDialogOpen(false);
+    setItemToEdit(null);
+
+    Swal.fire({
+      icon: "success",
+      title: "Platillo actualizado",
+      text: "Los cambios se guardaron correctamente",
+      timer: 1500,
+      showConfirmButton: false,
     });
   };
 
@@ -118,7 +135,7 @@ export function Menu() {
           <p>Administra los platos del restaurante</p>
         </div>
         <button
-          onClick={() => setIsDialogOpen(true)}
+          onClick={() => setIsCreateDialogOpen(true)}
           className={styles.addButton}
         >
           <Plus size={18} />
@@ -139,9 +156,19 @@ export function Menu() {
       </div>
 
       <MenuItemFormDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
         onSubmit={handleCreateItem}
+      />
+
+      <EditMenuItemDialog
+        isOpen={isEditDialogOpen}
+        item={itemToEdit}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setItemToEdit(null);
+        }}
+        onSubmit={handleUpdateItem}
       />
     </div>
   );
