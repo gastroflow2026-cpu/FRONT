@@ -24,7 +24,7 @@ export default function Admin() {
 
   return (
     <div className={styles.rootContainer}>
-      {/* <Navbar /> */}
+      <Navbar />
 
       <div className={styles.middleSection}>
         <Sidebar activeModule={activeModule} onModuleChange={setActiveModule} />
