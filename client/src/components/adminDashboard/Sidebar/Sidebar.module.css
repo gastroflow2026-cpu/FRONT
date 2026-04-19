@@ -3,32 +3,39 @@
   inset: 0 auto 0 0;
   z-index: 40;
   width: 16rem;
+  max-width: 85%;
   background: white;
   border-right: 1px solid #E5E7EB;
   transition: transform 0.3s ease-in-out;
 }
 
-.sidebarHidden { transform: translateX(-100%); }
-.sidebarVisible { transform: translateX(0); }
+.sidebarHidden {
+  transform: translateX(-100%);
+}
+
+.sidebarVisible {
+  transform: translateX(0);
+}
 
 @media (min-width: 1024px) {
   .sidebar {
     position: static;
     transform: translateX(0);
+    max-width: none;
   }
 }
 
 .toggleBtn {
   position: fixed;
-  top: 1rem;
-  left: 1rem;
+  top: 95px;
+  right: 20px;
   z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   border: 1px solid #E5E7EB;
   background: white;
   cursor: pointer;
@@ -43,7 +50,9 @@
 }
 
 @media (min-width: 1024px) {
-  .toggleBtn { display: none; }
+  .toggleBtn {
+    display: none;
+  }
 }
 
 .overlay {
@@ -59,7 +68,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: 8px;
   border: none;
   background: transparent;
@@ -68,7 +77,9 @@
   font-size: 14px;
 }
 
-.navItem:hover { background: #F9FAFB; }
+.navItem:hover {
+  background: #F9FAFB;
+}
 
 .active {
   background: #FFF7ED;
@@ -76,6 +87,53 @@
   font-weight: 600;
 }
 
+.header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #E5E7EB;
+}
 
-.header { padding: 1.5rem; border-bottom: 1px solid #E5E7EB; }
-.footer { padding: 1rem; border-top: 1px solid #E5E7EB; display: flex; align-items: center; gap: 0.75rem; }
+.footer {
+  padding: 1rem;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 14rem;
+    margin-top: 80px;
+  }
+
+  .navItem {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+
+  .header {
+    padding: 1.2rem;
+  }
+
+  .footer {
+    padding: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 12rem;
+  }
+
+  .navItem {
+    font-size: 12px;
+    gap: 10px;
+  }
+
+  .toggleBtn {
+    top: 90px;
+    right: 15px;
+    width: 38px;
+    height: 38px;
+  }
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { EmployeeCard } from "./EmployeeCard";
 import { EmployeeFormDialog } from "./EmployeeCardDialog";
+import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import Swal from "sweetalert2";
 import styles from "./Employees.module.css";
 import { Employee } from "@/types/Employee";
@@ -37,6 +38,16 @@ export function Employees() {
   ]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const [passwordDialog, setPasswordDialog] = useState<{
+    isOpen: boolean;
+    employeeId: string;
+    employeeName: string;
+  }>({
+    isOpen: false,
+    employeeId: "",
+    employeeName: "",
+  });
 
   const handleToggleStatus = (id: string, isActive: boolean) => {
     setEmployees((prev) =>
@@ -70,6 +81,30 @@ export function Employees() {
     });
   };
 
+  // Función para abrir el modal de contraseña
+  const handleOpenPasswordDialog = (id: string) => {
+    const employee = employees.find((emp) => emp.id === id);
+    if (employee) {
+      setPasswordDialog({
+        isOpen: true,
+        employeeId: id,
+        employeeName: `${employee.name} ${employee.lastName}`,
+      });
+    }
+  };
+
+  const handleChangePassword = (employeeId: string, newPassword: string) => {
+    // Aquí iría tu llamada a la API
+    setPasswordDialog((prev) => ({ ...prev, isOpen: false }));
+    
+    Swal.fire({
+      icon: "success",
+      title: "Contraseña actualizada",
+      text: "La contraseña ha sido cambiada exitosamente.",
+      confirmButtonColor: "#ea580c",
+    });
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -93,6 +128,7 @@ export function Employees() {
             key={employee.id}
             employee={employee}
             onToggleStatus={handleToggleStatus}
+            onChangePassword={handleOpenPasswordDialog} // Nueva prop conectada
           />
         ))}
       </div>
@@ -101,6 +137,17 @@ export function Employees() {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onSubmit={handleCreateEmployee}
+      />
+
+      {/* Nuevo Diálogo de Contraseña */}
+      <ChangePasswordDialog
+        isOpen={passwordDialog.isOpen}
+        onClose={() =>
+          setPasswordDialog({ isOpen: false, employeeId: "", employeeName: "" })
+        }
+        onSubmit={handleChangePassword}
+        employeeId={passwordDialog.employeeId}
+        employeeName={passwordDialog.employeeName}
       />
     </div>
   );
