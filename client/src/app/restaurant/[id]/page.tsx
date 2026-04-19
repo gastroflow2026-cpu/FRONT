@@ -31,6 +31,8 @@ type PublicMenuCategory = {
   items: PublicMenuItem[];
 };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
@@ -74,7 +76,7 @@ const RestaurantDetail = () => {
     const fetchMenu = async () => {
       try {
         const { data } = await axios.get<PublicMenuCategory[]>(
-          "http://localhost:3000/menu/public",
+          `${API_URL}/menu/public`,
         );
 
         setCategories(data);
