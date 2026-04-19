@@ -1,42 +1,44 @@
-"use client"
+"use client";
 
+import { useState } from "react";
 import { Employees } from "@/components/adminDashboard/Employees/Employees";
 import { Menu } from "@/components/adminDashboard/Menu/Menu";
 import { Metrics } from "@/components/adminDashboard/Metrics/Metrics";
 import { Orders } from "@/components/adminDashboard/Orders/Orders";
 import { Reservations } from "@/components/adminDashboard/Reservations/Reservations";
 import { Sidebar } from "@/components/adminDashboard/Sidebar/Sidebar";
-import { useState } from "react";
+import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/layout/Navbar";
+import styles from "./Admin.module.css";
 
 export default function Admin() {
-    const [activeModule, setActiveModule] = useState("employees")
+  const [activeModule, setActiveModule] = useState("employees");
 
-  const renderModule = () => {
-    switch (activeModule) {
-      case "employees":
-        return <Employees />;
-      case "reservations":
-        return <Reservations />;
-      case "menu":
-        return <Menu />;
-      case "metrics":
-        return <Metrics />;
-      case "orders":
-        return <Orders />;
-      default:
-        return <Employees />;
-    }
+  const modules: Record<string, React.ReactNode> = {
+    employees: <Employees />,
+    reservations: <Reservations />,
+    menu: <Menu />,
+    metrics: <Metrics />,
+    orders: <Orders />,
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar activeModule={activeModule} onModuleChange={setActiveModule} />
+    <div className={styles.rootContainer}>
+      {/* <Navbar /> */}
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto p-6 lg:p-8 max-w-7xl">
-          {renderModule()}
-        </div>
-      </main>
+      <div className={styles.middleSection}>
+        <Sidebar activeModule={activeModule} onModuleChange={setActiveModule} />
+        
+        <main className={styles.mainContent}>
+          <div className={styles.container}>
+            {modules[activeModule] || <Employees />}
+          </div>
+        </main>
+      </div>
+
+      <footer className={styles.footerWrapper}>
+        <Footer />
+      </footer>
     </div>
   );
 }

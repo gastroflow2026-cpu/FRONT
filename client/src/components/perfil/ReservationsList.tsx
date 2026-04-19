@@ -2,7 +2,7 @@
 
 import style from "./ReservationsList.module.css";
 import { GiForkKnifeSpoon } from "react-icons/gi";
-import { Reserva } from "@/types/Reserva";
+import { Reserva } from "@/types/Reservation";
 
 export default function ReservList({ reserva }: { reserva: Reserva[] }) {
   return (
