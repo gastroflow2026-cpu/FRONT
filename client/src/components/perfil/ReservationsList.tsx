@@ -9,8 +9,11 @@ export default function ReservList({ reserva }: { reserva: Reserva[] }) {
     <div className={style.reservaContainer}>
       <h3>Historial de Reservas</h3>
       <div className={style.cardsGrid}>
-        {reserva.map((res: Reserva) => (
-          <div className={style.reservCard} key={res.id}>
+        {reserva.map((res: Reserva) => {
+          const displayId = res.id.slice(0, 8).toUpperCase();
+
+          return (
+            <div className={style.reservCard} key={res.id}>
 
             {/* Sección Superior */}
             <div className={style.cardSection}>
@@ -18,7 +21,7 @@ export default function ReservList({ reserva }: { reserva: Reserva[] }) {
                 <GiForkKnifeSpoon className={style.mainIcon} />
                 <div className={style.titleInfo}>
                   <h4>RESERVA DE MESA</h4>
-                  <p>Id #{res.id * 100} / GastroFlow</p>
+                  <p>Id #{displayId} / GastroFlow</p>
                 </div>
               </div>
             </div>
@@ -40,16 +43,17 @@ export default function ReservList({ reserva }: { reserva: Reserva[] }) {
               <div className={style.detailsRow}>
                 <div className={style.half}>
                   <span className={style.label}>COMENSALES</span>
-                  <span className={style.value}>{res.guests_count}</span>
+                  <span className={style.value}>{res.guests}</span>
                 </div>
                 <div className={style.half}>
-                  <span className={style.label}>TOTAL</span>
-                  <span className={style.value}>{res.total}</span>
+                  <span className={style.label}>ESTADO</span>
+                  <span className={style.value}>{res.status}</span>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
