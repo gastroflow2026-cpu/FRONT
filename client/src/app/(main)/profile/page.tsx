@@ -36,15 +36,6 @@ export default function Perfil() {
   const reserva = [res1, res2];
 
   return (
-<<<<<<< HEAD
-    <main className={styles.profile}>
-      <h2>Panel de Usuario</h2>
-      <div className={styles.userLayout}>
-        <UserInfo user={user} />
-        <ReservationsList reserva={reserva} />
-      </div>
-    </main>
-=======
     <>
     <Navbar></Navbar>
       <div className={styles.profile}>
@@ -56,6 +47,5 @@ export default function Perfil() {
       </div>
     <Footer></Footer>
     </>
->>>>>>> dev
   );
 }
