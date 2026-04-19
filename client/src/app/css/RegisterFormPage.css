@@ -1,0 +1,176 @@
+/* ========================================
+   BOTÓN VOLVER UNIFICADO (GRADIENTE Y HOVER)
+   ======================================== */
+.register-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(90deg, #ff7a18 0%, #ff3d77 100%);
+  box-shadow: 0 4px 24px 0 rgba(255, 122, 24, 0.12);
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.register-back-btn:hover {
+  background: linear-gradient(90deg, #ff8c42 0%, #ff4d8d 100%);
+  box-shadow: 0 8px 32px 0 rgba(255, 122, 24, 0.22);
+}
+/* ========================================
+   REGISTER PAGE
+   ======================================== */
+
+.register-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #050816 0%, #0b1023 50%, #151936 100%);
+}
+
+/* ========================================
+   CONTENEDOR PRINCIPAL
+   ======================================== */
+
+.register-page__container {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ========================================
+   LÍNEA DIVISORIA CENTRAL
+   ======================================== */
+
+/* ========================================
+   LÍNEA DIVISORIA CENTRAL
+   ======================================== */
+
+.register-page__container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px; /* 🔥 más gruesa */
+  height: 100%;
+
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 15%,
+    rgba(255, 122, 24, 0.6) 50%,
+    /* 🔥 más intensidad */ rgba(255, 255, 255, 0.2) 85%,
+    transparent 100%
+  );
+
+  /* 🔥 glow más fuerte */
+  box-shadow:
+    0 0 8px rgba(255, 122, 24, 0.8),
+    0 0 20px rgba(255, 122, 24, 0.25);
+
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ========================================
+   IZQUIERDA: LOGO
+   ======================================== */
+
+.register-page__image-section {
+  width: 50%;
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.register-page__logo-image {
+  display: block;
+  width: 90%;
+  max-width: 800px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5));
+}
+
+/* ========================================
+   DERECHA: FORMULARIO
+   ======================================== */
+
+.register-page__form-section {
+  width: 50%;
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ========================================
+   BOTÓN VOLVER
+   ======================================== */
+
+.register-page__back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 9999px;
+  color: #374151;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  transition: all 0.3s ease;
+}
+
+.register-page__back:hover {
+  transform: translateX(-4px);
+  background: white;
+}
+
+.register-page__back-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .register-page__container {
+    flex-direction: column;
+  }
+
+  .register-page__container::before {
+    display: none;
+  }
+
+  .register-page__image-section {
+    width: 100%;
+    min-height: 260px;
+    padding-top: 6rem;
+    padding-bottom: 1rem;
+  }
+
+  .register-page__logo-image {
+    width: 220px;
+    max-width: 220px;
+  }
+
+  .register-page__form-section {
+    width: 100%;
+    min-height: auto;
+    padding: 1.5rem 1rem 2rem;
+  }
+}
