@@ -10,7 +10,9 @@ import { reservationSchema } from "@/validations/reservationSchema";
 import { UsersContext } from "@/context/UsersContext";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { ALL_RESTAURANTS } from "@/app/data/restaurants.data";
+import { ALL_RESTAURANTS } from "@/app/data/restaurants.data"; 
+import TableGrid from "@/components/features/table.grid";
+import { Table } from "@/app/data/restaurants.data";
 
 type PublicMenuItem = {
   id: string;
@@ -36,9 +38,11 @@ const RestaurantDetail = () => {
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
-  const restaurant = ALL_RESTAURANTS.find(
-    (r) => String(r.id) === String(restaurantId),
-  );
+  const restaurant = ALL_RESTAURANTS.find(r => String(r.id) === String(restaurantId));
+  if (!restaurant) return <div>Restaurante no encontrado</div>;
+
+  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  
 
   // Fecha mínima para el atributo 'min' del input date
   const today = new Date();
@@ -125,17 +129,18 @@ const RestaurantDetail = () => {
   };
 
   // El formulario es válido si no hay errores y todos los campos obligatorios tienen valor
+  const isFormValid = 
+    Object.values(formErrors).every((err) => err === "") && 
+    formValues.name !== "" && 
+    formValues.email !== "" && 
+    formValues.phone !== "" && 
+    formValues.date !== "" &&
+    selectedTable !== null;
+    
 
   const getMenuItemImage = (item: PublicMenuItem) => {
     return item.image_url || FALLBACK_MENU_IMAGE;
   };
-
-  const isFormValid =
-    Object.values(formErrors).every((err) => err === "") &&
-    formValues.name !== "" &&
-    formValues.email !== "" &&
-    formValues.phone !== "" &&
-    formValues.date !== "";
 
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
@@ -145,12 +150,18 @@ const RestaurantDetail = () => {
       // Validar formulario completo con Yup
       await reservationSchema.validate(formValues, { abortEarly: false });
 
+      const finalBookingData = {
+    ...formValues,
+    tableId: selectedTable?.id,
+    tableNumber: selectedTable?.number
+  };
+      
       if (!isLogged) {
         // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
         console.log("Usuario no logueado, guardando datos temporalmente");
         const dataToSave = {
           restaurantId: restaurantId,
-          bookingDetails: formValues,
+          bookingDetails: finalBookingData
         };
         localStorage.setItem(
           "gastroflow_temp_booking",
@@ -185,6 +196,11 @@ const RestaurantDetail = () => {
   if (!restaurant) {
     return <div className="p-10">Restaurante no encontrado</div>;
   }
+
+  // Filtrar mesas según la cantidad de comensales
+  const filteredTables = (restaurant.tables || []).filter(
+    (t) => t.status === 'decorative' || (t.capacity >= formValues.guests && t.type === 'table')
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -287,88 +303,92 @@ const RestaurantDetail = () => {
 
                         <div className="space-y-4">
                           {category.items.map((item: PublicMenuItem) => (
-                            <div
-                              key={item.id}
-                              className="flex flex-col gap-4 rounded-2xl border border-gray-200 p-4 transition hover:border-gastro-coral md:flex-row md:items-center md:justify-between"
-                            >
-                              <div className="flex gap-4 group">
-                                <div className="h-34 w-50 shrink-0 overflow-hidden rounded-xl border border-gray-200">
-                                  <img
-                                    src={getMenuItemImage(item)}
-                                    alt={item.name}
-                                    className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-175 group-hover:brightness-110"
-                                    onError={(e) => {
-                                      e.currentTarget.src = FALLBACK_MENU_IMAGE;
-                                    }}
-                                  />
+                            <React.Fragment key={item.id}>
+                              <div
+                                className="flex flex-col gap-4 rounded-2xl border border-gray-200 p-4 transition hover:border-gastro-coral md:flex-row md:items-center md:justify-between"
+                              >
+                                <div className="flex gap-4 group">
+                                  <div className="h-34 w-50 shrink-0 overflow-hidden rounded-xl border border-gray-200">
+                                    <img
+                                      src={getMenuItemImage(item)}
+                                      alt={item.name}
+                                      className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-175 group-hover:brightness-110"
+                                      onError={(e) => {
+                                        e.currentTarget.src = FALLBACK_MENU_IMAGE;
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div className="min-w-0">
+                                    <h4 className="font-semibold text-slate-900">
+                                      {item.name}
+                                    </h4>
+
+                                    <p className="mt-1 text-sm text-slate-600">
+                                      {item.description || "Sin descripción"}
+                                    </p>
+
+                                    {!!item.allergens?.trim() && (
+                                      <>
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                          {item.allergens
+                                            .split(",")
+                                            .map(
+                                              (
+                                                allergen: string,
+                                                index: number,
+                                              ) => {
+                                                const key = allergen
+                                                  .trim()
+                                                  .toLowerCase();
+
+                                                const allergenLabels: Record<
+                                                  string,
+                                                  string
+                                                > = {
+                                                  gluten: "Gluten",
+                                                  lacteos: "Lácteos",
+                                                  huevo: "Huevo",
+                                                  sulfitos: "Sulfitos",
+                                                };
+
+                                                return (
+                                                  <span
+                                                    key={`${item.id}-allergen-${index}`}
+                                                    className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                                                  >
+                                                    {allergenLabels[key] ||
+                                                      allergen.trim()}
+                                                  </span>
+                                                );
+                                              },
+                                            )}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
 
-                                <div className="min-w-0">
-                                  <h4 className="font-semibold text-slate-900">
-                                    {item.name}
-                                  </h4>
-
-                                  <p className="mt-1 text-sm text-slate-600">
-                                    {item.description || "Sin descripción"}
-                                  </p>
-
-                                  {!!item.allergens?.trim() && (
-                                    <>
-                                      <div className="mt-2 flex flex-wrap gap-2">
-                                        {item.allergens
-                                          .split(",")
-                                          .map(
-                                            (
-                                              allergen: string,
-                                              index: number,
-                                            ) => {
-                                              const key = allergen
-                                                .trim()
-                                                .toLowerCase();
-
-                                              const allergenLabels: Record<
-                                                string,
-                                                string
-                                              > = {
-                                                gluten: "Gluten",
-                                                lacteos: "Lácteos",
-                                                huevo: "Huevo",
-                                                sulfitos: "Sulfitos",
-                                              };
-
-                                              return (
-                                                <span
-                                                  key={`${item.id}-allergen-${index}`}
-                                                  className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-                                                >
-                                                  {allergenLabels[key] ||
-                                                    allergen.trim()}
-                                                </span>
-                                              );
-                                            },
-                                          )}
-                                      </div>
-                                    </>
-                                  )}
+                                <div className="font-bold text-slate-900 md:text-right">
+                                  {new Intl.NumberFormat("en-US", {
+                                    style: "currency",
+                                    currency: "USD",
+                                    maximumFractionDigits: 0,
+                                  })
+                                    .format(Number(item.price))
+                                    .replace("$", "US$")}
                                 </div>
                               </div>
-
-                              <div className="font-bold text-slate-900 md:text-right">
-                                {new Intl.NumberFormat("en-US", {
-                                  style: "currency",
-                                  currency: "USD",
-                                  maximumFractionDigits: 0,
-                                })
-                                  .format(Number(item.price))
-                                  .replace("$", "US$")}
+                              <div className="font-bold text-slate-900">
+                                {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(Number(item.price))}
                               </div>
-                            </div>
+                            </React.Fragment>
                           ))}
                         </div>
                       </div>
                     );
                   })
-              )}
+                )}
             </div>
           </div>
 
@@ -490,6 +510,7 @@ const RestaurantDetail = () => {
                   )}
                 </div>
 
+
                 {/* Comensales */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">
@@ -519,6 +540,29 @@ const RestaurantDetail = () => {
                     <p className="mt-1 text-xs text-rose-500">
                       {formErrors.guests}
                     </p>
+                  )}
+                </div>
+
+                {/* Selección de mesa (filtrada por comensales) */}
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Selecciona tu mesa</label>
+                  <TableGrid
+                    tables={filteredTables}
+                    selectedTableId={selectedTable?.id || null}
+                    onTableSelect={setSelectedTable}
+                  />
+                  {selectedTable && (
+                    <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl flex justify-between items-center">
+                      <p className="text-orange-800 text-xs font-medium">
+                        Has seleccionado la <strong>Mesa {selectedTable.number}</strong> (Capacidad: {selectedTable.capacity} personas)
+                      </p>
+                      <button
+                        onClick={() => setSelectedTable(null)}
+                        className="text-orange-600 text-xs underline font-bold"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
                   )}
                 </div>
 
