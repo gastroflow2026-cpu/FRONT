@@ -1,3 +1,11 @@
+export interface Table {
+  id: string;
+  number: number;
+  capacity: number;
+  status: 'available' | 'occupied' | 'decorative';
+  type?: 'table' | 'entrance' | 'bathroom' | 'bar' | 'kitchen';
+}
+
 export interface Restaurant {
   id: string;
   name: string;
@@ -7,6 +15,7 @@ export interface Restaurant {
   rating: number;
   image: string;
   about?: string; 
+  tables?: Table[];
 }
 
 export const ALL_RESTAURANTS: Restaurant[] = [
@@ -18,7 +27,25 @@ export const ALL_RESTAURANTS: Restaurant[] = [
     category: "Italiana",
     rating: 4.8,
     image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop",
-    about: "La Bella Vita ofrece una experiencia italiana auténtica en el corazón de Palermo. Con pastas amasadas a mano y recetas transmitidas por generaciones, cada plato es un viaje a las raíces de Italia."
+    about: "La Bella Vita ofrece una experiencia italiana auténtica en el corazón de Palermo. Con pastas amasadas a mano y recetas transmitidas por generaciones, cada plato es un viaje a las raíces de Italia.",
+    tables: [
+      { id: "ent-1", number: 0, capacity: 0, status: 'decorative', type: 'entrance' },
+      { id: "empty-1", number: 0, capacity: 0, status: 'decorative' },
+      { id: "wc-1", number: 0, capacity: 0, status: 'decorative', type: 'bathroom' },
+      { id: "1-1", number: 1, capacity: 2, status: 'available', type: 'table' },
+      { id: "1-2", number: 2, capacity: 4, status: 'occupied', type: 'table' },
+      { id: "1-3", number: 3, capacity: 2, status: 'available', type: 'table' },
+      { id: "1-4", number: 4, capacity: 6, status: 'available', type: 'table' },
+      { id: "1-5", number: 5, capacity: 4, status: 'available', type: 'table' },
+      { id: "1-6", number: 6, capacity: 2, status: 'occupied', type: 'table' },
+      { id: "1-7", number: 7, capacity: 2, status: 'available', type: 'table' },
+      { id: "1-8", number: 8, capacity: 4, status: 'available', type: 'table' },
+      { id: "1-9", number: 9, capacity: 6, status: 'available', type: 'table' },
+      { id: "1-10", number: 10, capacity: 2, status: 'available', type: 'table' },
+      { id: "bar-1", number: 0, capacity: 0, status: 'decorative', type: 'bar' },
+      { id: "kitchen-1", number: 0, capacity: 0, status: 'decorative', type: 'kitchen' },
+      { id: "empty-2", number: 0, capacity: 0, status: 'decorative' }
+    ]
   },
   {
     id: "2",
