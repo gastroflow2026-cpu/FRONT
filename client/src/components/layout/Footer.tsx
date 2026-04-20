@@ -37,6 +37,7 @@ const Footer = () => {
             <ul className="space-y-4 text-gray-400">
               <li><Link href="/" className="hover:text-white transition-colors">Inicio</Link></li>
               <li><Link href="/restaurantes" className="hover:text-white transition-colors">Restaurantes</Link></li>
+              <li><Link href="/join#planes" className="hover:text-white transition-colors">Nuestros Planes</Link></li>
               <li><Link href="/promociones" className="hover:text-white transition-colors">Promociones</Link></li>
               <li><Link href="/blog" className="hover:text-white transition-colors">Blog Gastronómico</Link></li>
             </ul>
