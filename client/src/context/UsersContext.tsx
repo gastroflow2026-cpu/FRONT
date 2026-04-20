@@ -3,6 +3,8 @@ import { createContext, useState, ReactNode, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 interface LoginValues {
   email: string;
   password: string;
@@ -42,7 +44,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const loginUser = async (values: LoginValues): Promise<number> => {
-    const res = await axios.post("http://localhost:3000/auth/signin", values);
+    const res = await axios.post(`${API_URL}/auth/signin`, values);
     if (!res.data.user) throw new Error("No se recibió el usuario");
 
     const token = res.data.token;
@@ -54,11 +56,11 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loginUserGoogle = async () => {
-    window.location.href = "http://localhost:3000/auth/google/login";
+    window.location.href = `${API_URL}/auth/google/login`;
   };
 
   const registerUserGoogle = async () => {
-    window.location.href = "http://localhost:3000/auth/google/register";
+    window.location.href = `${API_URL}/auth/google/register`;
   };
 
   const clearQueryParam = (paramName: string) => {
@@ -162,7 +164,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
 
   const registerNewUser = async (values: RegisterValues): Promise<number> => {
     try {
-      const res = await axios.post("http://localhost:3000/auth/signup", values);
+      const res = await axios.post(`${API_URL}/auth/signup`, values);
       return res.status;
     } catch (error: any) {
       if (axios.isAxiosError(error) && error.response) {

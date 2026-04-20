@@ -1,4 +1,4 @@
-interface Reservation {
+export interface Reserva {
   id: string;
   date: string;
   customerName: string;

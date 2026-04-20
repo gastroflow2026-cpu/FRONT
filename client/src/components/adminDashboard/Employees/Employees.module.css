@@ -1,13 +1,16 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .header {
   display: flex;
-  align-items: center;
+  flex-direction: row;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .titleSection h2 {
@@ -18,24 +21,24 @@
 }
 
 .titleSection p {
-  color: #4b5563;
+  color: #6b7280;
   margin-top: 0.25rem;
+  font-size: 1rem;
 }
 
 .addButton {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
   background-color: #ea580c;
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  font-size: 0.875rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
   border: none;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  gap: 0.5rem;
+  transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
 .addButton:hover {
@@ -44,7 +47,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(1, 1fr);
   gap: 1.5rem;
 }
 
@@ -57,5 +60,17 @@
 @media (min-width: 1024px) {
   .grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .addButton {
+    width: 100%;
+    justify-content: center;
   }
 }

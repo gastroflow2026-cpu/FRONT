@@ -30,15 +30,23 @@ const Hero = () => {
         <p className="text-lg md:text-xl mb-8 text-gray-200">
           Reserva en los mejores restaurantes y gestiona tus pedidos en tiempo real.
         </p>
-        <button onClick={() => {
-          if(isLogged){
-            document.getElementById('restaurantes-destacados')?.scrollIntoView({ behavior: 'smooth' });
-          }else{
-            router.push('/login');
-          }
-        }} className="bg-linear-to-r from-[#FF7A45] to-[#FF3F7E] hover:scale-105 transition-transform text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg">
-          Reservar Ahora
-        </button>
+        <div className="flex flex-wrap justify-center gap-4">
+          <button onClick={() => {
+            if(isLogged){
+              document.getElementById('restaurantes-destacados')?.scrollIntoView({ behavior: 'smooth' });
+            }else{
+              router.push('/login');
+            }
+          }} className="bg-linear-to-r from-[#FF7A45] to-[#FF3F7E] hover:scale-105 transition-transform text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg">
+            Reservar Ahora
+          </button>
+          <button
+            onClick={() => router.push('/join')}
+            className="px-8 py-4 rounded-full border border-white/30 bg-white/10 backdrop-blur-md text-white font-bold hover:bg-white/20 transition-all duration-300"
+          >
+            Registra tu negocio
+          </button>
+        </div>
       </div>
     </section>
   );
