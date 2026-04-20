@@ -8,7 +8,7 @@ interface ReservationValues {
     customer_phone: number;
     reservation_date: string;
     start_time: string;
-    guest_count: number;
+    guests_count: number;
     notes?: string;
     table_id: string;
 }
@@ -27,7 +27,7 @@ const ReservationsProvider = ({ children }: { children: ReactNode }) => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.post(
-                `http:/localhost:3000/restaurants/${restaurantId}/reservations/newReservation`,
+                `http://localhost:3000/restaurants/11111111-1111-1111-1111-111111111111/reservations/newReservation`,
                 values,
                 {
                     headers: {
@@ -35,6 +35,11 @@ const ReservationsProvider = ({ children }: { children: ReactNode }) => {
                     },
                 }
             );
+            const { url } = response.data;
+            console.log(url);
+            if (url) {
+            window.location.href = url; // redirige a Stripe
+            }
             return response.data;
         } catch (error: any) {
             throw new Error(error.response?.data?.message || 'Error al crear la reserva');
