@@ -18,7 +18,12 @@ export default function Register() {
       <Link
         href="/"
         className="register-back-btn group"
-        style={{ zIndex: 20, position: 'absolute', top: '1.5rem', left: '1.5rem' }}
+        style={{
+          zIndex: 20,
+          position: "absolute",
+          top: "1.5rem",
+          left: "1.5rem",
+        }}
       >
         <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
           <ArrowLeft className="w-5 h-5" />

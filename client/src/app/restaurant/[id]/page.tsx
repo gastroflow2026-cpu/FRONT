@@ -33,6 +33,8 @@ type PublicMenuCategory = {
   items: PublicMenuItem[];
 };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
@@ -72,7 +74,10 @@ const RestaurantDetail = () => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const { data } = await axios.get<PublicMenuCategory[]>("http://localhost:3000/menu/public");
+        const { data } = await axios.get<PublicMenuCategory[]>(
+          `${API_URL}/menu/public`,
+        );
+
         setCategories(data);
       } catch (error) {
         console.error("Error cargando menú:", error);
@@ -381,7 +386,11 @@ const RestaurantDetail = () => {
                 <button type="button" onClick={handleConfirmReservation} disabled={!isFormValid} className="w-full rounded-xl bg-linear-to-r from-orange-500 to-pink-600 py-4 font-bold text-white transition-all shadow-lg enabled:hover:scale-[1.02] disabled:opacity-50">
                   Confirmar Reserva
                 </button>
-                <p className="text-[10px] text-center text-gray-400">Recibirás confirmación inmediata por email.</p>
+                <p className="text-[10px] text-center text-gray-400">
+                  Recibirás confirmación inmediata por email.
+                  <br />
+                  (La reserva puede tener seña según el restaurante).
+                </p>
               </div>
             </div>
           </div>
