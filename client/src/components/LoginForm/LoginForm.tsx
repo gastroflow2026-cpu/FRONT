@@ -12,34 +12,40 @@ import { UsersContext } from "../../context/UsersContext";
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const {loginUser, loginUserGoogle} = useContext(UsersContext)
-
+  const { loginUser, loginUserGoogle } = useContext(UsersContext);
 
   const handleSubmit = async (
     values: typeof loginInitialValues,
-    { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
+    { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void },
   ) => {
     try {
       await loginUser(values);
       await Swal.fire({
         icon: "success",
-        title: "¡Bienvenido!",
-        text: "Iniciaste sesión correctamente.",
+        title: "Bienvenido",
+        text: "Iniciaste sesion correctamente.",
         confirmButtonColor: "#f97316",
         timer: 2000,
         showConfirmButton: false,
       });
       router.push("/");
     } catch (error: unknown) {
-      const message = "El correo no está registrado o las credenciales son incorrectas.";
+      const message =
+        error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED"
+          ? "Esta cuenta owner debe iniciar sesion desde el acceso para socios."
+          : "El correo no esta registrado o las credenciales son incorrectas.";
 
-      if (typeof error === "object" && error !== null && "response" in error)
-      await Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        text: message,
-        confirmButtonColor: "#f97316",
-      });
+      if (
+        (typeof error === "object" && error !== null && "response" in error) ||
+        error instanceof Error
+      ) {
+        await Swal.fire({
+          icon: "error",
+          title: "Error al iniciar sesion",
+          text: message,
+          confirmButtonColor: "#f97316",
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -47,10 +53,8 @@ const LoginForm = () => {
 
   return (
     <div className="min-h-screen flex bg-[radial-gradient(circle_at_20%_20%,#070b18_0%,#141a33_70%)]">
-
-      {/* Panel izquierdo — Logo (solo desktop) */}
       <div className="hidden lg:flex w-1/2 items-center justify-center relative ">
-      <div className="absolute right-0 top-0 h-full w-0.5 bg-linear-to-b from-orange-500 via-pink-500 to-transparent opacity-70" />
+        <div className="absolute right-0 top-0 h-full w-0.5 bg-linear-to-b from-orange-500 via-pink-500 to-transparent opacity-70" />
         <button
           type="button"
           onClick={() => router.push("/")}
@@ -70,25 +74,27 @@ const LoginForm = () => {
         />
       </div>
 
-      {/* Panel derecho — Formulario */}
       <div className="flex flex-col justify-center items-center w-full lg:w-1/2 px-4 py-10 md:px-10">
-
-        {/* Header mobile */}
         <div className="flex lg:hidden flex-col items-center mb-6 gap-3 w-full">
           <button
-             type="button"
-             onClick={() => router.push("/")}
-             className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-linear-to-r from-orange-500 to-pink-500 cursor-pointer"
-           >
-             <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
-               <ArrowLeft className="w-5 h-5" />
-               Volver al inicio
-             </span>
-           </button>
-          <Image src="/logo.png" alt="GastroFlow Logo" width={120} height={120} className="mt-2" />
+            type="button"
+            onClick={() => router.push("/")}
+            className="absolute top-6 left-6 group inline-flex items-center justify-center p-1 rounded-2xl bg-linear-to-r from-orange-500 to-pink-500 cursor-pointer"
+          >
+            <span className="flex items-center gap-3 px-10 py-4 bg-[#0a0e1e] rounded-xl text-white text-lg font-semibold transition-all duration-200 group-hover:bg-transparent">
+              <ArrowLeft className="w-5 h-5" />
+              Volver al inicio
+            </span>
+          </button>
+          <Image
+            src="/logo.png"
+            alt="GastroFlow Logo"
+            width={120}
+            height={120}
+            className="mt-2"
+          />
         </div>
 
-        {/* Card */}
         <div
           className="w-full max-w-lg min-h-150 rounded-2xl px-12 py-14 flex flex-col justify-center"
           style={{
@@ -96,7 +102,6 @@ const LoginForm = () => {
             boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
           }}
         >
-          {/* Título */}
           <div className="text-center mb-8">
             <h2
               className="text-4xl font-bold mb-2"
@@ -108,7 +113,7 @@ const LoginForm = () => {
             >
               GastroFlow
             </h2>
-            <p className="text-white/50">Iniciá sesión para continuar</p>
+            <p className="text-white/50">Inicia sesion para continuar</p>
           </div>
 
           <Formik
@@ -120,8 +125,6 @@ const LoginForm = () => {
           >
             {({ isSubmitting }) => (
               <Form className="flex flex-col gap-5 items-center">
-
-                {/* Email */}
                 <div className="flex flex-col gap-2 w-full max-w-xs">
                   <label className="text-sm font-semibold text-white/80">Email</label>
                   <div
@@ -142,9 +145,8 @@ const LoginForm = () => {
                   <ErrorMessage name="email" component="p" className="text-red-400 text-xs" />
                 </div>
 
-                {/* Contraseña */}
                 <div className="flex flex-col gap-2 w-full max-w-xs">
-                  <label className="text-sm font-semibold text-white/80">Contraseña</label>
+                  <label className="text-sm font-semibold text-white/80">Contrasena</label>
                   <div
                     className="flex items-center rounded-md px-4 py-4 gap-3 transition-all"
                     style={{
@@ -164,24 +166,29 @@ const LoginForm = () => {
                       onClick={() => setShowPassword(!showPassword)}
                       className="text-gray-400 hover:text-orange-400 transition cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                   <ErrorMessage name="password" component="p" className="text-red-400 text-xs" />
                 </div>
 
-                {/* Recordarme y olvidaste contraseña */}
                 <div className="flex items-center justify-between w-full max-w-xs">
                   <label className="flex items-center gap-2 text-sm text-white/50 cursor-pointer">
                     <Field type="checkbox" name="rememberMe" className="accent-orange-400 w-4 h-4" />
                     Recordarme
                   </label>
-                  <a href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300 transition hover:underline cursor-pointer">
-                    ¿Olvidaste tu contraseña?
+                  <a
+                    href="/forgot-password"
+                    className="text-sm text-orange-400 hover:text-orange-300 transition hover:underline cursor-pointer"
+                  >
+                    Olvidaste tu contrasena?
                   </a>
                 </div>
 
-                {/* Botón submit */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -194,34 +201,36 @@ const LoginForm = () => {
                   {isSubmitting ? (
                     <div className="flex items-center gap-3">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Iniciando sesión...
+                      Iniciando sesion...
                     </div>
                   ) : (
                     <>
                       <LogIn className="w-5 h-5" />
-                      Iniciar Sesión
+                      Iniciar Sesion
                     </>
                   )}
                 </button>
 
-                {/* Link a registro */}
                 <p className="text-center text-sm text-white/40">
-                  ¿No tenés una cuenta?{" "}
-                  <a href="/register" className="text-orange-400 font-semibold hover:text-orange-300 transition hover:underline">
-                    Registrate aquí
+                  No tienes una cuenta?{" "}
+                  <a
+                    href="/register"
+                    className="text-orange-400 font-semibold hover:text-orange-300 transition hover:underline"
+                  >
+                    Registrate aqui
                   </a>
                 </p>
 
-                {/* Separador */}
                 <div className="flex items-center gap-3">
                   <hr className="flex-1 border-white/10" />
-                  <span className="text-xs text-white/30">o continúa con</span>
+                  <span className="text-xs text-white/30">o continua con</span>
                   <hr className="flex-1 border-white/10" />
                 </div>
 
-                {/* Botón Google */}
                 <button
-                  onClick={async () =>{loginUserGoogle()}}
+                  onClick={async () => {
+                    loginUserGoogle();
+                  }}
                   type="button"
                   className="flex items-center justify-center gap-2 w-auto max-w-xs py-3 px-5 border-2 border-white/5 bg-white/5 hover:bg-white/10 hover:-translate-y-0.5 rounded-md text-sm font-semibold text-white/70 hover:text-white transition-all cursor-pointer"
                 >
@@ -233,7 +242,6 @@ const LoginForm = () => {
                   </svg>
                   Google
                 </button>
-
               </Form>
             )}
           </Formik>

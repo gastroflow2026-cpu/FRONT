@@ -99,9 +99,9 @@ const PricingTable = () => {
                 ))}
               </ul>
               
-              <button className={`w-full py-4 rounded-xl font-bold transition-all shadow-md active:scale-95 ${plan.featured ? 'bg-linear-to-r from-orange-500 to-pink-500 text-white hover:opacity-90' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}`}>
+              {/* <button className={`w-full py-4 rounded-xl font-bold transition-all shadow-md active:scale-95 ${plan.featured ? 'bg-linear-to-r from-orange-500 to-pink-500 text-white hover:opacity-90' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}`}>
                 {plan.cta}
-              </button>
+              </button> */}
               </div>
             </div>
           ))}
