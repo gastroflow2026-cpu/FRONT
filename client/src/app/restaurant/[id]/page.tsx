@@ -578,6 +578,8 @@ const RestaurantDetail = () => {
                 </button>
                 <p className="text-[10px] text-center text-gray-400">
                   Recibirás confirmación inmediata por email.
+                  <br />
+                  (La reserva puede tener seña según el restaurante).
                 </p>
               </div>
             </div>
