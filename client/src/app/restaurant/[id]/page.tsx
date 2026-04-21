@@ -10,9 +10,11 @@ import { reservationSchema } from "@/validations/reservationSchema";
 import { UsersContext } from "@/context/UsersContext";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { ALL_RESTAURANTS } from "@/app/data/restaurants.data"; 
+import { ALL_RESTAURANTS } from "@/app/data/restaurants.data";
 import TableGrid from "@/components/features/table.grid";
-import { Table } from "@/app/data/restaurants.data";
+import { ReservationsContext } from "@/context/ReservationsContext";
+import { useTables } from "@/context/TablesContext";
+import type { Table } from "@/context/TablesContext";
 
 type PublicMenuItem = {
   id: string;
@@ -41,17 +43,14 @@ const RestaurantDetail = () => {
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
   const restaurant = ALL_RESTAURANTS.find(r => String(r.id) === String(restaurantId));
-  if (!restaurant) return <div>Restaurante no encontrado</div>;
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  
+  const { tables, loading: loadingTables, getTables } = useTables();
 
-  // Fecha mínima para el atributo 'min' del input date
   const today = new Date();
   const minReservationDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-  const FALLBACK_MENU_IMAGE =
-    "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg";
+  const FALLBACK_MENU_IMAGE = "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg";
 
   const [formValues, setFormValues] = useState({
     name: "",
@@ -87,36 +86,38 @@ const RestaurantDetail = () => {
         setLoadingMenu(false);
       }
     };
-
     fetchMenu();
-  }, []); // EFECTO 2: Persistencia de datos - Recuperar si existen
+  }, []);
+
+  // EFECTO 2: Carga de mesas desde el back
+  useEffect(() => {
+    if (restaurantId) {
+      getTables(restaurantId);
+    }
+  }, [restaurantId]);
+
+  // EFECTO 3: Persistencia de datos
   useEffect(() => {
     const savedBookingData = localStorage.getItem("gastroflow_temp_booking");
     if (savedBookingData) {
       const parsedData = JSON.parse(savedBookingData);
-      // Solo restaurar si es para este restaurante
       if (parsedData.restaurantId === restaurantId) {
-        setFormValues((prev) => ({ ...prev, ...parsedData.bookingDetails }));
-        console.log("Datos de reserva recuperados exitosamente");
-        // Limpiar LocalStorage inmediatamente después de restaurar
+        setFormValues(prev => ({ ...prev, ...parsedData.bookingDetails }));
         localStorage.removeItem("gastroflow_temp_booking");
       }
     }
   }, [restaurantId]);
 
-  // Handler para validar campos individuales con Yup
   const validateField = async (name: string, value: any, allValues: any) => {
     try {
       await reservationSchema.validateAt(name, allValues);
-      setFormErrors((prev) => ({ ...prev, [name]: "" }));
+      setFormErrors(prev => ({ ...prev, [name]: "" }));
     } catch (err: any) {
-      setFormErrors((prev) => ({ ...prev, [name]: err.message }));
+      setFormErrors(prev => ({ ...prev, [name]: err.message }));
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const updatedValues = { ...formValues, [name]: value };
     setFormValues(updatedValues);
@@ -130,369 +131,210 @@ const RestaurantDetail = () => {
     validateField("guests", newValue, updatedValues);
   };
 
-  // El formulario es válido si no hay errores y todos los campos obligatorios tienen valor
-  const isFormValid = 
-    Object.values(formErrors).every((err) => err === "") && 
-    formValues.name !== "" && 
-    formValues.email !== "" && 
-    formValues.phone !== "" && 
+  const isFormValid =
+    Object.values(formErrors).every(err => err === "") &&
+    formValues.name !== "" &&
+    formValues.email !== "" &&
+    formValues.phone !== "" &&
     formValues.date !== "" &&
     selectedTable !== null;
-    
 
-  const getMenuItemImage = (item: PublicMenuItem) => {
-    return item.image_url || FALLBACK_MENU_IMAGE;
-  };
+  const getMenuItemImage = (item: PublicMenuItem) => item.image_url || FALLBACK_MENU_IMAGE;
 
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
+  const { handleReservation } = useContext(ReservationsContext);
 
   const handleConfirmReservation = async () => {
     try {
-      // Validar formulario completo con Yup
       await reservationSchema.validate(formValues, { abortEarly: false });
 
-      const finalBookingData = {
-    ...formValues,
-    tableId: selectedTable?.id,
-    tableNumber: selectedTable?.number
-  };
-      
-      if (!isLogged) {
-        // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
-        console.log("Usuario no logueado, guardando datos temporalmente");
-        const dataToSave = {
-          restaurantId: restaurantId,
-          bookingDetails: finalBookingData
-        };
-        localStorage.setItem(
-          "gastroflow_temp_booking",
-          JSON.stringify(dataToSave),
-        );
-        router.push("/login");
-      } else {
-        // Si ESTÁ logueado, mostrar alerta de éxito
-        const [year, month, day] = formValues.date.split("-");
-        const formattedDate = `${day}/${month}/${year}`;
+      if (!selectedTable?.id) {
         Swal.fire({
-          icon: "success",
-          title: "¡Reserva Exitosa!",
-          text: `Tu mesa para ${formValues.guests} personas el ${formattedDate} ha sido confirmada.`,
-          confirmButtonText: "¡Buen provecho!",
-          confirmButtonColor: "#ff7e5f",
+          icon: 'error',
+          title: 'Seleccioná una mesa',
+          text: 'Por favor seleccioná una mesa antes de confirmar',
+          confirmButtonColor: '#ff7e5f',
         });
-        // Aquí iría la lógica de axios.post al backend para crear la reserva
-        console.log("Reserva válida enviando al backend:", formValues);
+        return;
+      }
+
+      if (!isLogged) {
+        const dataToSave = {
+          restaurantId,
+          bookingDetails: {
+            ...formValues,
+            tableId: selectedTable.id,
+            tableNumber: selectedTable.table_number,
+          },
+        };
+        localStorage.setItem('gastroflow_temp_booking', JSON.stringify(dataToSave));
+        router.push('/login');
+      } else {
+        const reservationData = {
+          customer_name: formValues.name,
+          customer_email: formValues.email,
+          customer_phone: Number(formValues.phone),
+          reservation_date: formValues.date,
+          start_time: `${formValues.date}T${formValues.time}:00`,
+          guests_count: formValues.guests,
+          table_id: selectedTable.id,
+        };
+
+        await handleReservation(restaurantId as string, reservationData);
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Sólo un paso más!',
+          confirmButtonText: 'Continuando al pago de la seña...',
+          confirmButtonColor: '#ff7e5f',
+        });
       }
     } catch (err: any) {
-      console.error("Error de validación final:", err.errors ?? err.message);
-      // SweetAlert para mostrar la validación general
+      console.error('Error:', err.errors ?? err.message);
       Swal.fire({
-        icon: "error",
-        title: "Formulario incompleto",
-        text: "Por favor verifica que todos los campos sean válidos",
-        confirmButtonColor: "#ff7e5f",
+        icon: 'error',
+        title: 'Formulario incompleto',
+        text: 'Por favor verifica que todos los campos sean válidos',
+        confirmButtonColor: '#ff7e5f',
       });
     }
   };
-  if (!restaurant) {
-    return <div className="p-10">Restaurante no encontrado</div>;
-  }
 
-  // Filtrar mesas según la cantidad de comensales
-  const filteredTables = (restaurant.tables || []).filter(
-    (t) => t.status === 'decorative' || (t.capacity >= formValues.guests && t.type === 'table')
-  );
+  if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
+
+  // Filtrar mesas por capacidad >= comensales y que estén disponibles
+  const filteredTables = tables.filter(t => 
+    t.capacity >= formValues.guests && 
+    (t.status === 'DISPONIBLE' || t.status === 'RESERVADA') && 
+    t.is_active
+);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
-
       <main className="grow pt-20">
         <section className="relative h-[40vh] w-full">
-          <img
-            src={restaurant.image}
-            className="w-full h-full object-cover"
-            alt={restaurant.name}
-          />
+          <img src={restaurant.image} className="w-full h-full object-cover" alt={restaurant.name} />
           <div className="absolute inset-0 bg-black/40 flex items-end">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                {restaurant.name}
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">{restaurant.name}</h1>
               <div className="flex flex-wrap items-center gap-4 text-white">
                 <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
-                  <Star size={16} className="text-orange-400 fill-orange-400" />{" "}
-                  {restaurant.rating}
+                  <Star size={16} className="text-orange-400 fill-orange-400" /> {restaurant.rating}
                 </span>
-                <span className="flex items-center gap-1">
-                  <MapPin size={16} /> {restaurant.location}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Utensils size={16} /> {restaurant.category}
-                </span>
+                <span className="flex items-center gap-1"><MapPin size={16} /> {restaurant.location}</span>
+                <span className="flex items-center gap-1"><Utensils size={16} /> {restaurant.category}</span>
               </div>
             </div>
           </div>
         </section>
+
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Columna Izquierda */}
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-              <h2 className="mb-4 text-2xl font-bold text-slate-900">
-                Sobre nosotros
-              </h2>
+              <h2 className="mb-4 text-2xl font-bold text-slate-900">Sobre nosotros</h2>
               <p className="text-gray-600 leading-relaxed italic">
-                "La Bella Vita ofrece una experiencia italiana auténtica en el
-                corazón de Palermo. Con pastas amasadas a mano y recetas
-                transmitidas por generaciones, cada plato es un viaje a las
-                raíces de Italia."
+                "La Bella Vita ofrece una experiencia italiana auténtica en el corazón de Palermo. Con pastas amasadas a mano y recetas transmitidas por generaciones, cada plato es un viaje a las raíces de Italia."
               </p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
               <h2 className="mb-4 text-2xl font-bold text-slate-900">Menú</h2>
-              <p className="mb-4 text-xs text-amber-700">
-                Algunos platos contienen ingredientes relevantes para personas
-                con restricciones alimentarias.
-              </p>
-
+              <p className="mb-4 text-xs text-amber-700">Algunos platos contienen ingredientes relevantes para personas con restricciones alimentarias.</p>
               <div className="mb-6 flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                    !selectedCategory
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
+                <button onClick={() => setSelectedCategory(null)} className={`rounded-full px-4 py-2 text-sm font-medium transition ${!selectedCategory ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
                   Todas
                 </button>
-                {categories.map((cat: PublicMenuCategory) => (
-                  <button
-                    key={cat.category_id}
-                    onClick={() => setSelectedCategory(cat.category_id)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                      selectedCategory === cat.category_id
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                  >
+                {categories.map(cat => (
+                  <button key={cat.category_id} onClick={() => setSelectedCategory(cat.category_id)} className={`rounded-full px-4 py-2 text-sm font-medium transition ${selectedCategory === cat.category_id ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
                     {cat.category_name}
                   </button>
                 ))}
               </div>
 
               {loadingMenu ? (
-                <p className="py-10 text-center text-slate-500">
-                  Cargando platos...
-                </p>
+                <p className="py-10 text-center text-slate-500">Cargando platos...</p>
               ) : (
-                categories
-                  .filter((category: PublicMenuCategory) =>
-                    selectedCategory
-                      ? category.category_id === selectedCategory
-                      : true,
-                  )
-                  .map((category: PublicMenuCategory) => {
-                    if (!category.items?.length) return null;
-
-                    return (
-                      <div key={category.category_id} className="mb-8">
-                        <h3 className="mb-4 text-xl font-semibold text-slate-800">
-                          {category.category_name}
-                        </h3>
-
-                        <div className="space-y-4">
-                          {category.items.map((item: PublicMenuItem) => (
-                            <React.Fragment key={item.id}>
-                              <div
-                                className="flex flex-col gap-4 rounded-2xl border border-gray-200 p-4 transition hover:border-gastro-coral md:flex-row md:items-center md:justify-between"
-                              >
-                                <div className="flex gap-4 group">
-                                  <div className="h-34 w-50 shrink-0 overflow-hidden rounded-xl border border-gray-200">
-                                    <img
-                                      src={getMenuItemImage(item)}
-                                      alt={item.name}
-                                      className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-175 group-hover:brightness-110"
-                                      onError={(e) => {
-                                        e.currentTarget.src = FALLBACK_MENU_IMAGE;
-                                      }}
-                                    />
-                                  </div>
-
-                                  <div className="min-w-0">
-                                    <h4 className="font-semibold text-slate-900">
-                                      {item.name}
-                                    </h4>
-
-                                    <p className="mt-1 text-sm text-slate-600">
-                                      {item.description || "Sin descripción"}
-                                    </p>
-
-                                    {!!item.allergens?.trim() && (
-                                      <>
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                          {item.allergens
-                                            .split(",")
-                                            .map(
-                                              (
-                                                allergen: string,
-                                                index: number,
-                                              ) => {
-                                                const key = allergen
-                                                  .trim()
-                                                  .toLowerCase();
-
-                                                const allergenLabels: Record<
-                                                  string,
-                                                  string
-                                                > = {
-                                                  gluten: "Gluten",
-                                                  lacteos: "Lácteos",
-                                                  huevo: "Huevo",
-                                                  sulfitos: "Sulfitos",
-                                                };
-
-                                                return (
-                                                  <span
-                                                    key={`${item.id}-allergen-${index}`}
-                                                    className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-                                                  >
-                                                    {allergenLabels[key] ||
-                                                      allergen.trim()}
-                                                  </span>
-                                                );
-                                              },
-                                            )}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
+                categories.filter(cat => selectedCategory ? cat.category_id === selectedCategory : true).map(category => {
+                  if (!category.items?.length) return null;
+                  return (
+                    <div key={category.category_id} className="mb-8">
+                      <h3 className="mb-4 text-xl font-semibold text-slate-800">{category.category_name}</h3>
+                      <div className="space-y-4">
+                        {category.items.map(item => (
+                          <React.Fragment key={item.id}>
+                            <div className="flex flex-col gap-4 rounded-2xl border border-gray-200 p-4 transition hover:border-gastro-coral md:flex-row md:items-center md:justify-between">
+                              <div className="flex gap-4 group">
+                                <div className="h-34 w-50 shrink-0 overflow-hidden rounded-xl border border-gray-200">
+                                  <img src={getMenuItemImage(item)} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-175 group-hover:brightness-110" onError={e => { e.currentTarget.src = FALLBACK_MENU_IMAGE; }} />
                                 </div>
-
-                                <div className="font-bold text-slate-900 md:text-right">
-                                  {new Intl.NumberFormat("en-US", {
-                                    style: "currency",
-                                    currency: "USD",
-                                    maximumFractionDigits: 0,
-                                  })
-                                    .format(Number(item.price))
-                                    .replace("$", "US$")}
+                                <div className="min-w-0">
+                                  <h4 className="font-semibold text-slate-900">{item.name}</h4>
+                                  <p className="mt-1 text-sm text-slate-600">{item.description || "Sin descripción"}</p>
+                                  {!!item.allergens?.trim() && (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      {item.allergens.split(",").map((allergen, index) => {
+                                        const key = allergen.trim().toLowerCase();
+                                        const allergenLabels: Record<string, string> = { gluten: "Gluten", lacteos: "Lácteos", huevo: "Huevo", sulfitos: "Sulfitos" };
+                                        return <span key={`${item.id}-allergen-${index}`} className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">{allergenLabels[key] || allergen.trim()}</span>;
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                              <div className="font-bold text-slate-900">
-                                {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(Number(item.price))}
+                              <div className="font-bold text-slate-900 md:text-right">
+                                US{new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(Number(item.price))}
                               </div>
-                            </React.Fragment>
-                          ))}
-                        </div>
+                            </div>
+                          </React.Fragment>
+                        ))}
                       </div>
-                    );
-                  })
-                )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
           {/* Columna Derecha: Widget de Reserva */}
           <div className="lg:col-span-1">
             <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 sticky top-24">
-              <h3 className="mb-6 text-xl font-bold text-slate-900">
-                Reserva tu mesa
-              </h3>
-
+              <h3 className="mb-6 text-xl font-bold text-slate-900">Reserva tu mesa</h3>
               <div className="space-y-5">
                 {/* Nombre */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formValues.name}
-                    onChange={handleInputChange}
-                    placeholder="Ej.: Juan Perez"
-                    className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.name ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
-                  />
-                  {formErrors.name && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.name}
-                    </p>
-                  )}
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Nombre</label>
+                  <input type="text" name="name" value={formValues.name} onChange={handleInputChange} placeholder="Ej.: Juan Perez" className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.name ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`} />
+                  {formErrors.name && <p className="mt-1 text-xs text-rose-500">{formErrors.name}</p>}
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formValues.email}
-                    onChange={handleInputChange}
-                    placeholder="juan@email.com"
-                    className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.email ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
-                  />
-                  {formErrors.email && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.email}
-                    </p>
-                  )}
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Email</label>
+                  <input type="email" name="email" value={formValues.email} onChange={handleInputChange} placeholder="juan@email.com" className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.email ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`} />
+                  {formErrors.email && <p className="mt-1 text-xs text-rose-500">{formErrors.email}</p>}
                 </div>
 
                 {/* Teléfono */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Teléfono
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formValues.phone}
-                    onChange={handleInputChange}
-                    placeholder="3515551234"
-                    className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.phone ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
-                  />
-                  {formErrors.phone && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.phone}
-                    </p>
-                  )}
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Teléfono</label>
+                  <input type="tel" name="phone" value={formValues.phone} onChange={handleInputChange} placeholder="3515551234" className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.phone ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`} />
+                  {formErrors.phone && <p className="mt-1 text-xs text-rose-500">{formErrors.phone}</p>}
                 </div>
 
                 {/* Fecha */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Fecha
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    min={minReservationDate}
-                    value={formValues.date}
-                    onChange={handleInputChange}
-                    className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.date ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
-                  />
-                  {formErrors.date && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.date}
-                    </p>
-                  )}
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Fecha</label>
+                  <input type="date" name="date" min={minReservationDate} value={formValues.date} onChange={handleInputChange} className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.date ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`} />
+                  {formErrors.date && <p className="mt-1 text-xs text-rose-500">{formErrors.date}</p>}
                 </div>
 
                 {/* Hora */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Hora
-                  </label>
-                  <select
-                    name="time"
-                    value={formValues.time}
-                    onChange={handleInputChange}
-                    className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.time ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
-                  >
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Hora</label>
+                  <select name="time" value={formValues.time} onChange={handleInputChange} className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.time ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}>
                     <option>12:00</option>
                     <option>12:30</option>
                     <option>13:00</option>
@@ -505,79 +347,49 @@ const RestaurantDetail = () => {
                     <option>22:00</option>
                     <option>23:00</option>
                   </select>
-                  {formErrors.time && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.time}
-                    </p>
-                  )}
+                  {formErrors.time && <p className="mt-1 text-xs text-rose-500">{formErrors.time}</p>}
                 </div>
-
 
                 {/* Comensales */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Comensales
-                  </label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Comensales</label>
                   <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => updateGuests(-1)}
-                      className="h-10 w-10 rounded-lg bg-white shadow-sm font-bold text-slate-900 hover:text-gastro-coral"
-                    >
-                      -
-                    </button>
-                    <span className="font-bold text-slate-900">
-                      {formValues.guests}{" "}
-                      {formValues.guests === 1 ? "Persona" : "Personas"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateGuests(1)}
-                      className="h-10 w-10 rounded-lg bg-white shadow-sm font-bold text-slate-900 hover:text-gastro-coral"
-                    >
-                      +
-                    </button>
+                    <button type="button" onClick={() => updateGuests(-1)} className="h-10 w-10 rounded-lg bg-white shadow-sm font-bold text-slate-900 hover:text-gastro-coral">-</button>
+                    <span className="font-bold text-slate-900">{formValues.guests} {formValues.guests === 1 ? "Persona" : "Personas"}</span>
+                    <button type="button" onClick={() => updateGuests(1)} className="h-10 w-10 rounded-lg bg-white shadow-sm font-bold text-slate-900 hover:text-gastro-coral">+</button>
                   </div>
-                  {formErrors.guests && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.guests}
-                    </p>
-                  )}
+                  {formErrors.guests && <p className="mt-1 text-xs text-rose-500">{formErrors.guests}</p>}
                 </div>
 
-                {/* Selección de mesa (filtrada por comensales) */}
+                {/* Selección de mesa */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">Selecciona tu mesa</label>
-                  <TableGrid
-                    tables={filteredTables}
-                    selectedTableId={selectedTable?.id || null}
-                    onTableSelect={setSelectedTable}
-                  />
+                  {loadingTables ? (
+                    <p className="text-center text-sm text-slate-500 py-4">Cargando mesas...</p>
+                  ) : (
+                    <TableGrid
+                      tables={filteredTables}
+                      selectedTableId={selectedTable?.id || null}
+                      onTableSelect={setSelectedTable}
+                    />
+                  )}
                   {selectedTable && (
                     <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl flex justify-between items-center">
                       <p className="text-orange-800 text-xs font-medium">
-                        Has seleccionado la <strong>Mesa {selectedTable.number}</strong> (Capacidad: {selectedTable.capacity} personas)
+                        Has seleccionado la <strong>Mesa {selectedTable.table_number}</strong> (Capacidad: {selectedTable.capacity} personas)
                       </p>
-                      <button
-                        onClick={() => setSelectedTable(null)}
-                        className="text-orange-600 text-xs underline font-bold"
-                      >
-                        Cambiar
-                      </button>
+                      <button onClick={() => setSelectedTable(null)} className="text-orange-600 text-xs underline font-bold">Cambiar</button>
                     </div>
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleConfirmReservation}
-                  disabled={!isFormValid}
-                  className="w-full rounded-xl bg-linear-to-r from-orange-500 to-pink-600 py-4 font-bold text-white transition-all shadow-lg enabled:hover:scale-[1.02] disabled:opacity-50"
-                >
+                <button type="button" onClick={handleConfirmReservation} disabled={!isFormValid} className="w-full rounded-xl bg-linear-to-r from-orange-500 to-pink-600 py-4 font-bold text-white transition-all shadow-lg enabled:hover:scale-[1.02] disabled:opacity-50">
                   Confirmar Reserva
                 </button>
                 <p className="text-[10px] text-center text-gray-400">
                   Recibirás confirmación inmediata por email.
+                  <br />
+                  (La reserva puede tener seña según el restaurante).
                 </p>
               </div>
             </div>
