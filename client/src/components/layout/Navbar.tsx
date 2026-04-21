@@ -143,12 +143,6 @@ const Navbar = () => {
             >
               {primaryUserLabel}
             </Link>
-            <Link
-              href="/about"
-              className="text-white hover:text-orange-400 font-medium transition duration-150 text-sm"
-            >
-              Nosotros
-            </Link>
           </div>
 
           <div className="hidden shrink-0 items-center space-x-4 md:flex">
