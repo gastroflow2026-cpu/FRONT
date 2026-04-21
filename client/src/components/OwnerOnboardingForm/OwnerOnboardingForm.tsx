@@ -35,7 +35,7 @@ export default function OwnerOnboardingForm() {
           }),
         );
 
-        const result = await completeOwnerOnboarding(payload);
+        const result = await completeOwnerOnboarding(payload as OwnerOnboardingFormValues);
 
         if (
           (result.status === 200 || result.status === 201) &&
@@ -78,7 +78,7 @@ export default function OwnerOnboardingForm() {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,#120b18_0%,#0d1224_45%,#090d1b_100%)] px-4 py-4 lg:flex lg:items-center">
-      <div className="mx-auto w-full max-w-6xl rounded-[2rem] border border-white/10 bg-[#0b1020]/92 p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] md:p-8">
+      <div className="mx-auto w-full max-w-6xl rounded-4xl border border-white/10 bg-[#0b1020]/92 p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] md:p-8">
         <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl border border-white/10 bg-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
@@ -198,20 +198,20 @@ export default function OwnerOnboardingForm() {
               <div>
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-white/80">
                   <ImageIcon className="h-4 w-4 text-orange-300" />
-                  URL del logo
+                  URL de la imagen del restaurante o plato destacado
                 </label>
                 <input
-                  id="logo_url"
-                  name="logo_url"
+                  id="image_url"
+                  name="image_url"
                   type="url"
                   placeholder="https://..."
                   className={fieldClassName}
-                  value={formik.values.logo_url}
+                  value={formik.values.image_url}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                 />
-                {formik.touched.logo_url && formik.errors.logo_url && (
-                  <p className="mt-2 text-sm text-red-400">{formik.errors.logo_url}</p>
+                {formik.touched.image_url && formik.errors.image_url && (
+                  <p className="mt-2 text-sm text-red-400">{formik.errors.image_url}</p>
                 )}
               </div>
             </div>
@@ -265,6 +265,21 @@ export default function OwnerOnboardingForm() {
                 />
               </div>
             </div>
+
+            <div>
+              <label className="mb-2 text-sm font-semibold text-white/80">Categoria</label>
+              <input
+                id="category"
+                name="category"
+                type="text"
+                placeholder="Ej: Italiana, Parrilla, Sushi..."
+                maxLength={100}
+                className={fieldClassName}
+                value={formik.values.category}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -276,10 +291,24 @@ export default function OwnerOnboardingForm() {
               <textarea
                 id="description"
                 name="description"
-                rows={6}
+                rows={4}
                 placeholder="Describe el concepto, la cocina o el valor diferencial del restaurante."
                 className={`${fieldClassName} resize-none`}
                 value={formik.values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 text-sm font-semibold text-white/80">About</label>
+              <textarea
+                id="about"
+                name="about"
+                rows={3}
+                placeholder="Breve reseña sobre la historia o filosofia del restaurante."
+                className={`${fieldClassName} resize-none`}
+                value={formik.values.about}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
               />

@@ -5,7 +5,6 @@ import Link from "next/link";
 import RestaurantCard from "./RestaurantCard";
 import {
   fetchAllPublicRestaurants,
-  MOCK_PUBLIC_RESTAURANTS,
   PublicRestaurantCardItem,
 } from "@/utils/publicRestaurants";
 
@@ -26,9 +25,7 @@ const PublicRestaurantsGrid = ({
   sectionId,
   className = "bg-transparent py-20",
 }: PublicRestaurantsGridProps) => {
-  const [restaurants, setRestaurants] = useState<PublicRestaurantCardItem[]>(
-    MOCK_PUBLIC_RESTAURANTS,
-  );
+  const [restaurants, setRestaurants] = useState<PublicRestaurantCardItem[]>([]);
 
   useEffect(() => {
     const loadRestaurants = async () => {
@@ -40,11 +37,15 @@ const PublicRestaurantsGrid = ({
   }, []);
 
   const visibleRestaurants = useMemo(() => {
+    const sortedRestaurants = [...restaurants].sort(
+      (a, b) => Number(a.comingSoon) - Number(b.comingSoon),
+    );
+
     if (typeof limit === "number") {
-      return restaurants.slice(0, limit);
+      return sortedRestaurants.slice(0, limit);
     }
 
-    return restaurants;
+    return sortedRestaurants;
   }, [limit, restaurants]);
 
   return (

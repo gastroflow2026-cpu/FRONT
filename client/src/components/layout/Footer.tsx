@@ -61,20 +61,28 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/restaurantes"
+                  href="/about"
+                  className="hover:text-white transition-colors"
+                >
+                  Nosotros
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/restaurants"
                   className="hover:text-white transition-colors"
                 >
                   Restaurantes
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href="/promociones"
                   className="hover:text-white transition-colors"
                 >
                   Promociones
                 </Link>
-              </li>
+              //</li>
               <li>
                 <Link
                   href="/blog"
@@ -82,7 +90,7 @@ const Footer = () => {
                 >
                   Blog Gastronómico
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   href="/join#planes"
@@ -104,7 +112,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
+          {/* <div>
             <h3 className="text-lg font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-gastro-coral to-gastro-magenta">
               Soporte
             </h3>
@@ -142,7 +150,7 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           <div>
             <h3 className="text-lg font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-gastro-coral to-gastro-magenta">

@@ -10,7 +10,6 @@ import { reservationSchema } from "@/validations/reservationSchema";
 import { UsersContext } from "@/context/UsersContext";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { ALL_RESTAURANTS } from "@/app/data/restaurants.data";
 import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
@@ -33,16 +32,43 @@ type PublicMenuCategory = {
   items: PublicMenuItem[];
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+type PublicRestaurantResponse = {
+  id?: string;
+  slug?: string | null;
+  name?: string | null;
+  city?: string | null;
+  country?: string | null;
+  address?: string | null;
+  category?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  logo_url?: string | null;
+  rating?: number | string | null;
+  about?: string | null;
+};
+
+type RestaurantDetailData = {
+  id: string;
+  name: string;
+  location: string;
+  category: string;
+  rating: string;
+  image: string;
+  about: string;
+};
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
+const FALLBACK_RESTAURANT_IMAGE = "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg";
 
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
+  const [loadingRestaurant, setLoadingRestaurant] = useState(true);
+  const [restaurant, setRestaurant] = useState<RestaurantDetailData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
-  const restaurant = ALL_RESTAURANTS.find(r => String(r.id) === String(restaurantId));
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const { tables, loading: loadingTables, getTables } = useTables();
@@ -80,7 +106,7 @@ const RestaurantDetail = () => {
 
         setCategories(data);
       } catch (error) {
-        console.error("Error cargando menú:", error);
+        console.warn("Error cargando menú:", error);
         setCategories([]);
       } finally {
         setLoadingMenu(false);
@@ -89,12 +115,86 @@ const RestaurantDetail = () => {
     fetchMenu();
   }, []);
 
+  useEffect(() => {
+    const buildLocation = (restaurantData: PublicRestaurantResponse) => {
+      const cityCountry = [restaurantData.city, restaurantData.country]
+        .filter((value): value is string => Boolean(value && value.trim()))
+        .join(", ");
+
+      if (cityCountry) {
+        return cityCountry;
+      }
+
+      return restaurantData.address?.trim() || "-";
+    };
+
+    const fetchRestaurant = async () => {
+      if (!API_URL || !restaurantId) {
+        setRestaurant(null);
+        setLoadingRestaurant(false);
+        return;
+      }
+
+      try {
+        const { data } = await axios.get<PublicRestaurantResponse[]>(
+          `${API_URL}/restaurant/public/all`,
+        );
+
+        if (!Array.isArray(data)) {
+          setRestaurant(null);
+          return;
+        }
+
+        const matchedRestaurant = data.find(
+          (item) => item.id === restaurantId || item.slug === restaurantId,
+        );
+
+        if (!matchedRestaurant) {
+          setRestaurant(null);
+          return;
+        }
+
+        const ratingValue = matchedRestaurant.rating;
+        const normalizedRating =
+          typeof ratingValue === "number"
+            ? ratingValue.toFixed(1)
+            : ratingValue?.toString().trim() || "-";
+
+        setRestaurant({
+          id: matchedRestaurant.id || restaurantId,
+          name: matchedRestaurant.name?.trim() || "-",
+          location: buildLocation(matchedRestaurant),
+          category:
+            matchedRestaurant.category?.trim() ||
+            matchedRestaurant.description?.trim() ||
+            "-",
+          rating: normalizedRating,
+          image:
+            matchedRestaurant.image_url?.trim() ||
+            matchedRestaurant.logo_url?.trim() ||
+            FALLBACK_RESTAURANT_IMAGE,
+          about:
+            matchedRestaurant.about?.trim() ||
+            matchedRestaurant.description?.trim() ||
+            "Información del restaurante no disponible.",
+        });
+      } catch (error) {
+        console.warn("Error cargando restaurante:", error);
+        setRestaurant(null);
+      } finally {
+        setLoadingRestaurant(false);
+      }
+    };
+
+    fetchRestaurant();
+  }, [restaurantId]);
+
   // EFECTO 2: Carga de mesas desde el back
   useEffect(() => {
     if (restaurantId) {
       getTables(restaurantId);
     }
-  }, [restaurantId]);
+  }, [restaurantId, getTables]);
 
   // EFECTO 3: Persistencia de datos
   useEffect(() => {
@@ -191,16 +291,18 @@ const RestaurantDetail = () => {
         });
       }
     } catch (err: any) {
-      console.error('Error:', err.errors ?? err.message);
+      const errorMessage = err?.message || "No se pudo crear la reserva";
+      console.warn("Error al crear reserva:", errorMessage);
       Swal.fire({
         icon: 'error',
-        title: 'Formulario incompleto',
-        text: 'Por favor verifica que todos los campos sean válidos',
+        title: 'No se pudo confirmar la reserva',
+        text: errorMessage,
         confirmButtonColor: '#ff7e5f',
       });
     }
   };
 
+  if (loadingRestaurant) return <div className="p-10">Cargando restaurante...</div>;
   if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
 
   // Filtrar mesas por capacidad >= comensales y que estén disponibles
@@ -236,7 +338,7 @@ const RestaurantDetail = () => {
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
               <h2 className="mb-4 text-2xl font-bold text-slate-900">Sobre nosotros</h2>
               <p className="text-gray-600 leading-relaxed italic">
-                "La Bella Vita ofrece una experiencia italiana auténtica en el corazón de Palermo. Con pastas amasadas a mano y recetas transmitidas por generaciones, cada plato es un viaje a las raíces de Italia."
+                {restaurant.about}
               </p>
             </div>
 
@@ -366,6 +468,10 @@ const RestaurantDetail = () => {
                   <label className="mb-2 block text-sm font-semibold text-slate-900">Selecciona tu mesa</label>
                   {loadingTables ? (
                     <p className="text-center text-sm text-slate-500 py-4">Cargando mesas...</p>
+                  ) : filteredTables.length === 0 ? (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
+                      No hay mesas disponibles para este restaurante en este momento.
+                    </p>
                   ) : (
                     <TableGrid
                       tables={filteredTables}

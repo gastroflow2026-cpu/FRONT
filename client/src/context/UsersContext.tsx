@@ -251,6 +251,17 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [clearQueryParam]);
 
+  const showGoogleRegistrationSuccess = useCallback(async () => {
+    await Swal.fire({
+      icon: "success",
+      title: "Usuario registrado",
+      text: "Tu cuenta fue registrada correctamente. Inicia sesion para continuar.",
+      confirmButtonColor: "#f97316",
+    });
+
+    clearQueryParam("registered");
+  }, [clearQueryParam]);
+
   const saveGoogleSession = (token: string) => {
     const payload = JSON.parse(
       decodeURIComponent(
@@ -269,11 +280,17 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const processGoogleAuthRedirect = async () => {
       const url = new URL(window.location.href);
+      const registered = url.searchParams.get("registered");
       const token = url.searchParams.get("token");
       const error = url.searchParams.get("error");
 
       if (error) {
         await showGoogleAuthError(error);
+        return;
+      }
+
+      if (registered === "google_success") {
+        await showGoogleRegistrationSuccess();
         return;
       }
 
@@ -296,7 +313,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     };
 
     processGoogleAuthRedirect();
-  }, [showGoogleAuthError, clearQueryParam]);
+  }, [showGoogleAuthError, showGoogleRegistrationSuccess, clearQueryParam]);
 
   const logoutUser = (): void => {
     localStorage.removeItem("token");
@@ -305,6 +322,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
 
     clearQueryParam("token");
     clearQueryParam("error");
+    clearQueryParam("registered");
 
     setIsLogged(null);
   };
@@ -326,9 +344,6 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   ): Promise<RequestResult<AuthResponse | AuthErrorResponse>> => {
     try {
       const res = await axios.post(`${API_URL}/auth/owner/signup`, values);
-      const { token, user } = res.data;
-
-      saveAuthSession(token, user);
 
       return {
         status: res.status,

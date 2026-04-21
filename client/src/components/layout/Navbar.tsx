@@ -2,6 +2,7 @@
 
 import React, {
   useContext,
+  useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
@@ -11,13 +12,20 @@ import Image from "next/image";
 import Logo from "../assets/logo gastro f.webp";
 import { UsersContext } from "@/context/UsersContext";
 import { Search } from "lucide-react";
-import { ALL_RESTAURANTS } from "@/app/data/restaurants.data";
-import { Restaurant } from "@/app/data/restaurants.data";
+import {
+  fetchAllPublicRestaurants,
+  PublicRestaurantCardItem,
+} from "@/utils/publicRestaurants";
+
+type NavbarRestaurant = PublicRestaurantCardItem & {
+  description: string;
+};
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isLogged, logoutUser } = useContext(UsersContext);
   const [searchTerm, setSearchTerm] = useState("");
+  const [restaurants, setRestaurants] = useState<NavbarRestaurant[]>([]);
   const isHydrated = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -43,17 +51,32 @@ const Navbar = () => {
     () => false,
   );
 
-  const results = useMemo<Restaurant[]>(() => {
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      const publicRestaurants = await fetchAllPublicRestaurants();
+      const parsedRestaurants: NavbarRestaurant[] = publicRestaurants.map(
+        (restaurant) => ({
+          ...restaurant,
+          description: restaurant.category || "-",
+        }),
+      );
+      setRestaurants(parsedRestaurants);
+    };
+
+    loadRestaurants();
+  }, []);
+
+  const results = useMemo<NavbarRestaurant[]>(() => {
     if (searchTerm.trim() === "") {
       return [];
     }
 
-    return ALL_RESTAURANTS.filter(
+    return restaurants.filter(
       (restaurant) =>
         restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         restaurant.description.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [searchTerm]);
+  }, [restaurants, searchTerm]);
 
   const hasValidOwnerSession = Boolean(
     isHydrated && isLogged && isOwnerSession,
@@ -142,12 +165,6 @@ const Navbar = () => {
               className="text-sm font-medium text-white transition duration-150 hover:text-orange-400"
             >
               {primaryUserLabel}
-            </Link>
-            <Link
-              href="/about"
-              className="text-white hover:text-orange-400 font-medium transition duration-150 text-sm"
-            >
-              Nosotros
             </Link>
           </div>
 

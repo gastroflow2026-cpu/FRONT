@@ -41,16 +41,11 @@ export default function OwnerRegisterForm({
             theme: "dark",
             icon: "success",
             title: "Registro completado",
-            text: "Tu acceso owner fue creado correctamente.",
+            text: "Tu acceso owner fue creado correctamente. Inicia sesion para configurar tu restaurante.",
             confirmButtonColor: "#f97316",
           });
 
-          if (result.data.user.requires_restaurant_onboarding) {
-            router.push("/owner/onboarding");
-            return;
-          }
-
-          router.push("/");
+          router.push("/owner/login");
           return;
         }
 
