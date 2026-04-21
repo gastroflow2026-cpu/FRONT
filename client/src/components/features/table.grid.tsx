@@ -1,6 +1,14 @@
 import React from 'react';
-import type { Table } from '@/app/data/restaurants.data';
+import type { Table } from '@/context/TablesContext';
 import { Check, DoorOpen, Bath, Beer, ChefHat } from 'lucide-react';
+
+interface DecorativeItem {
+  id: string;
+  type: 'entrance' | 'bathroom' | 'bar' | 'kitchen';
+  isDecorative: true;
+}
+
+type GridItem = Table | DecorativeItem;
 
 interface TableGridProps {
   tables: Table[];
@@ -8,7 +16,43 @@ interface TableGridProps {
   onTableSelect: (table: Table) => void;
 }
 
+const DecorativeCard = ({ type }: { type: DecorativeItem['type'] }) => {
+  const config = {
+    entrance: { icon: <DoorOpen size={24} />, label: 'Entrada' },
+    bathroom: { icon: <Bath size={24} />, label: 'Baños' },
+    bar: { icon: <Beer size={24} />, label: 'Barra' },
+    kitchen: { icon: <ChefHat size={24} />, label: 'Cocina' },
+  };
+  const { icon, label } = config[type];
+
+  return (
+    <div className="flex flex-col items-center justify-center p-5 opacity-100 text-slate-400 border-2 border-dashed border-gray-200 rounded-2xl">
+      {icon}
+      <span className="text-[10px] font-bold uppercase mt-1">{label}</span>
+    </div>
+  );
+};
+
 const TableGrid: React.FC<TableGridProps> = ({ tables, selectedTableId, onTableSelect }) => {
+  const sorted = [...tables].sort((a, b) => a.table_number - b.table_number);
+
+  const gridItems: GridItem[] = [
+    { id: 'deco-entrance', isDecorative: true, type: 'entrance' },
+    sorted[0],
+    { id: 'deco-bathroom', isDecorative: true, type: 'bathroom' },
+    sorted[1],
+    sorted[2],
+    sorted[3],
+    sorted[4],
+    sorted[5],
+    sorted[6],
+    sorted[7],
+    sorted[8],
+    { id: 'deco-bar', isDecorative: true, type: 'bar' },
+    sorted[9],
+    { id: 'deco-kitchen', isDecorative: true, type: 'kitchen' },
+  ].filter(Boolean) as GridItem[];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -26,44 +70,47 @@ const TableGrid: React.FC<TableGridProps> = ({ tables, selectedTableId, onTableS
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {tables.map((item) => {
-          // 1. Si es un elemento decorativo
-          if (item.status === 'decorative') {
-            return (
-              <div key={item.id} className="flex flex-col items-center justify-center p-5 opacity-40 text-slate-400">
-                {item.type === 'entrance' && <><DoorOpen size={24} /> <span className="text-[10px] font-bold uppercase">Entrada</span></>}
-                {item.type === 'bathroom' && <><Bath size={24} /> <span className="text-[10px] font-bold uppercase">Baños</span></>}
-                {item.type === 'bar' && <><Beer size={24} /> <span className="text-[10px] font-bold uppercase">Barra</span></>}
-                {item.type === 'kitchen' && <><ChefHat size={24} /> <span className="text-[10px] font-bold uppercase">Cocina</span></>}
-              </div>
-            );
+        {gridItems.map((item) => {
+          if ('isDecorative' in item) {
+            return <DecorativeCard key={item.id} type={item.type} />;
           }
 
-          const isSelected = selectedTableId === item.id;
-          const isOccupied = item.status === 'occupied';
+          const table = item as Table;
+          const isSelected = selectedTableId === table.id;
+          const isOccupied = table.status === 'OCUPADA' || !table.is_active;
+          const isReserved = table.status === 'RESERVADA';
 
           return (
             <button
-              key={item.id}
-              type="button" // Importante: para que no haga submit al formulario
-              disabled={isOccupied}
-              onClick={() => onTableSelect(item)}
+              key={table.id}
+              type="button"
+              disabled={isOccupied || isReserved}
+              onClick={() => onTableSelect(table)}
               className={`
                 relative p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-1
-                ${isOccupied 
-                  ? 'bg-gray-50 border-gray-100 cursor-not-allowed opacity-40' 
-                  : isSelected 
-                    ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-500/20' 
-                    : 'border-gray-100 hover:border-orange-200 bg-white shadow-xs'}
+                ${isOccupied
+                  ? 'bg-gray-50 border-gray-100 cursor-not-allowed opacity-40'
+                  : isReserved
+                    ? 'bg-orange-50 border-orange-200 cursor-not-allowed opacity-80'
+                    : isSelected
+                      ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-500/20'
+                      : 'border-gray-100 hover:border-orange-200 bg-white shadow-xs'}
               `}
             >
-              <span className={`text-lg font-bold ${isSelected ? 'text-orange-600' : 'text-slate-800'}`}>
-                #{item.number}
+              <span className={`text-lg font-bold ${isSelected ? 'text-orange-600' : isReserved ? 'text-orange-400' : 'text-slate-800'}`}>
+                #{table.table_number}
               </span>
               <span className="text-[10px] font-bold text-slate-400 uppercase">
-                Cap. {item.capacity}
+                Cap. {table.capacity}
               </span>
-              
+              <span className="text-[10px] text-slate-400 uppercase">
+                {table.zone}
+              </span>
+              {isReserved && (
+                <span className="text-[10px] font-bold text-orange-500 uppercase mt-1">
+                  Reservada
+                </span>
+              )}
               {isSelected && (
                 <div className="absolute top-2 right-2 text-orange-600">
                   <Check size={16} strokeWidth={3} />

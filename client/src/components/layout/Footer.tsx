@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { BadgeDollarSign, LogIn, Mail, MapPin, Phone } from "lucide-react";
 import Logo from "../assets/logo gastro f.webp";
 
 const Footer = () => {
@@ -83,6 +83,24 @@ const Footer = () => {
                   Blog Gastronómico
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/join#planes"
+                  className="inline-flex items-center gap-2 hover:text-white transition-colors"
+                >
+                  <BadgeDollarSign size={16} />
+                  <span>Planes para restaurantes</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/owner/login"
+                  className="inline-flex items-center gap-2 hover:text-white transition-colors"
+                >
+                  <LogIn size={16} />
+                  <span>Inicio de sesión restaurantes</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -147,10 +165,9 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* LÍNEA FINAL */}
         <div className="pt-8 border-t border-gray-900 text-center text-gray-500 text-sm">
           <p>
-            © {new Date().getFullYear()} GastroFlow. Todos los derechos
+            &copy; {new Date().getFullYear()} GastroFlow. Todos los derechos
             reservados.
           </p>
         </div>
