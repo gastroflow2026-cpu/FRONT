@@ -30,7 +30,7 @@ export default function Admin() {
 
       <div className={styles.middleSection}>
         <Sidebar activeModule={activeModule} onModuleChange={setActiveModule} />
-        
+
         <main className={styles.mainContent}>
           <div className={styles.container}>
             {modules[activeModule] || <Employees />}

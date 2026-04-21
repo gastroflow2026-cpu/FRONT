@@ -1,13 +1,18 @@
-'use client';
+"use client";
 
-import React, { useContext, useMemo, useState, useSyncExternalStore } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import Logo from '../assets/logo gastro f.webp';
-import { UsersContext } from '@/context/UsersContext';
-import { Search } from 'lucide-react';
-import { ALL_RESTAURANTS } from '@/app/data/restaurants.data';
-import { Restaurant } from '@/app/data/restaurants.data';
+import React, {
+  useContext,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import Link from "next/link";
+import Image from "next/image";
+import Logo from "../assets/logo gastro f.webp";
+import { UsersContext } from "@/context/UsersContext";
+import { Search } from "lucide-react";
+import { ALL_RESTAURANTS } from "@/app/data/restaurants.data";
+import { Restaurant } from "@/app/data/restaurants.data";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,16 +48,23 @@ const Navbar = () => {
       return [];
     }
 
-    return ALL_RESTAURANTS.filter((restaurant) =>
-      restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      restaurant.description.toLowerCase().includes(searchTerm.toLowerCase()),
+    return ALL_RESTAURANTS.filter(
+      (restaurant) =>
+        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        restaurant.description.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [searchTerm]);
 
-  const hasValidOwnerSession = Boolean(isHydrated && isLogged && isOwnerSession);
+  const hasValidOwnerSession = Boolean(
+    isHydrated && isLogged && isOwnerSession,
+  );
   const primaryUserRoute = hasValidOwnerSession ? "/admin" : "/reservations";
-  const primaryUserLabel = hasValidOwnerSession ? "Dashboard Admin" : "Mis Reservas";
-  const greetingName = hasValidOwnerSession ? `Owner ${isLogged?.name}` : isLogged?.name;
+  const primaryUserLabel = hasValidOwnerSession
+    ? "Dashboard Admin"
+    : "Mis Reservas";
+  const greetingName = hasValidOwnerSession
+    ? `Owner ${isLogged?.name}`
+    : isLogged?.name;
   const showAuthenticatedActions = Boolean(isHydrated && isLogged);
 
   return (
@@ -99,7 +111,9 @@ const Navbar = () => {
                       className="h-10 w-10 rounded-lg object-cover"
                     />
                     <div>
-                      <p className="text-sm font-bold text-white">{restaurant.name}</p>
+                      <p className="text-sm font-bold text-white">
+                        {restaurant.name}
+                      </p>
                       <p className="text-xs text-gray-400">
                         {restaurant.description} • {restaurant.location}
                       </p>
@@ -111,14 +125,29 @@ const Navbar = () => {
           </div>
 
           <div className="hidden shrink-0 space-x-6 md:flex">
-            <Link href="/" className="text-sm font-medium text-white transition duration-150 hover:text-orange-400">
+            <Link
+              href="/"
+              className="text-sm font-medium text-white transition duration-150 hover:text-orange-400"
+            >
               Inicio
             </Link>
-            <Link href="/restaurants" className="text-sm font-medium text-white transition duration-150 hover:text-orange-400">
+            <Link
+              href="/restaurants"
+              className="text-sm font-medium text-white transition duration-150 hover:text-orange-400"
+            >
               Restaurantes
             </Link>
-            <Link href={primaryUserRoute} className="text-sm font-medium text-white transition duration-150 hover:text-orange-400">
+            <Link
+              href={primaryUserRoute}
+              className="text-sm font-medium text-white transition duration-150 hover:text-orange-400"
+            >
               {primaryUserLabel}
+            </Link>
+            <Link
+              href="/about"
+              className="text-white hover:text-orange-400 font-medium transition duration-150 text-sm"
+            >
+              Nosotros
             </Link>
           </div>
 
@@ -126,9 +155,15 @@ const Navbar = () => {
             {showAuthenticatedActions ? (
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-gray-300">
-                  Hola, <span className="font-semibold text-white">{greetingName}!</span>
+                  Hola,{" "}
+                  <span className="font-semibold text-white">
+                    {greetingName}!
+                  </span>
                 </span>
-                <button onClick={() => logoutUser()} className="text-sm text-gray-400 transition hover:text-white">
+                <button
+                  onClick={() => logoutUser()}
+                  className="text-sm text-gray-400 transition hover:text-white"
+                >
                   Cerrar Sesión
                 </button>
               </div>
@@ -149,12 +184,30 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center md:hidden">
-            <button onClick={() => setIsOpen(!isOpen)} className="text-white hover:text-orange-400 focus:outline-none">
-              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-white hover:text-orange-400 focus:outline-none"
+            >
+              <svg
+                className="h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 )}
               </svg>
             </button>
@@ -175,20 +228,32 @@ const Navbar = () => {
           </div>
 
           <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
-            <Link href="/" className="block rounded-md px-3 py-2 font-medium text-white hover:bg-gray-900 hover:text-orange-400">
+            <Link
+              href="/"
+              className="block rounded-md px-3 py-2 font-medium text-white hover:bg-gray-900 hover:text-orange-400"
+            >
               Inicio
             </Link>
-            <Link href="/restaurants" className="block rounded-md px-3 py-2 font-medium text-white hover:bg-gray-900 hover:text-orange-400">
+            <Link
+              href="/restaurants"
+              className="block rounded-md px-3 py-2 font-medium text-white hover:bg-gray-900 hover:text-orange-400"
+            >
               Restaurantes
             </Link>
-            <Link href={primaryUserRoute} className="block rounded-md px-3 py-2 font-medium text-white hover:bg-gray-900 hover:text-orange-400">
+            <Link
+              href={primaryUserRoute}
+              className="block rounded-md px-3 py-2 font-medium text-white hover:bg-gray-900 hover:text-orange-400"
+            >
               {primaryUserLabel}
             </Link>
           </div>
 
           <div className="flex flex-col space-y-3 border-t border-gray-800 px-5 py-4">
             {showAuthenticatedActions ? (
-              <button onClick={() => logoutUser()} className="w-full px-3 py-2 text-left text-gray-400 transition hover:text-white">
+              <button
+                onClick={() => logoutUser()}
+                className="w-full px-3 py-2 text-left text-gray-400 transition hover:text-white"
+              >
                 Cerrar Sesión
               </button>
             ) : (
