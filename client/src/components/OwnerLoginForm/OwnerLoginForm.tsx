@@ -210,7 +210,7 @@ const OwnerLoginForm = ({
   }
 
   return (
-    <div className="h-[100dvh] overflow-hidden flex bg-[radial-gradient(circle_at_20%_20%,#070b18_0%,#141a33_70%)]">
+    <div className="h-dvh overflow-hidden flex bg-[radial-gradient(circle_at_20%_20%,#070b18_0%,#141a33_70%)]">
       <div className="hidden lg:flex w-1/2 items-center justify-center relative">
         <div className="absolute right-0 top-0 h-full w-0.5 bg-linear-to-b from-orange-500 via-pink-500 to-transparent opacity-70" />
         <button

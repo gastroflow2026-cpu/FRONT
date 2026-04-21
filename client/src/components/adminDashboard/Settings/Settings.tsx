@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import { useFormik } from "formik";
 import Image from "next/image";
 import Swal from "sweetalert2";
-import { Building2, Globe, ImageIcon, MapPin, Phone, Save, ScrollText } from "lucide-react";
+import { Building2, Globe, ImageIcon, Mail, MapPin, Phone, Save, ScrollText } from "lucide-react";
 import { UsersContext } from "@/context/UsersContext";
 import styles from "./Settings.module.css";
 
@@ -14,12 +14,12 @@ interface RestaurantData {
   name?: string;
   slug?: string;
   phone?: string;
+  email?: string;
   address?: string;
   city?: string;
   country?: string;
   description?: string;
   category?: string;
-  rating?: string;
   image_url?: string;
   about?: string;
   is_active?: boolean;
@@ -34,12 +34,12 @@ export function Settings() {
     name: "",
     slug: "",
     phone: "",
+    email: "",
     address: "",
     city: "",
     country: "",
     description: "",
     category: "",
-    rating: "",
     image_url: "",
     about: "",
     is_active: true,
@@ -77,12 +77,12 @@ export function Settings() {
           name: data.name || "",
           slug: data.slug || "",
           phone: data.phone || "",
+          email: data.email || "",
           address: data.address || "",
           city: data.city || "",
           country: data.country || "",
           description: data.description || "",
           category: data.category || "",
-          rating: data.rating ?? "",
           image_url: data.image_url || "",
           about: data.about || "",
           is_active: data.is_active ?? true,
@@ -122,7 +122,7 @@ export function Settings() {
           token = storedToken;
         }
 
-        const { image_url, rating, ...rest } = values;
+        const { image_url, ...rest } = values;
         const payload = { ...rest, logo_url: image_url };
 
         const response = await fetch(`${API_URL}/restaurant/profile`, {
@@ -185,6 +185,24 @@ export function Settings() {
 
       <form onSubmit={formik.handleSubmit} className={styles.form}>
         <div className={styles.grid}>
+          <div className={styles.fullWidth}>
+            <label className={styles.label}>
+              <Building2 className={styles.labelIcon} />
+              Nombre del restaurante
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="Bistro Central"
+              maxLength={100}
+              className={fieldClassName}
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </div>
+
           <div>
             <label className={styles.label}>
               <Globe className={styles.labelIcon} />
@@ -216,6 +234,24 @@ export function Settings() {
               maxLength={20}
               className={fieldClassName}
               value={formik.values.phone}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </div>
+
+          <div>
+            <label className={styles.label}>
+              <Mail className={styles.labelIcon} />
+              Email del restaurante
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="contacto@bistro.com"
+              maxLength={150}
+              className={fieldClassName}
+              value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
@@ -285,6 +321,21 @@ export function Settings() {
               onBlur={formik.handleBlur}
             />
           </div>
+
+          <div>
+            <label className={styles.label}>Categoria</label>
+            <input
+              id="category"
+              name="category"
+              type="text"
+              placeholder="Ej: Italiana, Parrilla, Sushi..."
+              maxLength={80}
+              className={fieldClassName}
+              value={formik.values.category}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </div>
         </div>
 
         <div>
@@ -299,6 +350,20 @@ export function Settings() {
             placeholder="Describe el concepto, la cocina o el valor diferencial del restaurante."
             className={`${fieldClassName} ${styles.textarea}`}
             value={formik.values.description}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          />
+        </div>
+
+        <div>
+          <label className={styles.label}>About</label>
+          <textarea
+            id="about"
+            name="about"
+            rows={3}
+            placeholder="Breve reseña sobre la historia o filosofia del restaurante."
+            className={`${fieldClassName} ${styles.textarea}`}
+            value={formik.values.about}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />

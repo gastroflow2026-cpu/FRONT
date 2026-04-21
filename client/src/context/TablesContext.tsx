@@ -1,6 +1,8 @@
 "use client";
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import axios from "axios";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
 export interface Table {
     id: string;
@@ -27,31 +29,38 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
     const [tables, setTables] = useState<Table[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const getTables = async (restaurantId: string) => {
+    const getTables = useCallback(async (restaurantId: string) => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
+            if (!API_URL || !restaurantId) {
+                setTables([]);
+                return;
+            }
+
             const response = await axios.get(
-                `http://localhost:3000/restaurants/11111111-1111-1111-1111-111111111111/tables/availableTables`,
+                `${API_URL}/restaurants/${restaurantId}/tables/availableTables`,
                 {
-                    headers: {
+                    headers: token ? {
                         Authorization: `Bearer ${token}`,
-                    },
+                    } : undefined,
                 }
             );
-            setTables(response.data);
+
+            setTables(Array.isArray(response.data) ? response.data : []);
         } catch (error: any) {
-            throw new Error(error.response?.data?.message || 'Error al obtener las mesas');
+            console.warn(error.response?.data?.message || 'Error al obtener las mesas');
+            setTables([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const value: TablesContextType = {
+    const value: TablesContextType = useMemo(() => ({
         tables,
         loading,
         getTables,
-    };
+    }), [tables, loading, getTables]);
 
     return (
         <TablesContext.Provider value={value}>
