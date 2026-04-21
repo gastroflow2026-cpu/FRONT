@@ -11,13 +11,17 @@ import styles from "./Settings.module.css";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface RestaurantData {
+  name?: string;
   slug?: string;
   phone?: string;
   address?: string;
   city?: string;
   country?: string;
-  logo_url?: string;
   description?: string;
+  category?: string;
+  rating?: string;
+  image_url?: string;
+  about?: string;
   is_active?: boolean;
 }
 
@@ -27,13 +31,17 @@ export function Settings() {
   const { isLogged } = useContext(UsersContext);
   const [isLoading, setIsLoading] = useState(true);
   const [initialData, setInitialData] = useState<RestaurantData>({
+    name: "",
     slug: "",
     phone: "",
     address: "",
     city: "",
     country: "",
-    logo_url: "",
     description: "",
+    category: "",
+    rating: "",
+    image_url: "",
+    about: "",
     is_active: true,
   });
 
@@ -66,13 +74,17 @@ export function Settings() {
 
         const data = await response.json();
         setInitialData({
+          name: data.name || "",
           slug: data.slug || "",
           phone: data.phone || "",
           address: data.address || "",
           city: data.city || "",
           country: data.country || "",
-          logo_url: data.logo_url || "",
           description: data.description || "",
+          category: data.category || "",
+          rating: data.rating ?? "",
+          image_url: data.image_url || "",
+          about: data.about || "",
           is_active: data.is_active ?? true,
         });
       } catch (error) {
@@ -110,13 +122,16 @@ export function Settings() {
           token = storedToken;
         }
 
+        const { image_url, rating, ...rest } = values;
+        const payload = { ...rest, logo_url: image_url };
+
         const response = await fetch(`${API_URL}/restaurant/profile`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(values),
+          body: JSON.stringify(payload),
         });
 
         if (response.ok) {
@@ -212,12 +227,12 @@ export function Settings() {
               URL del Logo
             </label>
             <input
-              id="logo_url"
-              name="logo_url"
+              id="image_url"
+              name="image_url"
               type="url"
               placeholder="https://..."
               className={fieldClassName}
-              value={formik.values.logo_url}
+              value={formik.values.image_url}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
