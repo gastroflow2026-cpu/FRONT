@@ -10,6 +10,8 @@ export interface OwnerOnboardingFormValues {
   country: string;
   logo_url: string;
   description: string;
+  category: string;
+  about: string;
   is_active: boolean;
 }
 
@@ -23,6 +25,8 @@ export const ownerOnboardingInitialValues: OwnerOnboardingFormValues = {
   country: "",
   logo_url: "",
   description: "",
+  category: "",
+  about: "",
   is_active: true,
 };
 
@@ -49,5 +53,7 @@ export const ownerOnboardingValidationSchema = Yup.object({
     .max(80, "El pais no puede superar los 80 caracteres"),
   logo_url: Yup.string().trim(),
   description: Yup.string().trim(),
+  category: Yup.string().trim().max(100, "La categoria no puede superar los 100 caracteres"),
+  about: Yup.string().trim(),
   is_active: Yup.boolean(),
 });
