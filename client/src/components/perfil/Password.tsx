@@ -27,7 +27,6 @@ export const Password = () => {
               value={form.newPass}
               onChange={handleChange}
               className={`${styles.input} ${errors.newPass ? styles.inputError : ""}`}
-              placeholder="••••••••"
             />
             <button 
               type="button" 
@@ -54,7 +53,6 @@ export const Password = () => {
               value={form.confirmPass}
               onChange={handleChange}
               className={`${styles.input} ${errors.confirmPass ? styles.inputError : ""}`}
-              placeholder="••••••••"
             />
             <button 
               type="button" 

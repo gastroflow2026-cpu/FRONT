@@ -8,6 +8,7 @@ import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import Swal from "sweetalert2";
 import styles from "./Employees.module.css";
 import { Employee } from "@/types/Employee";
+import { User } from "@/types/User";
 
 export function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([
@@ -36,6 +37,12 @@ export function Employees() {
       isActive: false,
     },
   ]);
+
+  // try {
+  //   const { data }: { data: [User] } = await axios.get(`${API_URL}/`, {})
+  // } catch (error) {
+    
+  // }
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   

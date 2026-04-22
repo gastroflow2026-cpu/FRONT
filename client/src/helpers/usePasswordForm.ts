@@ -1,14 +1,17 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { passwordSchema } from "@/validations/passwordSchema";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 export const usePasswordForm = () => {
   const [form, setForm] = useState({
     newPass: "",
     confirmPass: "",
   });
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -45,8 +48,10 @@ export const usePasswordForm = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
+
+    const token = localStorage.getItem("token");
 
     try {
       setIsLoading(true);
@@ -54,7 +59,18 @@ export const usePasswordForm = () => {
 
       await passwordSchema.validate(form, { abortEarly: false });
 
-      console.log("Formulario válido:", form)
+      await axios.patch(
+        `${API_URL}/users/updatepassword`,
+        {
+          password: form.confirmPass,
+        },
+        {
+          headers: {
+            // Es vital que diga 'Bearer ' seguido del token limpio
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       Swal.fire({
         theme: "dark",
@@ -65,9 +81,11 @@ export const usePasswordForm = () => {
     } catch (err: any) {
       const newErrors: Record<string, string> = {};
 
-      err.inner.forEach((error: any) => {
-        newErrors[error.path] = error.message;
-      });
+      if (err.inner) {
+        err.inner.forEach((error: any) => {
+          newErrors[error.path] = error.message;
+        });
+      }
 
       Swal.fire({
         theme: "dark",
