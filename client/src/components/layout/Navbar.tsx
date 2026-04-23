@@ -129,7 +129,7 @@ const Navbar = () => {
                     className="flex items-center gap-3 border-b border-white/5 p-3 transition-colors last:border-none hover:bg-white/5"
                   >
                     <img
-                      src={restaurant.image ?? undefined}  // <-- null → undefined
+                      src={restaurant.image ?? undefined}
                       alt={restaurant.name}
                       className="h-10 w-10 rounded-lg object-cover"
                     />
