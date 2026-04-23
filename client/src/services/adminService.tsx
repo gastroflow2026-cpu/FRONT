@@ -2,7 +2,7 @@ import axios from "axios";
 import { ADMIN_ENDPOINTS } from "@/constants/AdminEndpoints";
 import { getToken } from "@/helpers/getToken";
 
-const getAuthHeaders = () => {
+export const getAuthHeaders = () => {
   const token = getToken();
 
   return {

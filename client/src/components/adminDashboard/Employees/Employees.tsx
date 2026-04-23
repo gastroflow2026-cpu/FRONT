@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { EmployeeCard } from "./EmployeeCard";
 import { EmployeeFormDialog } from "./EmployeeCardDialog";
@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 import styles from "./Employees.module.css";
 import { Employee } from "@/types/Employee";
 import { User } from "@/types/User";
+import { adminService } from "@/services/adminService";
 
 export function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([
@@ -37,6 +38,21 @@ export function Employees() {
       isActive: false,
     },
   ]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const data = await adminService.getAllPlates()
+        setEmployees(data)
+      } catch (err) {
+        console.error("Error cargando empleados", err)
+      }
+    }
+    fetchEmployees()
+  }, [])
+
+  console.log(employees);
+  
 
   // try {
   //   const { data }: { data: [User] } = await axios.get(`${API_URL}/`, {})

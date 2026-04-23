@@ -20,20 +20,13 @@ export default function Perfil() {
     roles: isLogged?.roles || [],
   };
 
-  console.log(isLogged?.imgUrl);
-  
-
   return (
     <>
       <Navbar />
       <div className={styles.profile}>
         <div className={styles.userLayout}>
-          {/* <UserInfo user={userData} />
-          <Password /> */}
-          <p>{userData.email}</p>
-          <p>{userData.id}</p>
-          <p>{userData.imgUrl}</p>
-          <p>{userData.roles}</p>
+          {/* <UserInfo user={userData} /> */}
+          <Password /> 
         </div>
       </div>
       <Footer />

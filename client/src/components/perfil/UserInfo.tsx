@@ -11,22 +11,25 @@ export default function UserInfo({ user }: { user: User }) {
   const { id, name, email, phone, imgUrl } = user ?? {};
   const [showPop, setShowPop] = useState(false);
 
+  console.log(user);
+  
+
   // ✅ useMemo para evitar recálculos en cada render
-  const avatarSrc = useMemo(() => imgUrl || "/default-avatar.png", [imgUrl]);
-  const displayName = useMemo(() => name || "Usuario", [name]);
-  const displayAlt = useMemo(() => `${displayName} avatar`, [displayName]);
+  // const avatarSrc = useMemo(() => imgUrl || "/default-avatar.png", [imgUrl]);
+  // const displayName = useMemo(() => name || "Usuario", [name]);
+  // const displayAlt = useMemo(() => `${displayName} avatar`, [displayName]);
 
   return (
     <div className={styles.card}>
       <div className={styles.avatarWrapper}>
         <div className={styles.avatar}>
-          <Image 
+          {/* <Image 
             src={avatarSrc} 
             alt={displayAlt}
             fill 
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority={false}
-          />
+          /> */}
         </div>
         <button 
           onClick={() => setShowPop(true)}

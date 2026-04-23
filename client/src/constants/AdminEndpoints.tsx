@@ -16,7 +16,7 @@ export const ADMIN_ENDPOINTS = {
 
   // --- Modulo de Menu
   MENU: {
-    LIST: `${API_URL}/menu/admin`,
+    LIST: `${API_URL}/menu/public`,
     CREATE: `${API_URL}`,
     UPDATE: (id: string) => `${API_URL}/menu/items/${id}`,
     DELETE: (id: string) => `${API_URL}/menu/items/${id}`,
