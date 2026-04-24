@@ -9,7 +9,8 @@ export function EmployeeCard({
   onToggleStatus,
   onChangePassword,
 }: EmployeeCardProps) {
-  const initials = `${employee.name[0]}${employee.lastName[0]}`.toUpperCase();
+  const initials =
+    `${employee.name?.[0] ?? "E"}${employee.lastName?.[0] ?? ""}`.toUpperCase();
   const roleClass = styles[employee.role] || styles.defaultRole;
 
   return (
