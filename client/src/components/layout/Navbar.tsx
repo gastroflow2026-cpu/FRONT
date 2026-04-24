@@ -16,6 +16,7 @@ import {
   fetchAllPublicRestaurants,
   PublicRestaurantCardItem,
 } from "@/utils/publicRestaurants";
+import { UserCircle } from "lucide-react";
 
 type NavbarRestaurant = PublicRestaurantCardItem & {
   description: string;
@@ -169,36 +170,53 @@ const Navbar = () => {
           </div>
 
           <div className="hidden shrink-0 items-center space-x-4 md:flex">
-            {showAuthenticatedActions ? (
-              <div className="flex items-center space-x-3">
+          {showAuthenticatedActions ? (
+            <div className="flex items-center space-x-3">
+              <Link href="/profile" className="flex items-center gap-2 group">
+                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-gray-600 group-hover:border-white transition">
+                  {isLogged?.imgUrl ? (
+                    <Image
+                      src={isLogged.imgUrl}
+                      alt="Foto de perfil"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <UserCircle
+                      size={32}
+                      className="text-gray-400 transition group-hover:text-white"
+                    />
+                  )}
+                </div>
                 <span className="text-sm text-gray-300">
                   Hola,{" "}
-                  <span className="font-semibold text-white">
+                  <span className="font-semibold text-white group-hover:text-orange-400 transition">
                     {greetingName}!
                   </span>
                 </span>
-                <button
-                  onClick={() => logoutUser()}
-                  className="text-sm text-gray-400 transition hover:text-white"
-                >
-                  Cerrar Sesión
+              </Link>
+              <button
+                onClick={() => logoutUser()}
+                className="text-sm text-gray-400 transition hover:text-white"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link href="/login">
+                <button className="rounded-full border border-gray-600 bg-transparent px-5 py-2 text-sm font-medium text-white transition duration-150 hover:bg-gray-900">
+                  Iniciar Sesión
                 </button>
-              </div>
-            ) : (
-              <>
-                <Link href="/login">
-                  <button className="rounded-full border border-gray-600 bg-transparent px-5 py-2 text-sm font-medium text-white transition duration-150 hover:bg-gray-900">
-                    Iniciar Sesión
-                  </button>
-                </Link>
-                <Link href="/register">
-                  <button className="rounded-full bg-linear-to-r from-orange-500 to-pink-500 px-5 py-2 text-sm font-medium text-white shadow-md transition duration-150 hover:opacity-90">
-                    Registrarse
-                  </button>
-                </Link>
-              </>
-            )}
-          </div>
+              </Link>
+              <Link href="/register">
+                <button className="rounded-full bg-linear-to-r from-orange-500 to-pink-500 px-5 py-2 text-sm font-medium text-white shadow-md transition duration-150 hover:opacity-90">
+                  Registrarse
+                </button>
+              </Link>
+            </>
+          )}
+        </div>
 
           <div className="flex items-center md:hidden">
             <button

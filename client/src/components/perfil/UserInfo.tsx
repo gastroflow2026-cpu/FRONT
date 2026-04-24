@@ -33,7 +33,7 @@ export default function UserInfo({ user }: { user: User }) {
         </button>
       </div>
 
-      {/* <h2 className={styles.name}>{displayName}</h2> */}
+      <h2 className={styles.name}>{name}</h2>
       <p className={styles.role}>COMENSAL</p>
 
       <div className={styles.infoRow}>
