@@ -2,7 +2,6 @@
 
 import { useContext, useEffect, useState } from "react";
 import { useFormik } from "formik";
-import Image from "next/image";
 import Swal from "sweetalert2";
 import { Building2, Globe, ImageIcon, Mail, MapPin, Phone, Save, ScrollText } from "lucide-react";
 import { UsersContext } from "@/context/UsersContext";
