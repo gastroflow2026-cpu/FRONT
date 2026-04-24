@@ -1,38 +1,44 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import styles from "./EditMenuItemDialog.module.css";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 
+type MenuItemStatus = "disponible" | "agotado" | "inactivo";
+
+type EditMenuItemPayload = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  status: MenuItemStatus;
+};
+
 interface EditMenuItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (item: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    image: string;
-    status: "disponible" | "agotado" | "inactivo";
-  }) => void;
-  item: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    image: string;
-    status: "disponible" | "agotado" | "inactivo";
-  } | null;
+  onSubmit: (item: EditMenuItemPayload) => void;
+  item: EditMenuItemPayload | null;
 }
 
-export function EditMenuItemDialog({ isOpen, onClose, onSubmit, item }: EditMenuItemDialogProps) {
+const isMenuItemStatus = (value: string): value is MenuItemStatus => {
+  return ["disponible", "agotado", "inactivo"].includes(value);
+};
+
+export function EditMenuItemDialog({
+  isOpen,
+  onClose,
+  onSubmit,
+  item,
+}: EditMenuItemDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     image: "",
-    status: "disponible" as "disponible" | "agotado" | "inactivo",
+    status: "disponible" as MenuItemStatus,
   });
 
   const [errors, setErrors] = useState({
@@ -43,7 +49,9 @@ export function EditMenuItemDialog({ isOpen, onClose, onSubmit, item }: EditMenu
   });
 
   useEffect(() => {
-    if (item) {
+    if (!item) return;
+
+    const timeoutId = window.setTimeout(() => {
       setFormData({
         name: item.name,
         description: item.description,
@@ -51,9 +59,10 @@ export function EditMenuItemDialog({ isOpen, onClose, onSubmit, item }: EditMenu
         image: item.image,
         status: item.status,
       });
-    }
-  }, [item]);
+    }, 0);
 
+    return () => window.clearTimeout(timeoutId);
+  }, [item]);
   if (!isOpen) return null;
 
   const validateForm = () => {
@@ -63,12 +72,14 @@ export function EditMenuItemDialog({ isOpen, onClose, onSubmit, item }: EditMenu
       price: !formData.price || parseFloat(formData.price) <= 0,
       image: !formData.image,
     };
+
     setErrors(newErrors);
-    return !Object.values(newErrors).some((error) => error);
+    return !Object.values(newErrors).some(Boolean);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!validateForm() || !item) return;
 
     onSubmit({
@@ -79,12 +90,28 @@ export function EditMenuItemDialog({ isOpen, onClose, onSubmit, item }: EditMenu
       image: formData.image,
       status: formData.status,
     });
+
     onClose();
   };
 
   const handleClose = () => {
-    setErrors({ name: false, description: false, price: false, image: false });
+    setErrors({
+      name: false,
+      description: false,
+      price: false,
+      image: false,
+    });
+
     onClose();
+  };
+
+  const handleStatusChange = (value: string) => {
+    if (!isMenuItemStatus(value)) return;
+
+    setFormData({
+      ...formData,
+      status: value,
+    });
   };
 
   return (
@@ -92,72 +119,123 @@ export function EditMenuItemDialog({ isOpen, onClose, onSubmit, item }: EditMenu
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>Editar Platillo</h2>
-          <button className={styles.closeBtn} onClick={handleClose}>
+
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={handleClose}
+            aria-label="Cerrar modal de edición"
+            title="Cerrar"
+          >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Imagen */}
           <div className={styles.inputGroup}>
             <label className={styles.label}>Imagen del Platillo *</label>
+
             <ImageUpload
               value={formData.image}
               onChange={(url) => setFormData({ ...formData, image: url })}
             />
-            {errors.image && <span className={styles.errorText}>La imagen es requerida</span>}
+
+            {errors.image && (
+              <span className={styles.errorText}>La imagen es requerida</span>
+            )}
           </div>
 
           <div className={styles.grid}>
-            {/* Título */}
             <div className={styles.inputGroup}>
-              <label className={styles.label}>Título del Platillo *</label>
+              <label className={styles.label} htmlFor="edit-name">
+                Título del Platillo *
+              </label>
+
               <input
-                className={`${styles.input} ${errors.name ? styles.inputError : ""}`}
+                id="edit-name"
+                name="name"
+                className={`${styles.input} ${
+                  errors.name ? styles.inputError : ""
+                }`}
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Ej: Paella Valenciana"
               />
-              {errors.name && <span className={styles.errorText}>El título es requerido</span>}
+
+              {errors.name && (
+                <span className={styles.errorText}>El título es requerido</span>
+              )}
             </div>
 
-            {/* Precio */}
             <div className={styles.inputGroup}>
-              <label className={styles.label}>Precio *</label>
+              <label className={styles.label} htmlFor="edit-price">
+                Precio *
+              </label>
+
               <div className={styles.priceWrapper}>
                 <span className={styles.currencySymbol}>$</span>
+
                 <input
+                  id="edit-price"
+                  name="price"
                   type="number"
                   step="0.01"
-                  className={`${styles.input} ${styles.priceInput} ${errors.price ? styles.inputError : ""}`}
+                  className={`${styles.input} ${styles.priceInput} ${
+                    errors.price ? styles.inputError : ""
+                  }`}
                   value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price: e.target.value })
+                  }
                   placeholder="0.00"
                 />
               </div>
-              {errors.price && <span className={styles.errorText}>Precio no válido</span>}
+
+              {errors.price && (
+                <span className={styles.errorText}>Precio no válido</span>
+              )}
             </div>
           </div>
 
-          {/* Descripción */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Descripción *</label>
+            <label className={styles.label} htmlFor="edit-description">
+              Descripción *
+            </label>
+
             <textarea
-              className={`${styles.textarea} ${errors.description ? styles.inputError : ""}`}
+              id="edit-description"
+              name="description"
+              className={`${styles.textarea} ${
+                errors.description ? styles.inputError : ""
+              }`}
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="Describe el platillo..."
               rows={3}
             />
-            {errors.description && <span className={styles.errorText}>La descripción es requerida</span>}
+
+            {errors.description && (
+              <span className={styles.errorText}>
+                La descripción es requerida
+              </span>
+            )}
           </div>
 
           <div className={styles.inputGroup}>
-            <label className={styles.label}>Estado del Platillo</label>
+            <label className={styles.label} htmlFor="edit-status">
+              Estado del Platillo
+            </label>
+
             <select
+              id="edit-status"
+              name="status"
               className={styles.select}
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+              onChange={(e) => handleStatusChange(e.target.value)}
             >
               <option value="disponible">Disponible</option>
               <option value="agotado">Agotado</option>
@@ -165,11 +243,15 @@ export function EditMenuItemDialog({ isOpen, onClose, onSubmit, item }: EditMenu
             </select>
           </div>
 
-          {/* Acciones */}
           <div className={styles.actions}>
-            <button type="button" className={styles.cancelBtn} onClick={handleClose}>
+            <button
+              type="button"
+              className={styles.cancelBtn}
+              onClick={handleClose}
+            >
               Cancelar
             </button>
+
             <button type="submit" className={styles.submitBtn}>
               Guardar Cambios
             </button>

@@ -8,8 +8,8 @@ import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import Swal from "sweetalert2";
 import styles from "./Employees.module.css";
 import { Employee } from "@/types/Employee";
-import { User } from "@/types/User";
-import { adminService } from "@/services/adminService";
+// import { User } from "@/types/User";
+// import { adminService } from "@/services/adminService";
 
 export function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([
@@ -39,29 +39,28 @@ export function Employees() {
     },
   ]);
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const data = await adminService.getAllPlates()
-        setEmployees(data)
-      } catch (err) {
-        console.error("Error cargando empleados", err)
-      }
-    }
-    fetchEmployees()
-  }, [])
+  // useEffect(() => {
+  //   const fetchEmployees = async () => {
+  //     try {
+  //       const data = await adminService.getAllPlates();
+  //       setEmployees(data);
+  //     } catch (err) {
+  //       console.error("Error cargando empleados", err);
+  //     }
+  //   };
+  //   fetchEmployees();
+  // }, []);
 
   console.log(employees);
-  
 
   // try {
   //   const { data }: { data: [User] } = await axios.get(`${API_URL}/`, {})
   // } catch (error) {
-    
+
   // }
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+
   const [passwordDialog, setPasswordDialog] = useState<{
     isOpen: boolean;
     employeeId: string;
@@ -74,7 +73,7 @@ export function Employees() {
 
   const handleToggleStatus = (id: string, isActive: boolean) => {
     setEmployees((prev) =>
-      prev.map((emp) => (emp.id === id ? { ...emp, isActive } : emp))
+      prev.map((emp) => (emp.id === id ? { ...emp, isActive } : emp)),
     );
 
     Swal.fire({
@@ -86,7 +85,9 @@ export function Employees() {
     });
   };
 
-  const handleCreateEmployee = (newEmployee: Omit<Employee, "id" | "isActive">) => {
+  const handleCreateEmployee = (
+    newEmployee: Omit<Employee, "id" | "isActive">,
+  ) => {
     const employee: Employee = {
       ...newEmployee,
       id: Date.now().toString(),
@@ -119,7 +120,7 @@ export function Employees() {
   const handleChangePassword = (employeeId: string, newPassword: string) => {
     // Aquí iría tu llamada a la API
     setPasswordDialog((prev) => ({ ...prev, isOpen: false }));
-    
+
     Swal.fire({
       icon: "success",
       title: "Contraseña actualizada",
@@ -135,8 +136,8 @@ export function Employees() {
           <h2>Gestión de Empleados</h2>
           <p>Administra el personal del restaurante</p>
         </div>
-        
-        <button 
+
+        <button
           className={styles.addButton}
           onClick={() => setIsDialogOpen(true)}
         >

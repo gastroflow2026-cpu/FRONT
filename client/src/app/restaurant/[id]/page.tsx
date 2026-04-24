@@ -59,7 +59,7 @@ type RestaurantDetailData = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 const FALLBACK_RESTAURANT_IMAGE =
-  "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg";
+  "https://res.cloudinary.com/dgzp5pfmp/image/upload/v1777002092/Pastas_portada_Bella_Vita_t43c1o.png";
 
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);

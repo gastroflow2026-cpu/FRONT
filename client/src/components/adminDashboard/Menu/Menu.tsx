@@ -1,48 +1,133 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { MenuItemCard } from "./MenuItemCard";
 import { MenuItemFormDialog } from "./MenuItemDialog";
 import { EditMenuItemDialog } from "./EditMenuItemDialog";
 import Swal from "sweetalert2";
+import axios from "axios";
 import styles from "./Menu.module.css";
-import { MenuItem } from "@/types/MenuItem";
+import { MenuItem, MenuCategory } from "@/types/MenuItem";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+type BackendMenuItem = {
+  id: string;
+  name: string;
+  description: string;
+  price: string | number;
+  image_url: string;
+  status: string;
+  category_id?: string;
+};
+
+type BackendMenuCategory = {
+  category_id: string;
+  category_name: string;
+  category_description?: string | null;
+  is_active?: boolean;
+  display_order?: number;
+  items: BackendMenuItem[];
+};
+
+const getToken = () =>
+  localStorage.getItem("token") ||
+  localStorage.getItem("accessToken") ||
+  localStorage.getItem("authToken");
+
+const mapBackendStatusToFront = (
+  status: string,
+): "disponible" | "agotado" | "inactivo" => {
+  if (status === "DISPONIBLE" || status === "AVAILABLE") return "disponible";
+  if (status === "AGOTADO" || status === "OUT_OF_STOCK") return "agotado";
+  return "inactivo";
+};
+
+const mapFrontStatusToBackend = (
+  status: "disponible" | "agotado" | "inactivo",
+) => {
+  if (status === "disponible") return "DISPONIBLE";
+  if (status === "agotado") return "AGOTADO";
+  return "INACTIVO";
+};
 
 export function Menu() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    {
-      id: "1",
-      name: "Paella Valenciana",
-      description: "Arroz con mariscos frescos, azafrán y verduras",
-      price: 24.99,
-      image: "https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=400",
-      status: "disponible",
-    },
-    {
-      id: "2",
-      name: "Cordero Asado",
-      description: "Cordero al horno con hierbas aromáticas y patatas",
-      price: 32.50,
-      image: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400",
-      status: "disponible",
-    },
-    {
-      id: "3",
-      name: "Tarta de Chocolate",
-      description: "Deliciosa tarta con ganache de chocolate belga",
-      price: 8.99,
-      image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400",
-      status: "agotado",
-    },
-  ]);
-
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<MenuItem | null>(null);
 
+  const fetchMenuItems = async () => {
+    try {
+      const getToken = () => {
+        const token = localStorage.getItem("token");
+        console.log("TOKEN USADO EN MENU:", token);
+        return token;
+      };
+
+      const token = getToken();
+
+      const response = await axios.get(`${API_URL}/menu/public`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const backendCategories = response.data;
+
+      const mappedCategories: MenuCategory[] = backendCategories.map(
+        (category) => ({
+          category_id: category.category_id,
+          category_name: category.category_name,
+          category_description: category.category_description,
+          is_active: category.is_active,
+          display_order: category.display_order,
+          items: category.items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: Number(item.price),
+            image: item.image_url,
+            status: mapBackendStatusToFront(item.status),
+            category_id: item.category_id || category.category_id,
+            category_name: category.category_name,
+          })),
+        }),
+      );
+
+      setCategories(mappedCategories);
+
+      const mappedItems: MenuItem[] = mappedCategories.flatMap(
+        (category) => category.items,
+      );
+
+      setMenuItems(mappedItems);
+    } catch (error) {
+      console.error("ERROR MENU ADMIN:", error);
+
+      if (axios.isAxiosError(error)) {
+        console.log("STATUS:", error.response?.status);
+        console.log("DATA:", error.response?.data);
+        console.log("URL:", error.config?.url);
+      }
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo cargar el menú",
+      });
+    }
+  };
+
+  useEffect(() => {
+    console.log("EJECUTANDO FETCH MENU");
+    fetchMenuItems();
+  }, []);
+
   const handleEdit = (id: string) => {
     const item = menuItems.find((i) => i.id === id);
+
     if (item) {
       setItemToEdit(item);
       setIsEditDialogOpen(true);
@@ -59,9 +144,20 @@ export function Menu() {
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setMenuItems((prev) => prev.filter((item) => item.id !== id));
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+
+      try {
+        const token = getToken();
+
+        await axios.delete(`${API_URL}/menu/items/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        await fetchMenuItems();
+
         Swal.fire({
           title: "Eliminado",
           text: "El plato ha sido eliminado exitosamente",
@@ -69,62 +165,135 @@ export function Menu() {
           timer: 1500,
           showConfirmButton: false,
         });
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo eliminar el plato. Si el backend no tiene DELETE, lo manejamos como INACTIVO.",
+        });
       }
     });
   };
 
-  const handleStatusChange = (id: string, status: "disponible" | "agotado" | "inactivo") => {
-    setMenuItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status } : item))
-    );
+  const handleStatusChange = async (
+    id: string,
+    status: "disponible" | "agotado" | "inactivo",
+  ) => {
+    try {
+      const token = getToken();
 
-    const statusMessages = {
-      disponible: "El platillo está ahora disponible",
-      agotado: "El platillo ha sido marcado como agotado",
-      inactivo: "El platillo ha sido desactivado",
-    };
+      await axios.patch(
+        `${API_URL}/menu/items/${id}/status`,
+        {
+          status: mapFrontStatusToBackend(status),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-    Swal.fire({
-      icon: "success",
-      title: "Estado actualizado",
-      text: statusMessages[status],
-      timer: 1500,
-      showConfirmButton: false,
-    });
+      await fetchMenuItems();
+
+      Swal.fire({
+        icon: "success",
+        title: "Estado actualizado",
+        text: "El estado del plato fue actualizado correctamente",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo actualizar el estado",
+      });
+    }
   };
 
-  const handleCreateItem = (newItem: Omit<MenuItem, "id">) => {
-    const item: MenuItem = {
-      ...newItem,
-      id: Date.now().toString(),
-      status: "disponible",
-    };
+  const handleCreateItem = async (newItem: Omit<MenuItem, "id">) => {
+    try {
+      const token = getToken();
 
-    setMenuItems((prev) => [...prev, item]);
-    setIsCreateDialogOpen(false);
+      await axios.post(
+        `${API_URL}/menu/items`,
+        {
+          name: newItem.name,
+          description: newItem.description,
+          price: newItem.price,
+          image_url: newItem.image,
+          category_id: newItem.category_id,
+          status: "DISPONIBLE",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-    Swal.fire({
-      icon: "success",
-      title: "Platillo creado",
-      text: `${item.name} ha sido agregado al menú exitosamente.`,
-      confirmButtonColor: "#ea580c",
-    });
+      await fetchMenuItems();
+      setIsCreateDialogOpen(false);
+
+      Swal.fire({
+        icon: "success",
+        title: "Platillo creado",
+        text: "El plato fue agregado al menú exitosamente.",
+        confirmButtonColor: "#ea580c",
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo crear el plato",
+      });
+    }
   };
 
-  const handleUpdateItem = (updatedItem: MenuItem) => {
-    setMenuItems((prev) =>
-      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-    );
-    setIsEditDialogOpen(false);
-    setItemToEdit(null);
+  const handleUpdateItem = async (updatedItem: MenuItem) => {
+    try {
+      const token = getToken();
 
-    Swal.fire({
-      icon: "success",
-      title: "Platillo actualizado",
-      text: "Los cambios se guardaron correctamente",
-      timer: 1500,
-      showConfirmButton: false,
-    });
+      await axios.patch(
+        `${API_URL}/menu/items/${updatedItem.id}`,
+        {
+          name: updatedItem.name,
+          description: updatedItem.description,
+          price: updatedItem.price,
+          image_url: updatedItem.image,
+          category_id: updatedItem.category_id,
+          status: mapFrontStatusToBackend(updatedItem.status),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      await fetchMenuItems();
+      setIsEditDialogOpen(false);
+      setItemToEdit(null);
+
+      Swal.fire({
+        icon: "success",
+        title: "Platillo actualizado",
+        text: "Los cambios se guardaron correctamente",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo actualizar el plato",
+      });
+    }
   };
 
   return (
@@ -134,6 +303,7 @@ export function Menu() {
           <h2>Gestión de Menú</h2>
           <p>Administra los platos del restaurante</p>
         </div>
+
         <button
           onClick={() => setIsCreateDialogOpen(true)}
           className={styles.addButton}
@@ -159,6 +329,7 @@ export function Menu() {
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSubmit={handleCreateItem}
+        categories={categories}
       />
 
       <EditMenuItemDialog
