@@ -11,47 +11,40 @@ export default function UserInfo({ user }: { user: User }) {
   const { id, name, email, phone, imgUrl } = user ?? {};
   const [showPop, setShowPop] = useState(false);
 
-  console.log(user);
-  
-
-  // ✅ useMemo para evitar recálculos en cada render
-  // const avatarSrc = useMemo(() => imgUrl || "/default-avatar.png", [imgUrl]);
-  // const displayName = useMemo(() => name || "Usuario", [name]);
-  // const displayAlt = useMemo(() => `${displayName} avatar`, [displayName]);
-
   return (
     <div className={styles.card}>
       <div className={styles.avatarWrapper}>
         <div className={styles.avatar}>
-          {/* <Image 
-            src={avatarSrc} 
-            alt={displayAlt}
-            fill 
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority={false}
-          /> */}
+          {imgUrl && (
+            <Image
+              src={imgUrl}
+              alt="Foto de perfil"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          )}
         </div>
-        <button 
+        <button
           onClick={() => setShowPop(true)}
           className={styles.editButton}
-          type="button" // ✅ accessibility
+          type="button"
         >
           <FaPen />
         </button>
       </div>
 
-      <h2 className={styles.name}>{displayName}</h2>
+      {/* <h2 className={styles.name}>{displayName}</h2> */}
       <p className={styles.role}>COMENSAL</p>
 
       <div className={styles.infoRow}>
         <div className={styles.half}>
           <span className={styles.label}>CORREO</span>
-          <span className={styles.value}>{email || "No disponible"}</span>
+          <span className={styles.value}>{email}</span>
         </div>
         <div className={styles.half}>
-          <span className={styles.label}>NÚMERO</span>
-          <span className={styles.value}>{phone || "No disponible"}</span>
-        </div>
+              <span className={styles.label}>NÚMERO</span>
+              <span className={styles.value}>{phone || "No disponible"}</span>
+            </div>
       </div>
 
       <div className={styles.infoRow}>
@@ -64,8 +57,8 @@ export default function UserInfo({ user }: { user: User }) {
           <span className={styles.value}>0</span>
         </div>
       </div>
-      
-      {showPop && <PopUp setShowPop={setShowPop} id={id || ""} />}
+
+      {showPop && <PopUp setShowPop={setShowPop} id={id} />}
     </div>
   );
-};
+}
