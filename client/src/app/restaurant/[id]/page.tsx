@@ -61,6 +61,19 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 const FALLBACK_RESTAURANT_IMAGE =
   "https://res.cloudinary.com/dgzp5pfmp/image/upload/v1777002092/Pastas_portada_Bella_Vita_t43c1o.png";
 
+type PublicRestaurant = {
+  id: string;
+  name: string;
+  image?: string;
+  logo_url?: string;
+  rating?: number;
+  city?: string;
+  country?: string;
+  description?: string;
+  tables?: Table[];
+  [key: string]: any;
+};
+
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);

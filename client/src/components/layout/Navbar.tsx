@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  useSyncExternalStore,
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,30 +26,6 @@ const Navbar = () => {
   const { isLogged, logoutUser } = useContext(UsersContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [restaurants, setRestaurants] = useState<NavbarRestaurant[]>([]);
-  const isHydrated = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-
-  const isOwnerSession = useSyncExternalStore(
-    () => () => {},
-    () => {
-      const storedUser = localStorage.getItem("user");
-
-      if (!storedUser) {
-        return false;
-      }
-
-      try {
-        const parsedUser = JSON.parse(storedUser) as { roles?: string[] };
-        return parsedUser.roles?.includes("rest_admin") ?? false;
-      } catch {
-        return false;
-      }
-    },
-    () => false,
-  );
 
   useEffect(() => {
     const loadRestaurants = async () => {
@@ -80,7 +55,7 @@ const Navbar = () => {
   }, [restaurants, searchTerm]);
 
   const hasValidOwnerSession = Boolean(
-    isHydrated && isLogged && isOwnerSession,
+    isLogged?.roles?.includes("rest_admin"),
   );
   const primaryUserRoute = hasValidOwnerSession ? "/admin" : "/reservations";
   const primaryUserLabel = hasValidOwnerSession
@@ -89,7 +64,7 @@ const Navbar = () => {
   const greetingName = hasValidOwnerSession
     ? `Owner ${isLogged?.name}`
     : isLogged?.name;
-  const showAuthenticatedActions = Boolean(isHydrated && isLogged);
+  const showAuthenticatedActions = Boolean(isLogged);
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#090b12]/95 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">

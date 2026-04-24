@@ -1,6 +1,7 @@
 "use client";
 import { createContext, ReactNode, useContext } from "react";
 import axios from "axios";
+import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
@@ -31,7 +32,7 @@ const ReservationsProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('API URL o Restaurant ID no están configurados');
             }
 
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const response = await axios.post(
                 `${API_URL}/restaurants/${restaurantId}/reservations/newReservation`,
                 values,

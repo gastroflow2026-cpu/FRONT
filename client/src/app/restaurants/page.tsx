@@ -16,7 +16,6 @@ export default function RestaurantsPage() {
           subtitle="Descubri los mejores sabores y gestiona tus reservas en tiempo real."
         />
       </main>
-
       <Footer />
     </div>
   );

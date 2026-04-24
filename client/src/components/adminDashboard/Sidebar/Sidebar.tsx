@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Users, Calendar, UtensilsCrossed, BarChart3, ShoppingBag, Menu, X, Settings } from "lucide-react";
 import styles from "./Sidebar.module.css";
+import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -36,18 +37,10 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
         return;
       }
 
-      const storedToken = localStorage.getItem("token");
+      const token = getToken();
 
-      if (!storedToken) {
+      if (!token) {
         return;
-      }
-
-      let token = storedToken;
-
-      try {
-        token = JSON.parse(storedToken) as string;
-      } catch {
-        token = storedToken;
       }
 
       try {

@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
+import { clearSession, getToken, saveSession } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -127,8 +128,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   
   const saveAuthSession = useCallback(
     (token: string, user: AuthResponseUser) => {
-      localStorage.setItem("token", JSON.stringify(token));
-      localStorage.setItem("user", JSON.stringify(user));
+      saveSession(token, user);
       
       setIsLogged(user);
     },
@@ -136,15 +136,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   );
     
   const getStoredToken = useCallback(() => {
-    const storedToken = localStorage.getItem("token");
-    
-    if (!storedToken) return null;
-    
-    try {
-      return JSON.parse(storedToken) as string;
-    } catch {
-      return storedToken;
-    }
+    return getToken();
   }, []);
 
   const updateUser = useCallback(async (updatedFields: Partial<SessionUser>) => {
@@ -344,9 +336,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
       imgUrl: payload.imgUrl || null,
     };
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-
+    saveSession(token, user);
     setIsLogged(user);
   };
 
@@ -389,8 +379,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logoutUser = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearSession();
 
     clearQueryParam("token");
     clearQueryParam("error");
