@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { clearSession, getToken, saveSession } from "@/helpers/getToken";
 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface LoginValues {
@@ -376,7 +377,6 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
 
     processGoogleAuthRedirect();
   }, [showGoogleAuthError, showGoogleRegistrationSuccess, clearQueryParam]);
-
 
   const logoutUser = () => {
     clearSession();

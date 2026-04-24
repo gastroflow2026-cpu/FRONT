@@ -7,38 +7,11 @@ import { EmployeeFormDialog } from "./EmployeeCardDialog";
 import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import Swal from "sweetalert2";
 import styles from "./Employees.module.css";
-import { Employee } from "@/types/Employee";
+import { CreateEmployeePayload, Employee } from "@/types/Employee";
+import { adminService } from "@/services/adminService";
 
 export function Employees() {
-  const [employees, setEmployees] = useState<Employee[]>([
-    {
-      id: "1",
-      name: "Carlos",
-      lastName: "Rodríguez",
-      email: "carlos@restaurant.com",
-      role: "cocinero",
-      isActive: true,
-    },
-    {
-      id: "2",
-      name: "María",
-      lastName: "González",
-      email: "maria@restaurant.com",
-      role: "mesero",
-      isActive: true,
-    },
-    {
-      id: "3",
-      name: "Juan",
-      lastName: "Pérez",
-      email: "juan@restaurant.com",
-      role: "cajero",
-      isActive: false,
-    },
-  ]);
-
-  console.log(employees);
-
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [passwordDialog, setPasswordDialog] = useState<{
@@ -51,41 +24,80 @@ export function Employees() {
     employeeName: "",
   });
 
-  const handleToggleStatus = (id: string, isActive: boolean) => {
-    setEmployees((prev) =>
-      prev.map((emp) => (emp.id === id ? { ...emp, isActive } : emp)),
-    );
-
-    Swal.fire({
-      icon: "success",
-      title: isActive ? "Empleado activado" : "Empleado desactivado",
-      text: `El empleado ha sido ${isActive ? "dado de alta" : "dado de baja"} exitosamente.`,
-      timer: 2000,
-      showConfirmButton: false,
-    });
-  };
-
-  const handleCreateEmployee = (
-    newEmployee: Omit<Employee, "id" | "isActive">,
-  ) => {
-    const employee: Employee = {
-      ...newEmployee,
-      id: Date.now().toString(),
-      isActive: true,
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const data = await adminService.getAllEmployees();
+        setEmployees(data);
+      } catch (err) {
+        console.error("Error cargando empleados", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error cargando empleados",
+          text: "No se pudo obtener el listado de empleados.",
+          confirmButtonColor: "#ea580c",
+        });
+      }
     };
 
-    setEmployees((prev) => [...prev, employee]);
-    setIsDialogOpen(false);
+    fetchEmployees();
+  }, []);
 
-    Swal.fire({
-      icon: "success",
-      title: "Empleado creado",
-      text: `${employee.name} ${employee.lastName} ha sido agregado exitosamente.`,
-      confirmButtonColor: "#ea580c",
-    });
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    const previousEmployees = employees;
+
+    setEmployees((prev) => prev.map((emp) => (emp.id === id ? { ...emp, isActive } : emp)));
+
+    try {
+      const updatedEmployee = await adminService.updateEmployeeStatus(id, isActive);
+
+      setEmployees((prev) => prev.map((emp) => (emp.id === id ? updatedEmployee : emp)));
+
+      Swal.fire({
+        icon: "success",
+        title: isActive ? "Empleado activado" : "Empleado desactivado",
+        text: `El empleado ha sido ${isActive ? "dado de alta" : "dado de baja"} exitosamente.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      console.error("Error actualizando estado del empleado", err);
+      setEmployees(previousEmployees);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error actualizando empleado",
+        text: "No se pudo cambiar el estado del empleado.",
+        confirmButtonColor: "#ea580c",
+      });
+    }
   };
 
-  // Función para abrir el modal de contraseña
+  const handleCreateEmployee = async (newEmployee: CreateEmployeePayload) => {
+    try {
+      const employee = await adminService.createEmployee(newEmployee);
+
+      setEmployees((prev) => [...prev, employee]);
+      setIsDialogOpen(false);
+
+      Swal.fire({
+        icon: "success",
+        title: "Empleado creado",
+        text: `${employee.name} ${employee.lastName} ha sido agregado exitosamente.`,
+        confirmButtonColor: "#ea580c",
+      });
+    } catch (err) {
+      console.error("Error creando empleado", err);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error creando empleado",
+        text: "No se pudo crear el empleado. Revisa los datos e intenta nuevamente.",
+        confirmButtonColor: "#ea580c",
+      });
+    }
+  };
+
   const handleOpenPasswordDialog = (id: string) => {
     const employee = employees.find((emp) => emp.id === id);
     if (employee) {
@@ -97,16 +109,29 @@ export function Employees() {
     }
   };
 
-  const handleChangePassword = (employeeId: string, newPassword: string) => {
-    // Aquí iría tu llamada a la API
-    setPasswordDialog((prev) => ({ ...prev, isOpen: false }));
+  const handleChangePassword = async (employeeId: string, newPassword: string) => {
+    try {
+      await adminService.changeEmployeePassword(employeeId, newPassword);
+      setPasswordDialog((prev) => ({ ...prev, isOpen: false }));
 
-    Swal.fire({
-      icon: "success",
-      title: "Contraseña actualizada",
-      text: "La contraseña ha sido cambiada exitosamente.",
-      confirmButtonColor: "#ea580c",
-    });
+      Swal.fire({
+        icon: "success",
+        title: "Contraseña actualizada",
+        text: "La contraseña ha sido cambiada exitosamente.",
+        confirmButtonColor: "#ea580c",
+      });
+    } catch (err) {
+      console.error("Error actualizando contraseña", err);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error actualizando contraseña",
+        text: "No se pudo cambiar la contraseña del empleado.",
+        confirmButtonColor: "#ea580c",
+      });
+
+      throw err;
+    }
   };
 
   return (
@@ -117,10 +142,7 @@ export function Employees() {
           <p>Administra el personal del restaurante</p>
         </div>
 
-        <button
-          className={styles.addButton}
-          onClick={() => setIsDialogOpen(true)}
-        >
+        <button className={styles.addButton} onClick={() => setIsDialogOpen(true)}>
           <Plus size={18} />
           Nuevo Empleado
         </button>
@@ -132,7 +154,7 @@ export function Employees() {
             key={employee.id}
             employee={employee}
             onToggleStatus={handleToggleStatus}
-            onChangePassword={handleOpenPasswordDialog} // Nueva prop conectada
+            onChangePassword={handleOpenPasswordDialog}
           />
         ))}
       </div>
@@ -143,12 +165,9 @@ export function Employees() {
         onSubmit={handleCreateEmployee}
       />
 
-      {/* Nuevo Diálogo de Contraseña */}
       <ChangePasswordDialog
         isOpen={passwordDialog.isOpen}
-        onClose={() =>
-          setPasswordDialog({ isOpen: false, employeeId: "", employeeName: "" })
-        }
+        onClose={() => setPasswordDialog({ isOpen: false, employeeId: "", employeeName: "" })}
         onSubmit={handleChangePassword}
         employeeId={passwordDialog.employeeId}
         employeeName={passwordDialog.employeeName}

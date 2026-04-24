@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import styles from "./EmployeeCardDialog.module.css";
+import { CreateEmployeePayload, EmployeeRole } from "@/types/Employee";
 
 interface EmployeeFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateEmployeePayload) => Promise<void> | void;
 }
 
 export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDialogProps) {
@@ -15,14 +16,19 @@ export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDi
     lastName: "",
     email: "",
     password: "",
-    role: "",
+    role: "" as EmployeeRole | "",
   });
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (!formData.role) return;
+
+    await onSubmit({
+      ...formData,
+      role: formData.role,
+    });
     setFormData({ name: "", lastName: "", email: "", password: "", role: "" });
   };
 
@@ -79,7 +85,7 @@ export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDi
             <select 
               className={styles.select}
               value={formData.role} 
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value as EmployeeRole })}
               required
             >
               <option value="" disabled>Seleccionar rol</option>

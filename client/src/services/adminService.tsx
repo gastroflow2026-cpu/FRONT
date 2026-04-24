@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ADMIN_ENDPOINTS } from "@/constants/AdminEndpoints";
 import { getToken } from "@/helpers/getToken";
+import { CreateEmployeePayload, Employee } from "@/types/Employee";
 
 export const getAuthHeaders = () => {
   const token = getToken();
@@ -8,13 +9,14 @@ export const getAuthHeaders = () => {
   return {
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
     },
   };
 };
 
 export const adminService = {
   // --- SECCION: EMPLEADOS ---
-  getAllEmployees: async () => {
+  getAllEmployees: async (): Promise<Employee[]> => {
     const res = await axios.get(
       ADMIN_ENDPOINTS.EMPLOYEES.LIST,
       getAuthHeaders(),
@@ -22,7 +24,7 @@ export const adminService = {
     return res.data;
   },
 
-  createEmployee: async (employeeData: any) => {
+  createEmployee: async (employeeData: CreateEmployeePayload): Promise<Employee> => {
     const res = await axios.post(
       ADMIN_ENDPOINTS.EMPLOYEES.CREATE,
       employeeData,
@@ -31,19 +33,19 @@ export const adminService = {
     return res.data;
   },
 
-  deactivateEmployee: async (userId: string) => {
+  updateEmployeeStatus: async (employeeId: string, isActive: boolean): Promise<Employee> => {
     const res = await axios.patch(
-      ADMIN_ENDPOINTS.EMPLOYEES.DEACTIVATE(userId),
-      {},
+      ADMIN_ENDPOINTS.EMPLOYEES.STATUS(employeeId),
+      { isActive },
       getAuthHeaders(),
     );
     return res.data;
   },
 
-  changeEmployeePassword: async (userId: string, newPasswordData: string) => {
+  changeEmployeePassword: async (userId: string, newPassword: string) => {
     const res = await axios.patch(
       ADMIN_ENDPOINTS.EMPLOYEES.CHANGE_PASSWORD(userId),
-      newPasswordData,
+      { newPassword },
       getAuthHeaders(),
     );
     return res.data;
@@ -64,7 +66,7 @@ export const adminService = {
     return res.data;
   },
 
-  createNewPlate: async (plateData: any) => {
+  createNewPlate: async (plateData: Record<string, unknown>) => {
     const res = await axios.post(
       ADMIN_ENDPOINTS.MENU.CREATE,
       plateData,
@@ -73,7 +75,7 @@ export const adminService = {
     return res.data;
   },
 
-  updatePlateInfo: async (id: string, plateData: any) => {
+  updatePlateInfo: async (id: string, plateData: Record<string, unknown>) => {
     const res = await axios.patch(
       ADMIN_ENDPOINTS.MENU.UPDATE(id),
       plateData,
