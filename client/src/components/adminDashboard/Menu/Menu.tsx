@@ -69,11 +69,9 @@ export function Menu() {
 
       const token = getToken();
 
-      const response = await axios.get(`${API_URL}/menu/public`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get<BackendMenuCategory[]>(
+        `${API_URL}/menu/public`,
+      );
 
       const backendCategories = response.data;
 
@@ -245,7 +243,13 @@ export function Menu() {
         confirmButtonColor: "#ea580c",
       });
     } catch (error) {
-      console.error(error);
+      console.error("ERROR CREATE ITEM:", error);
+
+      if (axios.isAxiosError(error)) {
+        console.log("CREATE STATUS:", error.response?.status);
+        console.log("CREATE DATA:", error.response?.data);
+        console.log("CREATE URL:", error.config?.url);
+      }
       Swal.fire({
         icon: "error",
         title: "Error",
