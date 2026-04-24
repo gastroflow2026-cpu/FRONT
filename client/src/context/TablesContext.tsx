@@ -1,6 +1,7 @@
 "use client";
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import axios from "axios";
+import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
@@ -32,7 +33,7 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
     const getTables = useCallback(async (restaurantId: string) => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
+            const token = getToken();
             if (!API_URL || !restaurantId) {
                 setTables([]);
                 return;
