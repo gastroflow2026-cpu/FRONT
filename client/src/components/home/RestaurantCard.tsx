@@ -37,7 +37,7 @@ const RestaurantCard = ({
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-5xl font-bold text-white/70 transition-transform duration-700 group-hover:scale-110">
+          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-slate-700 text-5xl font-bold text-white/70 transition-transform duration-700 group-hover:scale-110">
             -
           </div>
         )}
