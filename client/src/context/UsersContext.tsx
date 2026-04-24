@@ -8,6 +8,7 @@ import {
 } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -90,6 +91,7 @@ interface UsersContextType {
   registerOwner: (
     values: OwnerRegisterValues,
   ) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
+  updateUser: (updatedFields: Partial<SessionUser>) => Promise<void>;
 }
 
 export const UsersContext = createContext<UsersContextType>({
@@ -102,38 +104,42 @@ export const UsersContext = createContext<UsersContextType>({
   logoutUser: () => {},
   registerNewUser: async () => 0,
   registerOwner: async () => ({ status: 0 }),
+  updateUser: async () => {},
 });
 
 export const UsersProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter()
   const [isLogged, setIsLogged] = useState<SessionUser | null>(() => {
     if (typeof window === "undefined") return null;
-
+    
     const storedUser = localStorage.getItem("user");
-
+    
     if (!storedUser) return null;
-
+    
     try {
       return JSON.parse(storedUser);
     } catch {
       return null;
     }
   });
-
+  
+  
+  
   const saveAuthSession = useCallback(
     (token: string, user: AuthResponseUser) => {
       localStorage.setItem("token", JSON.stringify(token));
       localStorage.setItem("user", JSON.stringify(user));
-
+      
       setIsLogged(user);
     },
     [],
   );
-
+    
   const getStoredToken = useCallback(() => {
     const storedToken = localStorage.getItem("token");
-
+    
     if (!storedToken) return null;
-
+    
     try {
       return JSON.parse(storedToken) as string;
     } catch {
@@ -141,31 +147,57 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const updateUser = useCallback(async (updatedFields: Partial<SessionUser>) => {
+  if (!isLogged) return;
+
+  const token = getStoredToken();
+  
+  try {
+    const res = await axios.patch(
+      `${API_URL}/users/${isLogged.id}`,
+      updatedFields,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const updated = { ...isLogged, ...res.data };
+    localStorage.setItem("user", JSON.stringify(updated));
+    setIsLogged(updated);
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    throw error;
+  }
+}, [isLogged, getStoredToken]);
+
+  
   const loginUser = async (values: LoginValues): Promise<number> => {
     const res = await axios.post(`${API_URL}/auth/signin`, values);
-
+    
     if (!res.data.user) throw new Error("No se recibió el usuario");
-
+    
     const token = res.data.token;
     const user = res.data.user as AuthResponseUser;
-
+    
     if (user.roles?.includes("rest_admin")) {
       throw new Error("OWNER_LOGIN_RESTRICTED");
     }
-
+    
     saveAuthSession(token, user);
     return res.status;
   };
-
+  
   const loginOwner = async (
     values: LoginValues,
   ): Promise<RequestResult<AuthResponse | AuthErrorResponse>> => {
     try {
       const res = await axios.post(`${API_URL}/auth/owner/signin`, values);
       const { token, user } = res.data;
-
+      
       saveAuthSession(token, user);
-
+      
       return {
         status: res.status,
         data: res.data,
@@ -177,31 +209,31 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
           data: error.response.data,
         };
       }
-
+      
       throw error;
     }
   };
-
+  
   const loginUserGoogle = async () => {
     window.location.href = `${API_URL}/auth/google/login`;
   };
-
+  
   const registerUserGoogle = async () => {
     window.location.href = `${API_URL}/auth/google/register`;
   };
-
+  
   const completeOwnerOnboarding = async (
     values: OwnerOnboardingValues,
   ): Promise<RequestResult<AuthResponse | AuthErrorResponse>> => {
     const token = getStoredToken();
-
+    
     if (!token) {
       return {
         status: 401,
         data: { message: "No hay una sesión owner activa." },
       };
     }
-
+    
     try {
       const res = await axios.post(
         `${API_URL}/auth/owner/onboarding`,
@@ -212,11 +244,11 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
           },
         },
       );
-
+      
       const { token: nextToken, user } = res.data;
-
+      
       saveAuthSession(nextToken, user);
-
+      
       return {
         status: res.status,
         data: res.data,
@@ -228,17 +260,17 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
           data: error.response.data,
         };
       }
-
+      
       throw error;
     }
   };
-
+  
   const clearQueryParam = useCallback((paramName: string) => {
     const url = new URL(window.location.href);
     url.searchParams.delete(paramName);
     window.history.replaceState({}, "", url);
   }, []);
-
+  
   const showGoogleAuthError = useCallback(
     async (errorCode: string) => {
       if (errorCode === "provider_conflict") {
@@ -251,7 +283,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         clearQueryParam("error");
         return;
       }
-
+      
       if (errorCode === "google_account_exists") {
         await Swal.fire({
           icon: "error",
@@ -262,7 +294,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         clearQueryParam("error");
         return;
       }
-
+      
       if (errorCode === "google_auth_failed") {
         await Swal.fire({
           icon: "error",
@@ -272,6 +304,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         });
         clearQueryParam("error");
       }
+      
     },
     [clearQueryParam],
   );
@@ -354,6 +387,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     processGoogleAuthRedirect();
   }, [showGoogleAuthError, showGoogleRegistrationSuccess, clearQueryParam]);
 
+
   const logoutUser = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -363,6 +397,8 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     clearQueryParam("registered");
 
     setIsLogged(null);
+
+    router.push("/");
   };
 
   const registerNewUser = async (
@@ -411,6 +447,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     logoutUser,
     registerNewUser,
     registerOwner,
+    updateUser,
   };
 
   return (
