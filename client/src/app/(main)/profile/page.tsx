@@ -6,17 +6,24 @@ import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
 import { Password } from "@/components/perfil/Password";
 import { UsersContext } from "@/context/UsersContext";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 
 export default function Perfil() {
   const { isLogged } = useContext(UsersContext);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   const userData = {
     id: isLogged?.id || "",
     name: isLogged?.name || "Usuario",
     email: isLogged?.email || "",
     imgUrl: isLogged?.imgUrl || null,
-    phone: "", // Temporal
+    phone: "",
     roles: isLogged?.roles || [],
   };
 
@@ -25,8 +32,8 @@ export default function Perfil() {
       <Navbar />
       <div className={styles.profile}>
         <div className={styles.userLayout}>
-          {/* <UserInfo user={userData} /> */}
-          <Password /> 
+          <UserInfo user={userData}/>
+          <Password />
         </div>
       </div>
       <Footer />
