@@ -39,19 +39,19 @@ export function Employees() {
     },
   ]);
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const data = await adminService.getAllPlates()
-        setEmployees(data)
-      } catch (err) {
-        console.error("Error cargando empleados", err)
-      }
-    }
-    fetchEmployees()
-  }, [])
+  // useEffect(() => {
+  //   const fetchEmployees = async () => {
+  //     try {
+  //       const data = await adminService.getAllPlates()
+  //       setEmployees(data)
+  //     } catch (err) {
+  //       console.error("Error cargando empleados", err)
+  //     }
+  //   }
+  //   fetchEmployees()
+  // }, [])
 
-  console.log(employees);
+  // console.log(employees);
   
 
   // try {

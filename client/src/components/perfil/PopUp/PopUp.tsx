@@ -5,6 +5,7 @@ import { IoCloseCircleSharp } from "react-icons/io5";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { getAuthHeaders } from "@/services/adminService";
 
 export interface PopUpProps {
   setShowPop: React.Dispatch<React.SetStateAction<boolean>>;
@@ -28,18 +29,20 @@ export const PopUp: React.FC<PopUpProps> = ({ setShowPop, id }) => {
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token");
+  const token = getAuthHeaders();
 
-    if (!file || !token) return
-    
+    if (!file) return;
+
     const formData = new FormData();
     formData.append("file", file);
 
-    await axios.post(`${API_URL}/files/upload-image/${id}`, formData, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    try {
+      await axios.post(`${API_URL}/files/upload-image/${id}`, formData, token);
+
+      setShowPop(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
