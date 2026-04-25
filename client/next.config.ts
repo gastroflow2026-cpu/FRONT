@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -14,6 +15,9 @@ const nextConfig: NextConfig = {
       },
     ],
     domains: ["res.cloudinary.com"],
+  },
+  turbopack: {
+    root: path.join(__dirname),
   },
 };
 

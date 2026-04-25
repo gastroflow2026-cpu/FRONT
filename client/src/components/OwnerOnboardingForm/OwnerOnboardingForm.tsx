@@ -37,11 +37,7 @@ export default function OwnerOnboardingForm() {
 
         const result = await completeOwnerOnboarding(payload as OwnerOnboardingFormValues);
 
-        if (
-          (result.status === 200 || result.status === 201) &&
-          result.data &&
-          "user" in result.data
-        ) {
+        if ((result.status === 200 || result.status === 201) && result.data && "user" in result.data) {
           localStorage.setItem("restaurantName", values.name.trim());
 
           await Swal.fire({
@@ -57,9 +53,7 @@ export default function OwnerOnboardingForm() {
         }
 
         const backendMessage =
-          result.data &&
-          "message" in result.data &&
-          typeof result.data.message === "string"
+          result.data && "message" in result.data && typeof result.data.message === "string"
             ? result.data.message
             : "No fue posible completar el onboarding del restaurante.";
 
@@ -97,14 +91,11 @@ export default function OwnerOnboardingForm() {
                 <Building2 className="h-4 w-4" />
                 Onboarding del restaurante
               </div>
-              <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
-                Configura tu restaurante
-              </h1>
+              <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">Configura tu restaurante</h1>
               <p className="text-sm leading-6 text-white/70 md:text-base">
                 {isLogged?.name ? `Hola ${isLogged.name}. ` : ""}
-                Este paso usa el contrato real de creacion de restaurante del backend.
-                Solo el nombre es obligatorio; el resto te ayuda a dejar la ficha lista
-                para operar.
+                En este paso configuraras la informacion principal de tu restaurante. El nombre es obligatorio; los
+                demas campos son opcionales y te permitiran dejar la ficha lista para comenzar a operar.
               </p>
             </div>
           </div>
@@ -221,15 +212,15 @@ export default function OwnerOnboardingForm() {
                 <MapPin className="h-4 w-4 text-orange-300" />
                 Direccion
               </label>
-                <input
-                  id="address"
-                  name="address"
-                  type="text"
-                  placeholder="Av. Corrientes 1234"
-                  maxLength={150}
-                  className={fieldClassName}
-                  value={formik.values.address}
-                  onChange={formik.handleChange}
+              <input
+                id="address"
+                name="address"
+                type="text"
+                placeholder="Av. Corrientes 1234"
+                maxLength={150}
+                className={fieldClassName}
+                value={formik.values.address}
+                onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
               />
             </div>
