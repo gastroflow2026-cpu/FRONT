@@ -48,6 +48,7 @@ export function Settings() {
   useEffect(() => {
     const fetchRestaurantData = async () => {
       const token = getToken();
+
       if (!token || !API_URL) {
         setIsLoading(false);
         return;
@@ -96,6 +97,7 @@ export function Settings() {
     onSubmit: async (values, { setSubmitting }) => {
       try {
         const token = getToken();
+
         if (!token || !API_URL) {
           await Swal.fire({
             theme: "dark",
@@ -372,11 +374,7 @@ export function Settings() {
           </span>
         </label>
 
-        <button
-          type="submit"
-          disabled={formik.isSubmitting}
-          className={styles.submitButton}
-        >
+        <button type="submit" disabled={formik.isSubmitting} className={styles.submitButton}>
           <Save className={styles.buttonIcon} />
           {formik.isSubmitting ? "Guardando..." : "Guardar Cambios"}
         </button>
