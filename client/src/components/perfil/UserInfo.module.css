@@ -1,4 +1,6 @@
 .card {
+  --accent-gradient-start: #f97316;
+  --accent-gradient-end: #ec4899;
   width: 100%;
   max-width: 380px;
   background: #0b0f20;
@@ -21,8 +23,14 @@
   width: 155px;
   height: 155px;
   border-radius: 50%;
-  background-color: #cfcfcf;
-  border: 5px solid #fb7050;
+  border: 5px solid transparent;
+  background:
+    linear-gradient(#cfcfcf, #cfcfcf) padding-box,
+    linear-gradient(
+      to right,
+      var(--accent-gradient-start),
+      var(--accent-gradient-end)
+    ) border-box;
   position: relative;
   transition: 0.3s;
   overflow: hidden;
@@ -67,7 +75,21 @@
   height: 70px;
   display: flex;
   width: 100%;
-  border-top: 2px solid #fb7050;
+  position: relative;
+}
+
+.infoRow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent-gradient-start),
+    var(--accent-gradient-end)
+  );
 }
 
 .half {
@@ -77,10 +99,25 @@
   align-items: center;
   justify-content: center;
   word-break: break-all;
+  position: relative;
 }
 
 .half:first-child {
-  border-right: 2px solid #fb7050;
+  border-right: none;
+}
+
+.half:first-child::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    var(--accent-gradient-start),
+    var(--accent-gradient-end)
+  );
 }
 
 .label {

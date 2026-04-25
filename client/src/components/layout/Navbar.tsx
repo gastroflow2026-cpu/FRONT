@@ -18,6 +18,7 @@ type NavbarRestaurant = PublicRestaurantCardItem & {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const { isLogged, logoutUser } = useContext(UsersContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [restaurants, setRestaurants] = useState<NavbarRestaurant[]>([]);
@@ -26,6 +27,10 @@ const Navbar = () => {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -55,23 +60,17 @@ const Navbar = () => {
     );
   }, [restaurants, searchTerm]);
 
-const hasValidOwnerSession = mounted
-  ? Boolean(isLogged?.roles?.includes("rest_admin"))
-  : false;
-
-const primaryUserRoute = hasValidOwnerSession ? "/admin" : "/reservations";
-
-const primaryUserLabel = hasValidOwnerSession
-  ? "Dashboard Admin"
-  : "Mis Reservas";
-
-const greetingName = mounted
-  ? hasValidOwnerSession
+  const hasValidOwnerSession = isHydrated && Boolean(
+    isLogged?.roles?.includes("rest_admin"),
+  );
+  const primaryUserRoute = hasValidOwnerSession ? "/admin" : "/reservations";
+  const primaryUserLabel = hasValidOwnerSession
+    ? "Dashboard Admin"
+    : "Mis Reservas";
+  const greetingName = hasValidOwnerSession
     ? `Owner ${isLogged?.name}`
-    : isLogged?.name
-  : "";
-
-const showAuthenticatedActions = mounted ? Boolean(isLogged) : false;
+    : isLogged?.name;
+  const showAuthenticatedActions = isHydrated && Boolean(isLogged);
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#090b12]/95 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">

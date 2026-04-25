@@ -24,7 +24,7 @@ export default function Perfil() {
     email: isLogged?.email || "",
     imgUrl: isLogged?.imgUrl || null,
     phone: "",
-    roles: isLogged?.roles || [],
+    roles: isLogged?.roles?.[0] ? [isLogged.roles[0]] : [],
   };
 
   return (
