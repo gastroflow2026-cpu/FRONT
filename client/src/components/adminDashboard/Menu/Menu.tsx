@@ -31,11 +31,16 @@ type BackendMenuCategory = {
   items: BackendMenuItem[];
 };
 
-const getToken = () =>
-  localStorage.getItem("token") ||
-  localStorage.getItem("accessToken") ||
-  localStorage.getItem("authToken");
+const getToken = () => {
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("authToken");
 
+  if (!token) return null;
+
+  return token.replace(/^"|"$/g, "");
+};
 const mapBackendStatusToFront = (
   status: string,
 ): "disponible" | "agotado" | "inactivo" => {
