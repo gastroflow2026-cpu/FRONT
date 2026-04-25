@@ -22,4 +22,12 @@ export const ADMIN_ENDPOINTS = {
     DELETE: (id: string) => `${API_URL}/menu/items/${id}`,
     STATUS: (id: string) => `${API_URL}/menu/items/${id}/status`,
   },
+
+  // --- Modulo de Menu Categories
+  CATEGORIES: {
+    CREATE: `${API_URL}/menu/categories`,
+    LIST: `${API_URL}/menu/categories`,
+    UPDATE: (id: string) => `${API_URL}/menu/categories/${id}`,
+    DELETE: (id: string) => `${API_URL}/menu/categories/${id}`,
+  },
 };
