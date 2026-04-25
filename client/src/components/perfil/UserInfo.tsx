@@ -7,9 +7,31 @@ import { FaPen } from "react-icons/fa";
 import { PopUp } from "./PopUp/PopUp";
 import Image from "next/image";
 
+const ROLE_LABELS: Record<string, string> = {
+  customer: "Comensal",
+  rest_admin: "Administrador",
+  waiter: "Mozo",
+  mesero: "Mozo",
+  chef: "Cocinero",
+  cocinero: "Cocinero",
+  cashier: "Cajero",
+  cajero: "Cajero",
+};
+
 export default function UserInfo({ user }: { user: User }) {
-  const { id, name, email, phone, imgUrl } = user ?? {};
+  const { id, name, email, phone, imgUrl, roles } = user ?? {};
   const [showPop, setShowPop] = useState(false);
+  const roleLabel = useMemo(() => {
+    const rawRole = roles?.[0];
+
+    if (!rawRole) {
+      return "Sin rol";
+    }
+
+    const normalizedRole = rawRole.toLowerCase();
+
+    return ROLE_LABELS[normalizedRole] ?? rawRole;
+  }, [roles]);
 
   return (
     <div className={styles.card}>
@@ -34,7 +56,7 @@ export default function UserInfo({ user }: { user: User }) {
       </div>
 
       <h2 className={styles.name}>{name}</h2>
-      <p className={styles.role}>COMENSAL</p>
+  <p className={styles.role}>{roleLabel}</p>
 
       <div className={styles.infoRow}>
         <div className={styles.half}>

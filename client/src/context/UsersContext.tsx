@@ -102,7 +102,7 @@ export const UsersContext = createContext<UsersContextType>({
   completeOwnerOnboarding: async () => ({ status: 0 }),
   loginUserGoogle: async () => {},
   registerUserGoogle: async () => {},
-  logoutUser: () => {},
+  logoutUser: async () => {},
   registerNewUser: async () => 0,
   registerOwner: async () => ({ status: 0 }),
   updateUser: async () => {},
@@ -378,17 +378,27 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   }, [showGoogleAuthError, showGoogleRegistrationSuccess, clearQueryParam]);
 
 
-  const logoutUser = () => {
-    clearSession();
+  const logoutUser = async () => {
+  const result = await Swal.fire({
+    title: "¿Cerrar sesión?",
+    text: "¿Estás seguro que querés salir?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#f97316",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, salir",
+    cancelButtonText: "Cancelar",
+  });
 
-    clearQueryParam("token");
-    clearQueryParam("error");
-    clearQueryParam("registered");
+  if (!result.isConfirmed) return;
 
-    setIsLogged(null);
-
-    router.push("/");
-  };
+  clearSession();
+  clearQueryParam("token");
+  clearQueryParam("error");
+  clearQueryParam("registered");
+  setIsLogged(null);
+  router.push("/");
+};
 
   const registerNewUser = async (
     values: RegisterValues,
