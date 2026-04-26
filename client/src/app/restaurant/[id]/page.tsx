@@ -10,9 +10,10 @@ import { reservationSchema } from "@/validations/reservationSchema";
 import { UsersContext } from "@/context/UsersContext";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { ALL_RESTAURANTS } from "@/app/data/restaurants.data"; 
 import TableGrid from "@/components/features/table.grid";
-import { Table } from "@/app/data/restaurants.data";
+import { ReservationsContext } from "@/context/ReservationsContext";
+import { useTables } from "@/context/TablesContext";
+import type { Table } from "@/context/TablesContext";
 
 type PublicMenuItem = {
   id: string;
@@ -31,27 +32,68 @@ type PublicMenuCategory = {
   items: PublicMenuItem[];
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+type PublicRestaurantResponse = {
+  id?: string;
+  slug?: string | null;
+  name?: string | null;
+  city?: string | null;
+  country?: string | null;
+  address?: string | null;
+  category?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  logo_url?: string | null;
+  rating?: number | string | null;
+  about?: string | null;
+};
+
+type RestaurantDetailData = {
+  id: string;
+  name: string;
+  location: string;
+  category: string;
+  rating: string;
+  image: string;
+  about: string;
+};
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
+const FALLBACK_RESTAURANT_IMAGE =
+  "https://res.cloudinary.com/dgzp5pfmp/image/upload/v1777002092/Pastas_portada_Bella_Vita_t43c1o.png";
+
+type PublicRestaurant = {
+  id: string;
+  name: string;
+  image?: string;
+  logo_url?: string;
+  rating?: number;
+  city?: string;
+  country?: string;
+  description?: string;
+  tables?: Table[];
+  [key: string]: any;
+};
 
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
+  const [loadingRestaurant, setLoadingRestaurant] = useState(true);
+  const [restaurant, setRestaurant] = useState<RestaurantDetailData | null>(
+    null,
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
-  const restaurant = ALL_RESTAURANTS.find(r => String(r.id) === String(restaurantId));
-  if (!restaurant) return <div>Restaurante no encontrado</div>;
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  
+  const { tables, loading: loadingTables, getTables } = useTables();
 
   // Fecha mínima para el atributo 'min' del input date
   const today = new Date();
   const minReservationDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-  const FALLBACK_MENU_IMAGE =
-    "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg";
+  const FALLBACK_MENU_IMAGE = "";
 
   const [formValues, setFormValues] = useState({
     name: "",
@@ -76,12 +118,11 @@ const RestaurantDetail = () => {
     const fetchMenu = async () => {
       try {
         const { data } = await axios.get<PublicMenuCategory[]>(
-          `${API_URL}/menu/public`,
+          "http://localhost:3000/menu/public",
         );
-
         setCategories(data);
       } catch (error) {
-        console.error("Error cargando menú:", error);
+        console.warn("Error cargando menú:", error);
         setCategories([]);
       } finally {
         setLoadingMenu(false);
@@ -89,7 +130,90 @@ const RestaurantDetail = () => {
     };
 
     fetchMenu();
-  }, []); // EFECTO 2: Persistencia de datos - Recuperar si existen
+  }, []);
+
+  useEffect(() => {
+    const buildLocation = (restaurantData: PublicRestaurantResponse) => {
+      const cityCountry = [restaurantData.city, restaurantData.country]
+        .filter((value): value is string => Boolean(value && value.trim()))
+        .join(", ");
+
+      if (cityCountry) {
+        return cityCountry;
+      }
+
+      return restaurantData.address?.trim() || "-";
+    };
+
+    const fetchRestaurant = async () => {
+      if (!API_URL || !restaurantId) {
+        setRestaurant(null);
+        setLoadingRestaurant(false);
+        return;
+      }
+
+      try {
+        const { data } = await axios.get<PublicRestaurantResponse[]>(
+          `${API_URL}/restaurant/public/all`,
+        );
+
+        if (!Array.isArray(data)) {
+          setRestaurant(null);
+          return;
+        }
+
+        const matchedRestaurant = data.find(
+          (item) => item.id === restaurantId || item.slug === restaurantId,
+        );
+
+        if (!matchedRestaurant) {
+          setRestaurant(null);
+          return;
+        }
+
+        const ratingValue = matchedRestaurant.rating;
+        const normalizedRating =
+          typeof ratingValue === "number"
+            ? ratingValue.toFixed(1)
+            : ratingValue?.toString().trim() || "-";
+
+        setRestaurant({
+          id: matchedRestaurant.id || restaurantId,
+          name: matchedRestaurant.name?.trim() || "-",
+          location: buildLocation(matchedRestaurant),
+          category:
+            matchedRestaurant.category?.trim() ||
+            matchedRestaurant.description?.trim() ||
+            "-",
+          rating: normalizedRating,
+          image:
+            matchedRestaurant.image_url?.trim() ||
+            matchedRestaurant.logo_url?.trim() ||
+            FALLBACK_RESTAURANT_IMAGE,
+          about:
+            matchedRestaurant.about?.trim() ||
+            matchedRestaurant.description?.trim() ||
+            "Información del restaurante no disponible.",
+        });
+      } catch (error) {
+        console.warn("Error cargando restaurante:", error);
+        setRestaurant(null);
+      } finally {
+        setLoadingRestaurant(false);
+      }
+    };
+
+    fetchRestaurant();
+  }, [restaurantId]);
+
+  // EFECTO 2: Carga de mesas desde el back
+  useEffect(() => {
+    if (restaurantId) {
+      getTables(restaurantId);
+    }
+  }, [restaurantId, getTables]);
+
+  // EFECTO 3: Persistencia de datos
   useEffect(() => {
     const savedBookingData = localStorage.getItem("gastroflow_temp_booking");
     if (savedBookingData) {
@@ -131,18 +255,17 @@ const RestaurantDetail = () => {
   };
 
   // El formulario es válido si no hay errores y todos los campos obligatorios tienen valor
-  const isFormValid = 
-    Object.values(formErrors).every((err) => err === "") && 
-    formValues.name !== "" && 
-    formValues.email !== "" && 
-    formValues.phone !== "" && 
-    formValues.date !== "" &&
-    selectedTable !== null;
-    
 
   const getMenuItemImage = (item: PublicMenuItem) => {
-    return item.image_url || FALLBACK_MENU_IMAGE;
+    return item.image_url?.trim() || FALLBACK_MENU_IMAGE;
   };
+
+  const isFormValid =
+    Object.values(formErrors).every((err) => err === "") &&
+    formValues.name !== "" &&
+    formValues.email !== "" &&
+    formValues.phone !== "" &&
+    formValues.date !== "";
 
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
@@ -152,18 +275,12 @@ const RestaurantDetail = () => {
       // Validar formulario completo con Yup
       await reservationSchema.validate(formValues, { abortEarly: false });
 
-      const finalBookingData = {
-    ...formValues,
-    tableId: selectedTable?.id,
-    tableNumber: selectedTable?.number
-  };
-      
       if (!isLogged) {
         // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
         console.log("Usuario no logueado, guardando datos temporalmente");
         const dataToSave = {
           restaurantId: restaurantId,
-          bookingDetails: finalBookingData
+          bookingDetails: formValues,
         };
         localStorage.setItem(
           "gastroflow_temp_booking",
@@ -185,23 +302,27 @@ const RestaurantDetail = () => {
         console.log("Reserva válida enviando al backend:", formValues);
       }
     } catch (err: any) {
-      console.error("Error de validación final:", err.errors ?? err.message);
-      // SweetAlert para mostrar la validación general
+      const errorMessage = err?.message || "No se pudo crear la reserva";
+      console.warn("Error al crear reserva:", errorMessage);
       Swal.fire({
         icon: "error",
-        title: "Formulario incompleto",
-        text: "Por favor verifica que todos los campos sean válidos",
+        title: "No se pudo confirmar la reserva",
+        text: errorMessage,
         confirmButtonColor: "#ff7e5f",
       });
     }
   };
-  if (!restaurant) {
-    return <div className="p-10">Restaurante no encontrado</div>;
-  }
 
-  // Filtrar mesas según la cantidad de comensales
-  const filteredTables = (restaurant.tables || []).filter(
-    (t) => t.status === 'decorative' || (t.capacity >= formValues.guests && t.type === 'table')
+  if (loadingRestaurant)
+    return <div className="p-10">Cargando restaurante...</div>;
+  if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
+
+  // Filtrar mesas por capacidad >= comensales y que estén disponibles
+  const filteredTables = tables.filter(
+    (t) =>
+      t.capacity >= formValues.guests &&
+      (t.status === "DISPONIBLE" || t.status === "RESERVADA") &&
+      t.is_active,
   );
 
   return (
@@ -243,10 +364,7 @@ const RestaurantDetail = () => {
                 Sobre nosotros
               </h2>
               <p className="text-gray-600 leading-relaxed italic">
-                "La Bella Vita ofrece una experiencia italiana auténtica en el
-                corazón de Palermo. Con pastas amasadas a mano y recetas
-                transmitidas por generaciones, cada plato es un viaje a las
-                raíces de Italia."
+                {restaurant.about}
               </p>
             </div>
 
@@ -305,92 +423,89 @@ const RestaurantDetail = () => {
 
                         <div className="space-y-4">
                           {category.items.map((item: PublicMenuItem) => (
-                            <React.Fragment key={item.id}>
-                              <div
-                                className="flex flex-col gap-4 rounded-2xl border border-gray-200 p-4 transition hover:border-gastro-coral md:flex-row md:items-center md:justify-between"
-                              >
-                                <div className="flex gap-4 group">
-                                  <div className="h-34 w-50 shrink-0 overflow-hidden rounded-xl border border-gray-200">
-                                    <img
-                                      src={getMenuItemImage(item)}
-                                      alt={item.name}
-                                      className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-175 group-hover:brightness-110"
-                                      onError={(e) => {
-                                        e.currentTarget.src = FALLBACK_MENU_IMAGE;
-                                      }}
-                                    />
-                                  </div>
-
-                                  <div className="min-w-0">
-                                    <h4 className="font-semibold text-slate-900">
-                                      {item.name}
-                                    </h4>
-
-                                    <p className="mt-1 text-sm text-slate-600">
-                                      {item.description || "Sin descripción"}
-                                    </p>
-
-                                    {!!item.allergens?.trim() && (
-                                      <>
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                          {item.allergens
-                                            .split(",")
-                                            .map(
-                                              (
-                                                allergen: string,
-                                                index: number,
-                                              ) => {
-                                                const key = allergen
-                                                  .trim()
-                                                  .toLowerCase();
-
-                                                const allergenLabels: Record<
-                                                  string,
-                                                  string
-                                                > = {
-                                                  gluten: "Gluten",
-                                                  lacteos: "Lácteos",
-                                                  huevo: "Huevo",
-                                                  sulfitos: "Sulfitos",
-                                                };
-
-                                                return (
-                                                  <span
-                                                    key={`${item.id}-allergen-${index}`}
-                                                    className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-                                                  >
-                                                    {allergenLabels[key] ||
-                                                      allergen.trim()}
-                                                  </span>
-                                                );
-                                              },
-                                            )}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
+                            <div
+                              key={item.id}
+                              className="flex flex-col gap-4 rounded-2xl border border-gray-200 p-4 transition hover:border-gastro-coral md:flex-row md:items-center md:justify-between"
+                            >
+                              <div className="flex gap-4 group">
+                                <div className="h-34 w-50 shrink-0 overflow-hidden rounded-xl border border-gray-200">
+                                  <img
+                                    src={getMenuItemImage(item)}
+                                    alt={item.name}
+                                    className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-175 group-hover:brightness-110"
+                                    onError={(e) => {
+                                      e.currentTarget.onerror = null;
+                                      e.currentTarget.src = FALLBACK_MENU_IMAGE;
+                                    }}
+                                  />
                                 </div>
 
-                                <div className="font-bold text-slate-900 md:text-right">
-                                  {new Intl.NumberFormat("en-US", {
-                                    style: "currency",
-                                    currency: "USD",
-                                    maximumFractionDigits: 0,
-                                  })
-                                    .format(Number(item.price))
-                                    .replace("$", "US$")}
+                                <div className="min-w-0">
+                                  <h4 className="font-semibold text-slate-900">
+                                    {item.name}
+                                  </h4>
+
+                                  <p className="mt-1 text-sm text-slate-600">
+                                    {item.description || "Sin descripción"}
+                                  </p>
+
+                                  {!!item.allergens?.trim() && (
+                                    <>
+                                      <div className="mt-2 flex flex-wrap gap-2">
+                                        {item.allergens
+                                          .split(",")
+                                          .map(
+                                            (
+                                              allergen: string,
+                                              index: number,
+                                            ) => {
+                                              const key = allergen
+                                                .trim()
+                                                .toLowerCase();
+
+                                              const allergenLabels: Record<
+                                                string,
+                                                string
+                                              > = {
+                                                gluten: "Gluten",
+                                                lacteos: "Lácteos",
+                                                huevo: "Huevo",
+                                                sulfitos: "Sulfitos",
+                                              };
+
+                                              return (
+                                                <span
+                                                  key={`${item.id}-allergen-${index}`}
+                                                  className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                                                >
+                                                  {allergenLabels[key] ||
+                                                    allergen.trim()}
+                                                </span>
+                                              );
+                                            },
+                                          )}
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                              <div className="font-bold text-slate-900">
-                                {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(Number(item.price))}
+
+                              <div className="font-bold text-slate-900 md:text-right">
+                                {new Intl.NumberFormat("en-US", {
+                                  style: "currency",
+                                  currency: "USD",
+                                  maximumFractionDigits: 0,
+                                })
+                                  .format(Number(item.price))
+                                  .replace("$", "US$")}
                               </div>
-                            </React.Fragment>
+                            </div>
                           ))}
                         </div>
                       </div>
                     );
                   })
-                )}
+              )}
             </div>
           </div>
 
@@ -488,6 +603,7 @@ const RestaurantDetail = () => {
                     Hora
                   </label>
                   <select
+                    aria-label="Seleccionar hora"
                     name="time"
                     value={formValues.time}
                     onChange={handleInputChange}
@@ -511,7 +627,6 @@ const RestaurantDetail = () => {
                     </p>
                   )}
                 </div>
-
 
                 {/* Comensales */}
                 <div>
@@ -545,18 +660,33 @@ const RestaurantDetail = () => {
                   )}
                 </div>
 
-                {/* Selección de mesa (filtrada por comensales) */}
+                {/* Selección de mesa */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">Selecciona tu mesa</label>
-                  <TableGrid
-                    tables={filteredTables}
-                    selectedTableId={selectedTable?.id || null}
-                    onTableSelect={setSelectedTable}
-                  />
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">
+                    Selecciona tu mesa
+                  </label>
+                  {loadingTables ? (
+                    <p className="text-center text-sm text-slate-500 py-4">
+                      Cargando mesas...
+                    </p>
+                  ) : filteredTables.length === 0 ? (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
+                      No hay mesas disponibles para este restaurante en este
+                      momento.
+                    </p>
+                  ) : (
+                    <TableGrid
+                      tables={filteredTables}
+                      selectedTableId={selectedTable?.id || null}
+                      onTableSelect={setSelectedTable}
+                    />
+                  )}
                   {selectedTable && (
                     <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl flex justify-between items-center">
                       <p className="text-orange-800 text-xs font-medium">
-                        Has seleccionado la <strong>Mesa {selectedTable.number}</strong> (Capacidad: {selectedTable.capacity} personas)
+                        Has seleccionado la{" "}
+                        <strong>Mesa {selectedTable.table_number}</strong>{" "}
+                        (Capacidad: {selectedTable.capacity} personas)
                       </p>
                       <button
                         onClick={() => setSelectedTable(null)}
@@ -578,8 +708,6 @@ const RestaurantDetail = () => {
                 </button>
                 <p className="text-[10px] text-center text-gray-400">
                   Recibirás confirmación inmediata por email.
-                  <br />
-                  (La reserva puede tener seña según el restaurante).
                 </p>
               </div>
             </div>

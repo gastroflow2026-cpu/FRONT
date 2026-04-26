@@ -1,86 +1,100 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { passwordSchema } from "@/validations/passwordSchema";
 import Swal from "sweetalert2";
+import axios from "axios";
+import { getAuthHeaders } from "@/services/adminService";
 
 export const usePasswordForm = () => {
   const [form, setForm] = useState({
-    newPass: "",
-    confirmPass: "",
-  });
+    newPassword: "",
+    confirmNewPassword: "",
+  })
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isLoading, setIsLoading] = useState(false)
 
   const validateField = async (name: string, value: string) => {
     try {
-      await passwordSchema.validateAt(name, { ...form, [name]: value });
+      await passwordSchema.validateAt(name, { ...form, [name]: value })
 
       setErrors((prev) => {
-        const copy = { ...prev };
-        delete copy[name];
-        return copy;
-      });
+        const copy = { ...prev }
+        delete copy[name]
+        return copy
+      })
     } catch (err: any) {
       setErrors((prev) => ({
         ...prev,
         [name]: err.message,
-      }));
+      }))
     }
-  };
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
+    const { name, value } = e.target
 
     setForm((prev) => ({
       ...prev,
-      [id]: value,
-    }));
+      [name]: value,
+    }))
 
-    validateField(id, value);
+    validateField(name, value)
 
-    if (id === "newPass" && form.confirmPass) {
-      validateField("confirmPass", form.confirmPass);
+    if (name === "newPassword" && form.confirmNewPassword) {
+      validateField("confirmNewPassword", form.confirmNewPassword)
     }
-  };
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.SubmitEvent) => {
+    e.preventDefault()
 
     try {
-      setIsLoading(true);
-      setErrors({});
+      setIsLoading(true)
+      setErrors({})
 
-      await passwordSchema.validate(form, { abortEarly: false });
+      await passwordSchema.validate(form, { abortEarly: false })
 
-      console.log("Formulario válido:", form)
+      const token = getAuthHeaders()
+
+      await axios.patch(`${API_URL}/users/updatepassword`, form, token)
 
       Swal.fire({
         theme: "dark",
         title: "Éxito!",
         text: "Contraseña actualizada correctamente",
         icon: "success",
-      });
-    } catch (err: any) {
-      const newErrors: Record<string, string> = {};
+      })
 
-      err.inner.forEach((error: any) => {
-        newErrors[error.path] = error.message;
-      });
+      setForm({
+        newPassword: "",
+        confirmNewPassword: "",
+      })
+
+    } catch (err: any) {
+      const newErrors: Record<string, string> = {}
+
+      if (err.inner) {
+        err.inner.forEach((error: any) => {
+          newErrors[error.path] = error.message
+        })
+      }
+
+      setErrors(newErrors)
 
       Swal.fire({
         theme: "dark",
         title: "Error!",
         text: "Error actualizando contraseña",
         icon: "error",
-      });
-
-      setErrors(newErrors);
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return {
     form,
@@ -88,5 +102,5 @@ export const usePasswordForm = () => {
     isLoading,
     handleChange,
     handleSubmit,
-  };
-};
+  }
+}
