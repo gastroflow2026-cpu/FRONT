@@ -66,7 +66,7 @@ export default function TableGrid({ tables, onTableClick }: TableGridProps) {
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-600 rounded-[2px]" />
+              <div key={i} className="bg-gray-600 rounded-xs" />
             ))}
           </div>
           <h2 className="font-semibold text-gray-800 text-sm">

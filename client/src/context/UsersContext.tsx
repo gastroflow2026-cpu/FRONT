@@ -74,12 +74,12 @@ interface RequestResult<T = undefined> {
   data?: T;
 }
 
-// 🔥 ahora SessionUser es el usuario completo
+// SessionUser es el usuario completo
 type SessionUser = AuthResponseUser;
 
 interface UsersContextType {
   isLogged: SessionUser | null;
-  loginUser: (values: LoginValues) => Promise<number>;
+  loginUser: (values: LoginValues) => Promise<{ status: number; user: AuthResponseUser }>;
   loginOwner: (
     values: LoginValues,
   ) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
@@ -98,7 +98,7 @@ interface UsersContextType {
 
 export const UsersContext = createContext<UsersContextType>({
   isLogged: null,
-  loginUser: async () => 0,
+  loginUser: async () => ({ status: 0, user: {} as AuthResponseUser }),
   loginOwner: async () => ({ status: 0 }),
   completeOwnerOnboarding: async () => ({ status: 0 }),
   loginUserGoogle: async () => {},
@@ -166,7 +166,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
 }, [isLogged, getStoredToken]);
 
   
-  const loginUser = async (values: LoginValues): Promise<number> => {
+  const loginUser = async (values: LoginValues): Promise<{ status: number; user: AuthResponseUser }> => {
     const res = await axios.post(`${API_URL}/auth/signin`, values);
     
     if (!res.data.user) throw new Error("No se recibió el usuario");
@@ -179,7 +179,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     }
     
     saveAuthSession(token, user);
-    return res.status;
+    return { status: res.status, user };
   };
   
   const loginOwner = async (

@@ -32,7 +32,7 @@ const LoginForm = () => {
     { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void },
   ) => {
     try {
-      await loginUser(values);
+      const { user } = await loginUser(values);
       await Swal.fire({
         icon: "success",
         title: "Bienvenido",
@@ -41,7 +41,14 @@ const LoginForm = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      router.push("/");
+      const roles: string[] = user?.roles ?? [];
+      if (roles.includes("waiter") || roles.includes("mesero")) {
+        router.push("/waiter");
+      } else if (roles.includes("cashier") || roles.includes("cajero")) {
+        router.push("/cashier");
+      } else {
+        router.push("/");
+      }
     } catch (error: unknown) {
       const message =
         error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED"
