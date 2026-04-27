@@ -125,7 +125,7 @@ export default function TableDrawer({ table, onClose, onCloseOrder }: TableDrawe
               className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
             >
               <CheckCircle size={16} />
-              Cobrar y cerrar orden
+              Cobrar
             </button>
           )}
           {(table.status === "libre" || table.status === "reservada") && (
