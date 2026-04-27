@@ -59,19 +59,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background-color: #f97316;
+  color: white;
   padding: 0.625rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.875rem;
+  border: none;
   cursor: pointer;
   transition: all 0.2s;
-  border: none;
   gap: 0.5rem;
 }
 
 .btnPrimary {
-  background-color: #ea580c;
-  color: white;
+  background-color: #f97316;
 }
 
 .btnPrimary:hover {

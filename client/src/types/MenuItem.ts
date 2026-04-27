@@ -1,18 +1,19 @@
+export type MenuItemStatus = "disponible" | "agotado" | "inactivo";
+
 export interface MenuItem {
   id: string;
   name: string;
   description: string;
-  price: string | number;
-  image_url: string;
-  status: string;
-  category_id?: string;
+  price: number;
+  image: string;
+  status: MenuItemStatus;
+  category_id: string;
 }
 
 export interface MenuCategory {
-  category_id: string;
-  category_name: string;
-  category_description?: string | null;
-  is_active?: boolean;
-  display_order?: number;
+  id: string;
+  name: string;
+  description: string;
+  display_order: number;
   items: MenuItem[];
 }
