@@ -17,7 +17,7 @@ export interface Table {
 interface TablesContextType {
     tables: Table[];
     loading: boolean;
-    getTables: (restaurantId: string) => Promise<void>;
+    getTables: (restaurantId: string, date?: string, time?: string) => Promise<void>;
 }
 
 export const TablesContext = createContext<TablesContextType>({
@@ -30,7 +30,7 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
     const [tables, setTables] = useState<Table[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const getTables = useCallback(async (restaurantId: string) => {
+    const getTables = useCallback(async (restaurantId: string, date?: string, time?: string) => {
         try {
             setLoading(true);
             const token = getToken();
@@ -42,9 +42,8 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
             const response = await axios.get(
                 `${API_URL}/restaurants/${restaurantId}/tables/availableTables`,
                 {
-                    headers: token ? {
-                        Authorization: `Bearer ${token}`,
-                    } : undefined,
+                    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                    params: { date, time }, // ← query params
                 }
             );
 
