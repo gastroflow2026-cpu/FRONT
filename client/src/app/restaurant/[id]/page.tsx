@@ -118,7 +118,7 @@ const RestaurantDetail = () => {
     const fetchMenu = async () => {
       try {
         const { data } = await axios.get<PublicMenuCategory[]>(
-          "http://localhost:3000/menu/public",
+          `${API_URL}/menu/${restaurantId}/public`,
         );
         setCategories(data);
       } catch (error) {
@@ -208,10 +208,9 @@ const RestaurantDetail = () => {
 
   // EFECTO 2: Carga de mesas desde el back
   useEffect(() => {
-    if (restaurantId) {
-      getTables(restaurantId);
-    }
-  }, [restaurantId, getTables]);
+    if (!restaurantId || !formValues.date) return; // ← no llama sin fecha
+    getTables(restaurantId, formValues.date, formValues.time);
+}, [restaurantId, formValues.date, formValues.time]);
 
   // EFECTO 3: Persistencia de datos
   useEffect(() => {
@@ -665,14 +664,17 @@ const RestaurantDetail = () => {
                   <label className="mb-2 block text-sm font-semibold text-slate-900">
                     Selecciona tu mesa
                   </label>
-                  {loadingTables ? (
+                  {!formValues.date ? (
+                    <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-4 text-center text-sm text-slate-500">
+                      Seleccioná una fecha para ver las mesas disponibles
+                    </p>
+                  ) : loadingTables ? (
                     <p className="text-center text-sm text-slate-500 py-4">
                       Cargando mesas...
                     </p>
                   ) : filteredTables.length === 0 ? (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
-                      No hay mesas disponibles para este restaurante en este
-                      momento.
+                      No hay mesas disponibles para este restaurante en este momento.
                     </p>
                   ) : (
                     <TableGrid
