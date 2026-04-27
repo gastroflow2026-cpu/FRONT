@@ -1,24 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { UtensilsCrossed, RefreshCw, ChevronDown, User, LogOut, LayoutGrid, X } from "lucide-react";
+import { UtensilsCrossed, RefreshCw, ChevronDown, LogOut } from "lucide-react";
 
-interface CashierNavbarProps {
+interface KitchenNavbarProps {
   restaurantName: string;
-  cashierName: string;
+  chefName: string;
 }
 
-const MENU_OPTIONS = [
-  { label: "Mis datos personales", icon: User },
-  { label: "Cerrar caja", icon: X },
-  { label: "Asignar mesas", icon: LayoutGrid },
-  { label: "Cerrar sesión", icon: LogOut },
-];
-
-export default function CashierNavbar({
+export default function KitchenNavbar({
   restaurantName,
-  cashierName,
-}: CashierNavbarProps) {
+  chefName,
+}: KitchenNavbarProps) {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -58,7 +51,7 @@ export default function CashierNavbar({
     month: "short",
   });
 
-  const initials = cashierName
+  const initials = chefName
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -74,7 +67,7 @@ export default function CashierNavbar({
         </div>
         <div className="leading-tight">
           <p className="font-semibold text-gray-800 text-sm">{restaurantName}</p>
-          <p className="text-xs text-gray-400">Sistema de gestión</p>
+          <p className="text-xs text-gray-400">Cocina</p>
         </div>
       </div>
 
@@ -102,8 +95,8 @@ export default function CashierNavbar({
             <span className="text-white text-xs font-semibold">{initials}</span>
           </div>
           <div className="leading-tight text-left">
-            <p className="text-sm font-medium text-gray-800">{cashierName}</p>
-            <p className="text-xs text-gray-400">Cajero</p>
+            <p className="text-sm font-medium text-gray-800">{chefName}</p>
+            <p className="text-xs text-gray-400">Chef</p>
           </div>
           <ChevronDown
             size={14}
@@ -111,19 +104,15 @@ export default function CashierNavbar({
           />
         </button>
 
-        {/* Dropdown */}
         {menuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
-            {MENU_OPTIONS.map(({ label, icon: Icon }) => (
-              <button
-                key={label}
-                onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors text-left"
-              >
-                <Icon size={15} className="text-gray-400 shrink-0" />
-                {label}
-              </button>
-            ))}
+          <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors text-left"
+            >
+              <LogOut size={15} className="text-gray-400 shrink-0" />
+              Cerrar sesión
+            </button>
           </div>
         )}
       </div>
