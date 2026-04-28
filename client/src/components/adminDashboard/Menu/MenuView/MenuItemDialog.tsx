@@ -68,7 +68,7 @@ export function MenuItemDialog({
     name: false,
     description: false,
     price: false,
-    image: false,
+    image_url: false,
     category_id: false,
   });
 
@@ -101,7 +101,7 @@ export function MenuItemDialog({
       name: !formData.name.trim(),
       description: !formData.description.trim(),
       price: !formData.price || parseFloat(formData.price) <= 0,
-      image: !formData.image,
+      image_url: !formData.image,
       category_id: !formData.category_id,
     };
 
@@ -115,7 +115,7 @@ export function MenuItemDialog({
       name: false,
       description: false,
       price: false,
-      image: false,
+      image_url: false,
       category_id: false,
     });
     onClose();
@@ -166,7 +166,7 @@ export function MenuItemDialog({
               onChange={(url) => updateField("image", url)}
             />
 
-            {errors.image && (
+            {errors.image_url && (
               <p className={styles.errorMessage}>La imagen es requerida</p>
             )}
           </div>

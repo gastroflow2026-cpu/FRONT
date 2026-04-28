@@ -10,10 +10,7 @@ import { useCategories } from "@/utils/useCategory";
 export function Menu() {
   const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
 
-  // const { menuItems, createItem, updateItem, deleteItem, changeStatus } =
-  //   useMenu();
-
-  const { platesList, createItem, updateItem, deleteItem } = useMenu();
+  const { platesList, createItem, updateItem, deleteItem, changeStatus } = useMenu();
 
   const { categories, createCategory, updateCategory, deleteCategory } =
     useCategories();
@@ -49,7 +46,7 @@ export function Menu() {
             categories={categories}
             onUpdateItem={updateItem}
             onDeleteItem={deleteItem}
-            // onStatusChange={changeStatus}
+            onStatusChange={changeStatus}
           />
         )}
 

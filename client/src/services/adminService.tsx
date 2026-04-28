@@ -2,8 +2,7 @@ import axios from "axios";
 import { ADMIN_ENDPOINTS } from "@/constants/AdminEndpoints";
 import { getToken } from "@/helpers/getToken";
 import { CreateEmployeePayload, Employee } from "@/types/Employee";
-import { MenuItem, MenuItemStatus } from "@/types/MenuItem";
-import { Category } from "@/types/Category";
+import { MenuItemStatus } from "@/types/MenuItem";
 
 export const getAuthHeaders = () => {
   const token = getToken();
@@ -16,10 +15,30 @@ export const getAuthHeaders = () => {
   };
 };
 
-const mapStatus = (status: string): "disponible" | "agotado" | "inactivo" => {
-  if (status === "DISPONIBLE") return "disponible";
-  if (status === "AGOTADO") return "agotado";
-  return "inactivo";
+const mapStatus = (status: string) => {
+  switch (status) {
+    case "disponible":
+      return "DISPONIBLE";
+    case "agotado":
+      return "AGOTADO";
+    case "inactivo":
+      return "INACTIVO";
+    default:
+      return "DISPONIBLE";
+  }
+};
+
+const mapStatusFromAPI = (status: string): MenuItemStatus => {
+  switch (status) {
+    case "DISPONIBLE":
+      return "disponible";
+    case "AGOTADO":
+      return "agotado";
+    case "INACTIVO":
+      return "inactivo";
+    default:
+      return "disponible";
+  }
 };
 
 export const adminService = {
@@ -89,7 +108,7 @@ export const adminService = {
         description: item.description,
         price: Number(item.price),
         image: item.image_url,
-        status: mapStatus(item.status),
+        status: mapStatusFromAPI(item.status),
         category_id: item.category_id,
       })),
     }));
@@ -137,13 +156,13 @@ export const adminService = {
     );
   },
 
-  // updatePlateStatus: async (id: string, status: MenuItemStatus) => {
-  //   return axios.patch(
-  //     ADMIN_ENDPOINTS.MENU.STATUS(id),
-  //     { status: mapStatusToBackend(status) },
-  //     getAuthHeaders()
-  //   );
-  // },
+  updatePlateStatus: async (id: string, status: MenuItemStatus) => {
+    return axios.patch(
+      ADMIN_ENDPOINTS.MENU.STATUS(id),
+      { status: mapStatus(status) },
+      getAuthHeaders(),
+    );
+  },
 
   deletePlate: async (id: string) => {
     return axios.delete(ADMIN_ENDPOINTS.MENU.DELETE(id), getAuthHeaders());
