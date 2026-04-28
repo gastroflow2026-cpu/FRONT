@@ -15,17 +15,17 @@ export const ADMIN_ENDPOINTS = {
   },
 
   MENU: {
-    LIST: `${API_URL}/menu/admin`,
-    CREATE: `${API_URL}/menu/items`,
-    UPDATE: (id: string) => `${API_URL}/menu/items/${id}`,
-    DELETE: (id: string) => `${API_URL}/menu/items/${id}`,
-    STATUS: (id: string) => `${API_URL}/menu/items/${id}/status`,
+  LIST: (restaurantId: string) => `${API_URL}/menu/${restaurantId}/admin`,
+  CREATE: `${API_URL}/menu/items`, // ← faltaba /menu/items
+  UPDATE: (id: string) => `${API_URL}/menu/items/${id}`,
+  DELETE: (id: string) => `${API_URL}/menu/items/${id}`,
+  STATUS: (id: string) => `${API_URL}/menu/items/${id}/status`,
   },
 
   CATEGORIES: {
-    CREATE: `${API_URL}/menu/categories`,
-    LIST: `${API_URL}/menu/categories`,
-    UPDATE: (id: string) => `${API_URL}/menu/categories/${id}`,
-    DELETE: (id: string) => `${API_URL}/menu/categories/${id}`,
+  LIST: (restaurantId: string) => `${API_URL}/menu/${restaurantId}/categories`,
+  CREATE: `${API_URL}/menu/categories`,
+  UPDATE: (id: string) => `${API_URL}/menu/categories/${id}`,
+  DELETE: (id: string) => `${API_URL}/menu/categories/${id}`,
   },
 };

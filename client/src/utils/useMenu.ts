@@ -7,10 +7,12 @@ export function useMenu() {
 
   const fetchMenu = async () => {
     try {
-      const { categories } = await adminService.getAllPlates();
-      setPlatesList(categories);
-    } catch (error) {
-      console.error(error);
+      setLoading(true);
+      const { categories, menuItems } =
+        await adminService.getAllPlates(isLogged.restaurant_id); // ← pasar restaurant_id
+      setCategories(categories);
+      setMenuItems(menuItems);
+    } catch {
       Swal.fire("Error", "No se pudo cargar el menú", "error");
     }
   };

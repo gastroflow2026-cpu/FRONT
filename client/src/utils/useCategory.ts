@@ -10,17 +10,18 @@ export function useCategories() {
   const { isLogged } = useContext(UsersContext);
 
   const fetchCategories = async () => {
-    try {
-      const data = await adminService.getAllCategories();
-      setCategories(data);
-    } catch {
-      Swal.fire("Error", "No se pudieron cargar categorías", "error");
-    }
+  if (!isLogged?.restaurant_id) return; // ← guard
+  try {
+    const data = await adminService.getAllCategories(isLogged.restaurant_id);
+    setCategories(data);
+  } catch {
+    Swal.fire("Error", "No se pudieron cargar categorías", "error");
+  }
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+  fetchCategories();
+  }, [isLogged?.restaurant_id]);
 
   const createCategory = async (category: {
     name: string;
