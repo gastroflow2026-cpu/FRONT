@@ -2,6 +2,7 @@ import axios from "axios";
 import { ADMIN_ENDPOINTS } from "@/constants/AdminEndpoints";
 import { getToken } from "@/helpers/getToken";
 import { CreateEmployeePayload, Employee } from "@/types/Employee";
+import { MenuItemStatus } from "@/types/MenuItem";
 
 export const getAuthHeaders = () => {
   const token = getToken();
@@ -11,6 +12,32 @@ export const getAuthHeaders = () => {
       "Content-Type": "application/json",
     },
   };
+};
+
+const mapStatus = (status: string) => {
+  switch (status) {
+    case "disponible":
+      return "DISPONIBLE";
+    case "agotado":
+      return "AGOTADO";
+    case "inactivo":
+      return "INACTIVO";
+    default:
+      return "DISPONIBLE";
+  }
+};
+
+const mapStatusFromAPI = (status: string): MenuItemStatus => {
+  switch (status) {
+    case "DISPONIBLE":
+      return "disponible";
+    case "AGOTADO":
+      return "agotado";
+    case "INACTIVO":
+      return "inactivo";
+    default:
+      return "disponible";
+  }
 };
 
 export const adminService = {
@@ -23,7 +50,9 @@ export const adminService = {
     return res.data;
   },
 
-  createEmployee: async (employeeData: CreateEmployeePayload): Promise<Employee> => {
+  createEmployee: async (
+    employeeData: CreateEmployeePayload,
+  ): Promise<Employee> => {
     const res = await axios.post(
       ADMIN_ENDPOINTS.EMPLOYEES.CREATE,
       employeeData,
@@ -32,7 +61,10 @@ export const adminService = {
     return res.data;
   },
 
-  updateEmployeeStatus: async (employeeId: string, isActive: boolean): Promise<Employee> => {
+  updateEmployeeStatus: async (
+    employeeId: string,
+    isActive: boolean,
+  ): Promise<Employee> => {
     const res = await axios.patch(
       ADMIN_ENDPOINTS.EMPLOYEES.STATUS(employeeId),
       { isActive },
@@ -108,79 +140,51 @@ export const adminService = {
       name: plate.name,
       description: plate.description,
       price: plate.price,
-      image_url: plate.image,
       category_id: plate.category_id,
+      restaurant_id: plate.restaurant_id,
+      image_url: plate.image,
+      allergens: plate.allergens || "",
+      tags: plate.tags || "",
+      prep_time_minutes: plate.prep_time_minutes || 15,
       status: "DISPONIBLE",
+      display_order: plate.display_order || 1,
     };
 
-    const res = await axios.post(
-      ADMIN_ENDPOINTS.MENU.CREATE,
-      payload,
-      getAuthHeaders(),
-    );
-
-    return res.data;
+    return axios.post(ADMIN_ENDPOINTS.MENU.CREATE, payload, getAuthHeaders());
   },
 
-  updatePlateInfo: async (id: string, plate: any) => {
-    const mapFrontStatusToBackend = (status: string) => {
-      if (status === "disponible") return "DISPONIBLE";
-      if (status === "agotado") return "AGOTADO";
-      return "INACTIVO";
-    };
-
+  updatePlateInfo: async (id: string, plate: any, restaurant_id: string) => {
     const payload = {
       name: plate.name,
       description: plate.description,
       price: plate.price,
-      image_url: plate.image,
       category_id: plate.category_id,
-      status: mapFrontStatusToBackend(plate.status),
+      restaurant_id: restaurant_id,
+      image_url: plate.image,
+      allergens: plate.allergens || "",
+      tags: plate.tags || "",
+      prep_time_minutes: plate.prep_time_minutes || 15,
+      display_order: plate.display_order || 1,
+      status: "DISPONIBLE",
     };
 
-    const res = await axios.patch(
+    return axios.patch(
       ADMIN_ENDPOINTS.MENU.UPDATE(id),
       payload,
       getAuthHeaders(),
     );
-
-    return res.data;
   },
 
-  updatePlateStatus: async (id: string, status: boolean) => {
-    const res = await axios.patch(
+  updatePlateStatus: async (id: string, status: MenuItemStatus) => {
+    return axios.patch(
       ADMIN_ENDPOINTS.MENU.STATUS(id),
-      { is_active: status },
+      { status: mapStatus(status) },
       getAuthHeaders(),
     );
-    return res.data;
   },
 
   deletePlate: async (id: string) => {
-    const res = await axios.delete(
-      ADMIN_ENDPOINTS.MENU.DELETE(id),
-      getAuthHeaders(),
-    );
-    return res.data;
-  },
-
-  updatePlateStatusFlexible: async (
-    id: string,
-    status: "disponible" | "agotado" | "inactivo",
-  ) => {
-    const mapFrontStatusToBackend = (status: string) => {
-      if (status === "disponible") return "DISPONIBLE";
-      if (status === "agotado") return "AGOTADO";
-      return "INACTIVO";
-    };
-
-    const res = await axios.patch(
-      ADMIN_ENDPOINTS.MENU.STATUS(id),
-      { status: mapFrontStatusToBackend(status) },
-      getAuthHeaders(),
-    );
-
-    return res.data;
+    return axios.delete(ADMIN_ENDPOINTS.MENU.DELETE(id), getAuthHeaders());
   },
 
   // --- SECCION: MENU (Categorias)

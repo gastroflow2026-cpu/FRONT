@@ -1,20 +1,19 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const ADMIN_ENDPOINTS = {
-  // --- Modulo de Empleados ---
   EMPLOYEES: {
     LIST: `${API_URL}/employees`,
     CREATE: `${API_URL}/employees`,
     STATUS: (id: string) => `${API_URL}/employees/${id}/status`,
-    CHANGE_PASSWORD: (id: string) => `${API_URL}/users/${id}/resetpassword`,
+    CHANGE_PASSWORD: (id: string) =>
+      `${API_URL}/users/${id}/resetpassword`,
   },
 
-  // --- Modulo de Reservaciones ---
   RESERVATIONS: {
-    LIST: (restaurantId: string) => `${API_URL}/restaurants/${restaurantId}/reservations/AllReservations`,
+    LIST: (restaurantId: string) =>
+      `${API_URL}/restaurants/${restaurantId}/reservations/AllReservations`,
   },
 
-  // --- Modulo de Menu
   MENU: {
   LIST: (restaurantId: string) => `${API_URL}/menu/${restaurantId}/admin`,
   CREATE: `${API_URL}/menu/items`, // ← faltaba /menu/items
@@ -23,7 +22,6 @@ export const ADMIN_ENDPOINTS = {
   STATUS: (id: string) => `${API_URL}/menu/items/${id}/status`,
   },
 
-  // --- Modulo de Menu Categories
   CATEGORIES: {
   LIST: (restaurantId: string) => `${API_URL}/menu/${restaurantId}/categories`,
   CREATE: `${API_URL}/menu/categories`,

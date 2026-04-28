@@ -9,8 +9,6 @@ export function useCategories() {
 
   const { isLogged } = useContext(UsersContext);
 
-  console.log(isLogged?.restaurant_id);
-
   const fetchCategories = async () => {
   if (!isLogged?.restaurant_id) return; // ← guard
   try {
@@ -70,7 +68,7 @@ export function useCategories() {
       const payload = {
         name: category.name,
         description: category.description,
-        restaurant_id: isLogged?.restaurant_id, //"11111111-1111-1111-1111-111111111111"
+        restaurant_id: "11111111-1111-1111-1111-111111111111", /*isLogged?.restaurant_id,*/
         display_order: originalCategory?.display_order || 0,
       };
 
