@@ -16,18 +16,18 @@ export const ADMIN_ENDPOINTS = {
 
   // --- Modulo de Menu
   MENU: {
-  LIST: (restaurantId: string) => `${API_URL}/menu/${restaurantId}/public`, // ← función con parámetro
-  CREATE: `${API_URL}`,
+  LIST: (restaurantId: string) => `${API_URL}/menu/${restaurantId}/admin`,
+  CREATE: `${API_URL}/menu/items`, // ← faltaba /menu/items
   UPDATE: (id: string) => `${API_URL}/menu/items/${id}`,
   DELETE: (id: string) => `${API_URL}/menu/items/${id}`,
   STATUS: (id: string) => `${API_URL}/menu/items/${id}/status`,
-},
+  },
 
   // --- Modulo de Menu Categories
   CATEGORIES: {
-    CREATE: `${API_URL}/menu/categories`,
-    LIST: `${API_URL}/menu/categories`,
-    UPDATE: (id: string) => `${API_URL}/menu/categories/${id}`,
-    DELETE: (id: string) => `${API_URL}/menu/categories/${id}`,
+  LIST: (restaurantId: string) => `${API_URL}/menu/${restaurantId}/categories`,
+  CREATE: `${API_URL}/menu/categories`,
+  UPDATE: (id: string) => `${API_URL}/menu/categories/${id}`,
+  DELETE: (id: string) => `${API_URL}/menu/categories/${id}`,
   },
 };

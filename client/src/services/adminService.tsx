@@ -5,7 +5,6 @@ import { CreateEmployeePayload, Employee } from "@/types/Employee";
 
 export const getAuthHeaders = () => {
   const token = getToken();
-
   return {
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
@@ -62,53 +61,47 @@ export const adminService = {
 
   // --- SECCION: MENU
   getAllPlates: async (restaurantId: string) => {
-  const [categoriesRes, platesRes] = await Promise.all([
-    axios.get(ADMIN_ENDPOINTS.CATEGORIES.LIST, getAuthHeaders()),
-    axios.get(ADMIN_ENDPOINTS.MENU.LIST(restaurantId), getAuthHeaders()), // ← pasar restaurantId
+  const [categoriesRes, adminMenuRes] = await Promise.all([
+    axios.get(ADMIN_ENDPOINTS.CATEGORIES.LIST(restaurantId), getAuthHeaders()),
+    axios.get(ADMIN_ENDPOINTS.MENU.LIST(restaurantId), getAuthHeaders()),
   ]);
 
-    const categoriesData = categoriesRes.data;
-    const platesData = platesRes.data;
+  const categoriesData = categoriesRes.data;
+  const adminMenuData = adminMenuRes.data; // ← array de { category_id, items: [...] }
 
-    const mapBackendStatusToFront = (status: string) => {
-      if (status === "DISPONIBLE" || status === "AVAILABLE")
-        return "disponible";
-      if (status === "AGOTADO" || status === "OUT_OF_STOCK") return "agotado";
-      return "inactivo";
-    };
+  const mapBackendStatusToFront = (status: string) => {
+    if (status === "DISPONIBLE" || status === "AVAILABLE") return "disponible";
+    if (status === "AGOTADO" || status === "OUT_OF_STOCK") return "agotado";
+    return "inactivo";
+  };
 
-    const mappedCategories = categoriesData.map((cat: any) => {
-      const items = platesData
-        .filter((item: any) => item.category_id === cat.id)
-        .map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          price: Number(item.price),
-          image: item.image_url,
-          status: mapBackendStatusToFront(item.status),
-          category_id: item.category_id,
-          category_name: cat.name,
-        }));
+  // Extraer items planos del adminMenu
+  const allItems = adminMenuData.flatMap((group: any) =>
+  group.items.map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    price: Number(item.price),
+    image: item.image_url, // ← image_url del backend → image para el frontend
+    status: mapBackendStatusToFront(item.status),
+    category_id: item.category_id,
+  }))
+);
 
-      return {
-        id: cat.id,
-        name: cat.name,
-        description: cat.description,
-        is_active: cat.is_active,
-        display_order: cat.display_order,
-        createdAt: cat.created_at,
-        items,
-      };
-    });
+  const mappedCategories = categoriesData.map((cat: any) => ({
+    id: cat.id,
+    name: cat.name,
+    description: cat.description,
+    is_active: cat.is_active,
+    display_order: cat.display_order,
+    createdAt: cat.created_at,
+    items: allItems.filter((item: any) => item.category_id === cat.id),
+  }));
 
-    const menuItems = mappedCategories.flatMap((c: any) => c.items);
+  const menuItems = allItems;
 
-    return {
-      categories: mappedCategories,
-      menuItems,
-    };
-  },
+  return { categories: mappedCategories, menuItems };
+},
 
   createNewPlate: async (plate: any) => {
     const payload = {
@@ -191,23 +184,23 @@ export const adminService = {
   },
 
   // --- SECCION: MENU (Categorias)
-  getAllCategories: async () => {
-    const res = await axios.get(
-      ADMIN_ENDPOINTS.CATEGORIES.LIST,
-      getAuthHeaders(),
-    );
-    
-    const data = res.data;
-    
-    return data.map((cat: any) => ({
-      id: cat.id,
-      name: cat.name,
-      description: cat.description,
-      is_active: cat.is_active,
-      display_order: cat.display_order,
-      createdAt: cat.created_at,
-    }));
-  },
+  getAllCategories: async (restaurantId: string) => {
+  const res = await axios.get(
+    ADMIN_ENDPOINTS.CATEGORIES.LIST(restaurantId), // ← pasar restaurantId
+    getAuthHeaders(),
+  );
+  
+  const data = res.data;
+  
+  return data.map((cat: any) => ({
+    id: cat.id,
+    name: cat.name,
+    description: cat.description,
+    is_active: cat.is_active,
+    display_order: cat.display_order,
+    createdAt: cat.created_at,
+  }));
+},
 
   createCategory: async (categoryData: {
     name: string;

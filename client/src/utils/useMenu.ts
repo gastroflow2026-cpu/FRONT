@@ -16,7 +16,6 @@ export function useMenu() {
       setLoading(true);
       const { categories, menuItems } =
         await adminService.getAllPlates(isLogged.restaurant_id); // ← pasar restaurant_id
-
       setCategories(categories);
       setMenuItems(menuItems);
     } catch {
