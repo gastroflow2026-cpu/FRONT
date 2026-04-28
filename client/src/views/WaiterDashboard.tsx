@@ -11,8 +11,58 @@ import { useTables, Table as BackendTable } from "@/context/TablesContext";
 import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3000";
-const MENU_API_URLS = [`${API_URL}/menu/public`, `${API_URL}/menu/items/public`];
-const ORDERS_API_URL = `${API_URL}/orders`;
+
+const getAxiosErrorMessage = (error: unknown): string => {
+  if (!axios.isAxiosError(error)) return "";
+
+  const data = error.response?.data as { message?: unknown; error?: unknown } | undefined;
+
+  if (Array.isArray(data?.message) && data.message.length > 0) {
+    return data.message.map((item) => String(item)).join(" | ");
+  }
+
+  if (typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data?.error === "string") {
+    return data.error;
+  }
+
+  return error.message || "";
+};
+
+const shouldTryNextMenuEndpoint = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return false;
+
+  const status = error.response?.status;
+  if (status === 404) return true;
+
+  if (status === 400) {
+    const message = getAxiosErrorMessage(error).toLowerCase();
+    if (message.includes("uuid") || message.includes("restaurant")) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const buildMenuCandidates = (baseUrl: string, restaurantId: string) => {
+  const encodedId = encodeURIComponent(restaurantId);
+  return [
+    `${baseUrl}/menu/${encodedId}/public`,
+    `${baseUrl}/menu/public?restaurant_id=${encodedId}`,
+    `${baseUrl}/menu/public?restaurantId=${encodedId}`,
+    `${baseUrl}/menu/public/${encodedId}`,
+    `${baseUrl}/restaurants/${encodedId}/menu/public`,
+    `${baseUrl}/restaurants/${encodedId}/menu`,
+    `${baseUrl}/menu/items/public?restaurant_id=${encodedId}`,
+    `${baseUrl}/menu/items/public?restaurantId=${encodedId}`,
+    `${baseUrl}/menu/public`,
+    `${baseUrl}/menu/items/public`,
+  ];
+};
 
 // ─── Tipos locales ────────────────────────────────────────────────────────────
 type TableStatus = "libre" | "ocupada" | "reservada" | "listo";
@@ -96,6 +146,12 @@ function resolveRestaurantId(user: Record<string, unknown> | null): string | nul
   return null;
 }
 
+const getCategoryId = (category: MenuCategory): string =>
+  category.category_id || category.id || "";
+
+const getCategoryName = (category: MenuCategory): string =>
+  category.category_name || category.name || "Sin categoria";
+
 export default function WaiterDashboard() {
   const { isLogged } = useContext(UsersContext);
   const { tables: backendTables, loading: loadingTables, getTables } = useTables();
@@ -114,6 +170,14 @@ export default function WaiterDashboard() {
   const [menuErrorMessage, setMenuErrorMessage] = useState("Verificá la conexión con el servidor.");
 
   const fetchMenu = useCallback(async () => {
+    if (!restaurantId) {
+      setLoadingMenu(false);
+      setMenuError(true);
+      setMenuErrorMessage("No se encontró el restaurante del usuario logueado.");
+      setMenu([]);
+      return;
+    }
+
     try {
       setLoadingMenu(true);
       setMenuError(false);
@@ -122,16 +186,21 @@ export default function WaiterDashboard() {
       let menuData: MenuCategory[] = [];
       let lastError: unknown;
 
-      for (const endpoint of MENU_API_URLS) {
+      const token = getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+      const menuCandidates = buildMenuCandidates(API_URL, restaurantId);
+
+      for (const endpoint of menuCandidates) {
         try {
-          const { data } = await axios.get<MenuCategory[]>(endpoint);
+          const { data } = await axios.get<MenuCategory[]>(endpoint, { headers });
           menuData = Array.isArray(data) ? data : [];
           lastError = null;
           break;
         } catch (error: unknown) {
           lastError = error;
 
-          if (axios.isAxiosError(error) && error.response?.status === 404) {
+          if (shouldTryNextMenuEndpoint(error)) {
             continue;
           }
 
@@ -145,20 +214,19 @@ export default function WaiterDashboard() {
 
       setMenu(menuData);
       if (menuData.length > 0) {
-        setActiveCategory((prev) => prev || menuData[0].category_id);
+        setActiveCategory((prev) => prev || getCategoryId(menuData[0]));
       }
     } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.message || error.message || "Verificá la conexión con el servidor."
-        : "Verificá la conexión con el servidor.";
+      const message = getAxiosErrorMessage(error) || "Verificá la conexión con el servidor.";
 
       console.error("Error al cargar el menú:", error);
       setMenuError(true);
       setMenuErrorMessage(message);
+      setMenu([]);
     } finally {
       setLoadingMenu(false);
     }
-  }, []);
+  }, [restaurantId]);
 
   useEffect(() => {
     fetchMenu();
@@ -205,7 +273,7 @@ export default function WaiterDashboard() {
 
     try {
       const headers = getAuthHeaders();
-      const { data } = await axios.get<OrderByTableResponse[]>(`${ORDERS_API_URL}/table/${tableId}`, {
+      const { data } = await axios.get<OrderByTableResponse[]>(`${API_URL}/table/${tableId}`, {
         headers,
       });
 
@@ -289,163 +357,177 @@ export default function WaiterDashboard() {
   }
 
   async function handleSendToKitchen() {
-    if (!selectedTable || cart.length === 0 || !restaurantId || !waiterId) return;
+  if (!selectedTable || cart.length === 0 || !waiterId) return;
 
-    const result = await Swal.fire({
-      title: `Enviar pedido – Mesa ${selectedTable.tableNumber}`,
-      html: `<p>Se enviará el pedido de <strong>${cart.length} ítem(s)</strong> a cocina.</p>`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, enviar",
-      cancelButtonText: "Cancelar",
+  const result = await Swal.fire({
+    title: `Enviar pedido – Mesa ${selectedTable.tableNumber}`,
+    html: `<p>Se enviará el pedido de <strong>${cart.length} ítem(s)</strong> a cocina.</p>`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, enviar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#f97316",
+    cancelButtonColor: "#6b7280",
+  });
+
+  if (!result.isConfirmed) return;
+
+  setIsSendingOrder(true);
+  try {
+    const headers = getAuthHeaders();
+
+    // 1. Abrir la orden
+    const { data: openedOrder } = await axios.post(
+      `${API_URL}/order/open`,
+      { tableId: selectedTable.id },
+      { headers }
+    );
+
+    const orderId = openedOrder?.id || openedOrder?.order_id;
+    if (!orderId) throw new Error("No se recibió el id de la orden");
+
+  // 2. Agregar cada ítem
+for (const c of cart) {
+  await axios.post(
+    `${API_URL}/order/${orderId}/items`,
+    {
+      menuItemId: c.item.id,
+      name: c.item.name.slice(0, 59),
+      quantity: c.quantity,
+      notes: c.observation?.trim() || "",
+    },
+    { headers }
+  );
+}
+
+    // 3. Enviar a cocina
+   await axios.patch(
+  `${API_URL}/order/${orderId}`,
+  { status: "EN_PROGRESO" },  // ← valor real del enum IN_PROGRESS
+  { headers }
+);
+
+    // Guardar orderId para poder cerrarla después
+    setActiveOrderByTable((prev) => ({ ...prev, [selectedTable.id]: orderId }));
+    setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "ocupada" }));
+    await getTables(restaurantId!);
+
+    await Swal.fire({
+      title: "Pedido enviado",
+      text: "La orden fue enviada a cocina.",
+      icon: "success",
       confirmButtonColor: "#f97316",
-      cancelButtonColor: "#6b7280",
+      timer: 1800,
+      showConfirmButton: false,
     });
 
-    if (!result.isConfirmed) return;
-
-    setIsSendingOrder(true);
-    try {
-      const headers = getAuthHeaders();
-      const payload: CreateOrderPayload = {
-        restaurant_id: restaurantId,
-        table_id: selectedTable.id,
-        waiter_id: waiterId,
-        items: cart.map((c) => ({
-          menuItemId: c.item.id,
-          name: c.item.name,
-          price: Number(c.item.price),
-          quantity: c.quantity,
-          observations: c.observation || undefined,
-        })),
-        total_amount: Number(cartTotal.toFixed(2)),
-        observations: generalNote.trim() || undefined,
-      };
-
-      const { data: createdOrder } = await axios.post<CreatedOrderResponse>(ORDERS_API_URL, payload, {
-        headers,
-      });
-
-      const orderId = extractOrderId(createdOrder);
-      if (!orderId) {
-        throw new Error("No se recibió el id de la orden creada");
-      }
-
-      await axios.patch(
-        `${ORDERS_API_URL}/${orderId}/status`,
-        { status: "cooking" },
-        { headers }
-      );
-
-      setActiveOrderByTable((prev) => ({ ...prev, [selectedTable.id]: orderId }));
-      setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "ocupada" }));
-      await getTables(restaurantId);
-
-      await Swal.fire({
-        title: "Pedido enviado",
-        text: "La orden se creó y fue enviada a cocina.",
-        icon: "success",
-        confirmButtonColor: "#f97316",
-        timer: 1800,
-        showConfirmButton: false,
-      });
-
-      setCart([]);
-      setGeneralNote("");
-      setSelectedTableId(null);
-    } catch (error) {
-      const message =
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || "No se pudo enviar la orden a cocina."
-          : "No se pudo enviar la orden a cocina.";
-
-      await Swal.fire({
-        title: "Error al enviar",
-        text: message,
-        icon: "error",
-        confirmButtonColor: "#f97316",
-      });
-    } finally {
-      setIsSendingOrder(false);
-    }
-  }
-
-  async function handleCloseOrder() {
-    if (!selectedTable || !restaurantId) return;
-
-    const result = await Swal.fire({
-      title: `Cerrar orden – Mesa ${selectedTable.tableNumber}`,
-      text: "La orden pasará al cajero para su cobro.",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, cerrar",
-      cancelButtonText: "Cancelar",
+    setCart([]);
+    setGeneralNote("");
+    setSelectedTableId(null);
+  } catch (error) {
+    const message = axios.isAxiosError(error)
+      ? error.response?.data?.message || "No se pudo enviar la orden."
+      : "No se pudo enviar la orden.";
+    await Swal.fire({
+      title: "Error al enviar",
+      text: message,
+      icon: "error",
       confirmButtonColor: "#f97316",
-      cancelButtonColor: "#6b7280",
+    });
+  } finally {
+    setIsSendingOrder(false);
+  }
+}
+
+async function handleCloseOrder() {
+  if (!selectedTable) return;
+
+  const result = await Swal.fire({
+    title: `Cerrar orden – Mesa ${selectedTable.tableNumber}`,
+    text: "La orden pasará al cajero para su cobro.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, cerrar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#f97316",
+    cancelButtonColor: "#6b7280",
+  });
+
+  if (!result.isConfirmed) return;
+
+  setIsClosingOrder(true);
+  try {
+    // Buscar orderId: primero en cache local, luego en el back
+    let orderId: string | null = activeOrderByTable[selectedTable.id] ?? null;
+
+    if (!orderId) {
+      try {
+        const headers = getAuthHeaders();
+        const { data } = await axios.get(
+          `${API_URL}/order/table/${selectedTable.id}`,
+          { headers }
+        );
+        const orders = Array.isArray(data) ? data : [];
+        const active = [...orders].reverse().find(
+          (o) => (o.status || "").toLowerCase() !== "closed"
+        );
+        orderId = active?.id || active?.order_id || null;
+      } catch {
+        orderId = null;
+      }
+    }
+
+    if (!orderId) {
+      await Swal.fire({
+        title: "Sin orden activa",
+        text: "No encontramos una orden abierta para esta mesa.",
+        icon: "info",
+        confirmButtonColor: "#f97316",
+      });
+      return;
+    }
+
+    const headers = getAuthHeaders();
+    await axios.patch(`${API_URL}/order/${orderId}/close`, {}, { headers });
+
+    setActiveOrderByTable((prev) => {
+      const next = { ...prev };
+      delete next[selectedTable.id];
+      return next;
+    });
+    setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "libre" }));
+    await getTables(restaurantId!);
+
+    await Swal.fire({
+      title: "Orden cerrada",
+      text: "La orden fue enviada al cajero correctamente.",
+      icon: "success",
+      confirmButtonColor: "#f97316",
+      timer: 1800,
+      showConfirmButton: false,
     });
 
-    if (!result.isConfirmed) return;
-
-    setIsClosingOrder(true);
-    try {
-      const orderId = await resolveActiveOrderId(selectedTable.id);
-      if (!orderId) {
-        await Swal.fire({
-          title: "Sin orden activa",
-          text: "No encontramos una orden abierta para esta mesa.",
-          icon: "info",
-          confirmButtonColor: "#f97316",
-        });
-        return;
-      }
-
-      const headers = getAuthHeaders();
-      await axios.patch(
-        `${ORDERS_API_URL}/${orderId}/status`,
-        { status: "closed" },
-        { headers }
-      );
-
-      setActiveOrderByTable((prev) => {
-        const next = { ...prev };
-        delete next[selectedTable.id];
-        return next;
-      });
-      setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "libre" }));
-      await getTables(restaurantId);
-
-      await Swal.fire({
-        title: "Orden cerrada",
-        text: "La orden fue enviada al cajero correctamente.",
-        icon: "success",
-        confirmButtonColor: "#f97316",
-        timer: 1800,
-        showConfirmButton: false,
-      });
-
-      setCart([]);
-      setGeneralNote("");
-      setSelectedTableId(null);
-    } catch (error) {
-      const message =
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || "No se pudo cerrar la orden."
-          : "No se pudo cerrar la orden.";
-
-      await Swal.fire({
-        title: "Error al cerrar",
-        text: message,
-        icon: "error",
-        confirmButtonColor: "#f97316",
-      });
-    } finally {
-      setIsClosingOrder(false);
-    }
+    setCart([]);
+    setGeneralNote("");
+    setSelectedTableId(null);
+  } catch (error) {
+    const message = axios.isAxiosError(error)
+      ? error.response?.data?.message || "No se pudo cerrar la orden."
+      : "No se pudo cerrar la orden.";
+    await Swal.fire({
+      title: "Error al cerrar",
+      text: message,
+      icon: "error",
+      confirmButtonColor: "#f97316",
+    });
+  } finally {
+    setIsClosingOrder(false);
   }
+}
 
   // ─── Menú activo ──────────────────────────────────────────────────────────
   const activeMenuCategory: MenuCategory | undefined = menu.find(
-    (c) => c.category_id === activeCategory
+    (c) => getCategoryId(c) === activeCategory
   );
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -560,17 +642,23 @@ export default function WaiterDashboard() {
                   <>
                     <div className="flex gap-2 flex-wrap mb-4">
                       {menu.map((cat) => (
+                        (() => {
+                          const categoryId = getCategoryId(cat);
+                          const categoryName = getCategoryName(cat);
+                          return (
                         <button
-                          key={cat.category_id}
-                          onClick={() => setActiveCategory(cat.category_id)}
+                          key={categoryId}
+                          onClick={() => setActiveCategory(categoryId)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                            activeCategory === cat.category_id
+                            activeCategory === categoryId
                               ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-sm"
                               : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                           }`}
                         >
-                          {cat.category_name}
+                          {categoryName}
                         </button>
+                          );
+                        })()
                       ))}
                     </div>
 
