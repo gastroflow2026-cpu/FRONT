@@ -1,18 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import Swal from "sweetalert2";
 import { adminService } from "@/services/adminService";
 import { MenuItem, MenuCategory } from "@/types/MenuItem";
+import { UsersContext } from "@/context/UsersContext"; // ← ajustá el path si es diferente
 
 export function useMenu() {
+  const { isLogged } = useContext(UsersContext); // ← obtener usuario
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMenu = async () => {
+    if (!isLogged?.restaurant_id) return; // ← guard por si no tiene restaurant_id
     try {
       setLoading(true);
       const { categories, menuItems } =
-        await adminService.getAllPlates();
+        await adminService.getAllPlates(isLogged.restaurant_id); // ← pasar restaurant_id
 
       setCategories(categories);
       setMenuItems(menuItems);
@@ -25,7 +28,7 @@ export function useMenu() {
 
   useEffect(() => {
     fetchMenu();
-  }, []);
+  }, [isLogged?.restaurant_id]); // ← re-fetch si cambia el restaurant_id
 
   const createItem = async (item: Omit<MenuItem, "id">) => {
     try {

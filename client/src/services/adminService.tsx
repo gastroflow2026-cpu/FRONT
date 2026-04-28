@@ -61,11 +61,11 @@ export const adminService = {
   },
 
   // --- SECCION: MENU
-  getAllPlates: async () => {
-    const [categoriesRes, platesRes] = await Promise.all([
-      axios.get(ADMIN_ENDPOINTS.CATEGORIES.LIST, getAuthHeaders()),
-      axios.get(ADMIN_ENDPOINTS.MENU.LIST, getAuthHeaders()),
-    ]);
+  getAllPlates: async (restaurantId: string) => {
+  const [categoriesRes, platesRes] = await Promise.all([
+    axios.get(ADMIN_ENDPOINTS.CATEGORIES.LIST, getAuthHeaders()),
+    axios.get(ADMIN_ENDPOINTS.MENU.LIST(restaurantId), getAuthHeaders()), // ← pasar restaurantId
+  ]);
 
     const categoriesData = categoriesRes.data;
     const platesData = platesRes.data;
