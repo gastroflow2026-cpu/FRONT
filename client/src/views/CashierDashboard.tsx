@@ -5,13 +5,22 @@ import Swal from "sweetalert2";
 import CashierNavbar from "@/components/cashierDashboard/CashierNavbar";
 import MetricCards from "@/components/cashierDashboard/MetricCards";
 import TableGrid from "@/components/cashierDashboard/TableGrid";
-import OrdersList from "@/components/cashierDashboard/OrdersList";
-import ReservationsList from "@/components/cashierDashboard/ReservationsList";
 import TableDrawer from "@/components/cashierDashboard/TableDrawer";
+import ReservationsTab from "@/components/cashierDashboard/ReservationsTab";
+import TicketsTab from "@/components/cashierDashboard/TicketsTab";
 import { mockMetrics, mockTables } from "@/utils/cashierMockData";
 import { Table } from "@/types/cashier";
 
+type MainTab = "mesas" | "reservas" | "tickets";
+
+const TABS: { value: MainTab; label: string }[] = [
+  { value: "mesas", label: "Mesas y órdenes" },
+  { value: "reservas", label: "Reservas" },
+  { value: "tickets", label: "Tickets" },
+];
+
 export default function CashierDashboard() {
+  const [activeTab, setActiveTab] = useState<MainTab>("mesas");
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
 
   function handleTableClick(table: Table) {
@@ -24,28 +33,24 @@ export default function CashierDashboard() {
 
   async function handleCloseOrder(table: Table) {
     const result = await Swal.fire({
-      title: "¿Cerrar orden?",
-      html: `¿Confirmás el cierre de la orden <strong>#${table.currentOrder?.id}</strong> de la mesa <strong>${table.id}</strong>?`,
+      title: "¿Cobrar orden?",
+      html: `¿Confirmás el cobro de la orden <strong>#${table.currentOrder?.id}</strong> de la mesa <strong>${table.id}</strong>?`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Sí, cerrar orden",
+      confirmButtonText: "Sí, cobrar",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#f97316",
       cancelButtonColor: "#6b7280",
-      reverseButtons: false,
     });
 
     if (result.isConfirmed) {
       await Swal.fire({
-        title: "¡Orden cerrada!",
-        text: "La orden fue marcada como pagada correctamente.",
+        title: "¡Cobro registrado!",
+        text: "El pago fue registrado correctamente.",
         icon: "success",
         confirmButtonText: "OK",
         confirmButtonColor: "#f97316",
       });
-
-      // Cuando el back esté listo, acá va el llamado a la API
-      // Por ahora cerramos el drawer
       setSelectedTable(null);
     }
   }
@@ -55,9 +60,10 @@ export default function CashierDashboard() {
       <CashierNavbar
         restaurantName="La Parrilla del Chef"
         cashierName="Carlos M."
-        notificationCount={2}
       />
+
       <main className="p-6">
+        {/* Título */}
         <div className="flex items-center gap-2 mb-6">
           <div className="w-5 h-5 grid grid-cols-2 gap-0.5">
             {[...Array(4)].map((_, i) => (
@@ -68,16 +74,33 @@ export default function CashierDashboard() {
             Dashboard del Cajero
           </h1>
         </div>
+
+        {/* Métricas */}
         <MetricCards metrics={mockMetrics} />
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2">
-            <TableGrid tables={mockTables} onTableClick={handleTableClick} />
-          </div>
-          <div className="col-span-1 flex flex-col gap-6">
-            <OrdersList />
-            <ReservationsList />
-          </div>
+
+        {/* Tabs principales */}
+        <div className="flex gap-1 bg-white border border-gray-100 rounded-xl shadow-sm p-1 mb-4">
+          {TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.value
+                  ? "bg-gray-800 text-white"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+
+        {/* Contenido según tab */}
+        {activeTab === "mesas" && (
+          <TableGrid tables={mockTables} onTableClick={handleTableClick} />
+        )}
+        {activeTab === "reservas" && <ReservationsTab />}
+        {activeTab === "tickets" && <TicketsTab />}
       </main>
 
       <TableDrawer

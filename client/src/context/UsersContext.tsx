@@ -1,7 +1,16 @@
 "use client";
-import { createContext, useState, ReactNode, useCallback, useEffect } from "react";
+import {
+  createContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useEffect,
+} from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+import { clearSession, getToken, saveSession } from "@/helpers/getToken";
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -65,14 +74,15 @@ interface RequestResult<T = undefined> {
   data?: T;
 }
 
-interface SessionUser {
-  name: string;
-}
+// 🔥 ahora SessionUser es el usuario completo
+type SessionUser = AuthResponseUser;
 
 interface UsersContextType {
   isLogged: SessionUser | null;
   loginUser: (values: LoginValues) => Promise<number>;
-  loginOwner: (values: LoginValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
+  loginOwner: (
+    values: LoginValues,
+  ) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
   completeOwnerOnboarding: (
     values: OwnerOnboardingValues,
   ) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
@@ -80,7 +90,10 @@ interface UsersContextType {
   registerUserGoogle: () => Promise<void>;
   logoutUser: () => void;
   registerNewUser: (values: RegisterValues) => Promise<number>;
-  registerOwner: (values: OwnerRegisterValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
+  registerOwner: (
+    values: OwnerRegisterValues,
+  ) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
+  updateUser: (updatedFields: Partial<SessionUser>) => Promise<void>;
 }
 
 export const UsersContext = createContext<UsersContextType>({
@@ -90,62 +103,94 @@ export const UsersContext = createContext<UsersContextType>({
   completeOwnerOnboarding: async () => ({ status: 0 }),
   loginUserGoogle: async () => {},
   registerUserGoogle: async () => {},
-  logoutUser: () => {},
+  logoutUser: async () => {},
   registerNewUser: async () => 0,
   registerOwner: async () => ({ status: 0 }),
+  updateUser: async () => {},
 });
 
 export const UsersProvider = ({ children }: { children: ReactNode }) => {
-  const [isLogged, setIsLogged] = useState(() => {
+  const router = useRouter()
+  const [isLogged, setIsLogged] = useState<SessionUser | null>(() => {
     if (typeof window === "undefined") return null;
-    const name = localStorage.getItem("name");
-    return name ? { name } : null;
-  });
-
-  const saveAuthSession = useCallback((token: string, user: AuthResponseUser) => {
-    localStorage.setItem("token", JSON.stringify(token));
-    localStorage.setItem("name", user.name);
-    localStorage.setItem("user", JSON.stringify(user));
-    setIsLogged({ name: user.name });
-  }, []);
-
-  const getStoredToken = useCallback(() => {
-    const storedToken = localStorage.getItem("token");
-
-    if (!storedToken) {
+    
+    const storedUser = localStorage.getItem("user");
+    
+    if (!storedUser) return null;
+    
+    try {
+      return JSON.parse(storedUser);
+    } catch {
       return null;
     }
-
-    try {
-      return JSON.parse(storedToken) as string;
-    } catch {
-      return storedToken;
-    }
+  });
+  
+  
+  
+  const saveAuthSession = useCallback(
+    (token: string, user: AuthResponseUser) => {
+      saveSession(token, user);
+      
+      setIsLogged(user);
+    },
+    [],
+  );
+    
+  const getStoredToken = useCallback(() => {
+    return getToken();
   }, []);
 
+  const updateUser = useCallback(async (updatedFields: Partial<SessionUser>) => {
+  if (!isLogged) return;
+
+  const token = getStoredToken();
+  
+  try {
+    const res = await axios.patch(
+      `${API_URL}/users/${isLogged.id}`,
+      updatedFields,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const updated = { ...isLogged, ...res.data };
+    localStorage.setItem("user", JSON.stringify(updated));
+    setIsLogged(updated);
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    throw error;
+  }
+}, [isLogged, getStoredToken]);
+
+  
   const loginUser = async (values: LoginValues): Promise<number> => {
     const res = await axios.post(`${API_URL}/auth/signin`, values);
+    
     if (!res.data.user) throw new Error("No se recibió el usuario");
-
+    
     const token = res.data.token;
     const user = res.data.user as AuthResponseUser;
-
+    
     if (user.roles?.includes("rest_admin")) {
       throw new Error("OWNER_LOGIN_RESTRICTED");
     }
+    
     saveAuthSession(token, user);
     return res.status;
   };
-
+  
   const loginOwner = async (
     values: LoginValues,
   ): Promise<RequestResult<AuthResponse | AuthErrorResponse>> => {
     try {
       const res = await axios.post(`${API_URL}/auth/owner/signin`, values);
       const { token, user } = res.data;
-
+      
       saveAuthSession(token, user);
-
+      
       return {
         status: res.status,
         data: res.data,
@@ -157,41 +202,46 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
           data: error.response.data,
         };
       }
-
+      
       throw error;
     }
   };
-
+  
   const loginUserGoogle = async () => {
     window.location.href = `${API_URL}/auth/google/login`;
   };
-
+  
   const registerUserGoogle = async () => {
     window.location.href = `${API_URL}/auth/google/register`;
   };
-
+  
   const completeOwnerOnboarding = async (
     values: OwnerOnboardingValues,
   ): Promise<RequestResult<AuthResponse | AuthErrorResponse>> => {
     const token = getStoredToken();
-
+    
     if (!token) {
       return {
         status: 401,
-        data: { message: "No hay una sesion owner activa." },
+        data: { message: "No hay una sesión owner activa." },
       };
     }
-
+    
     try {
-      const res = await axios.post(`${API_URL}/auth/owner/onboarding`, values, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await axios.post(
+        `${API_URL}/auth/owner/onboarding`,
+        values,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
+      
       const { token: nextToken, user } = res.data;
-
+      
       saveAuthSession(nextToken, user);
-
+      
       return {
         status: res.status,
         data: res.data,
@@ -203,53 +253,54 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
           data: error.response.data,
         };
       }
-
+      
       throw error;
     }
   };
-
+  
   const clearQueryParam = useCallback((paramName: string) => {
     const url = new URL(window.location.href);
     url.searchParams.delete(paramName);
     window.history.replaceState({}, "", url);
   }, []);
-
-  const showGoogleAuthError = useCallback(async (errorCode: string) => {
-    if (errorCode === "provider_conflict") {
-      await Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        text: "Este correo ya está registrado con email y contraseña. Iniciá sesión con otro método.",
-        confirmButtonColor: "#f97316",
-      });
-
-      clearQueryParam("error");
-      return;
-    }
-
-    if (errorCode === "google_account_exists") {
-      await Swal.fire({
-        icon: "error",
-        title: "Cuenta ya registrada",
-        text: "Este correo ya está registrado con Google. Iniciá sesión.",
-        confirmButtonColor: "#f97316",
-      });
-
-      clearQueryParam("error");
-      return;
-    }
-
-    if (errorCode === "google_auth_failed") {
-      await Swal.fire({
-        icon: "error",
-        title: "Error con Google",
-        text: "No se pudo completar el inicio de sesión con Google.",
-        confirmButtonColor: "#f97316",
-      });
-
-      clearQueryParam("error");
-    }
-  }, [clearQueryParam]);
+  
+  const showGoogleAuthError = useCallback(
+    async (errorCode: string) => {
+      if (errorCode === "provider_conflict") {
+        await Swal.fire({
+          icon: "error",
+          title: "Error al iniciar sesión",
+          text: "Este correo ya está registrado con email y contraseña.",
+          confirmButtonColor: "#f97316",
+        });
+        clearQueryParam("error");
+        return;
+      }
+      
+      if (errorCode === "google_account_exists") {
+        await Swal.fire({
+          icon: "error",
+          title: "Cuenta ya registrada",
+          text: "Este correo ya está registrado con Google.",
+          confirmButtonColor: "#f97316",
+        });
+        clearQueryParam("error");
+        return;
+      }
+      
+      if (errorCode === "google_auth_failed") {
+        await Swal.fire({
+          icon: "error",
+          title: "Error con Google",
+          text: "No se pudo completar el login.",
+          confirmButtonColor: "#f97316",
+        });
+        clearQueryParam("error");
+      }
+      
+    },
+    [clearQueryParam],
+  );
 
   const showGoogleRegistrationSuccess = useCallback(async () => {
     await Swal.fire({
@@ -267,14 +318,27 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
       decodeURIComponent(
         atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
           .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .map(
+            (c) =>
+              "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2),
+          )
           .join(""),
       ),
-    ) as SessionUser;
+    );
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("name", payload.name);
-    setIsLogged({ name: payload.name });
+    const user: AuthResponseUser = {
+      id: payload.id,
+      name: payload.name,
+      email: payload.email,
+      roles: payload.roles || [],
+      auth_provider: "google",
+      restaurant_id: null,
+      requires_restaurant_onboarding: false,
+      imgUrl: payload.imgUrl || null,
+    };
+
+    saveSession(token, user);
+    setIsLogged(user);
   };
 
   useEffect(() => {
@@ -304,8 +368,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
         await Swal.fire({
           icon: "error",
           title: "Error con Google",
-          text: "No se pudo completar el inicio de sesión con Google.",
-          confirmButtonColor: "#f97316",
+          text: "No se pudo completar el login.",
         });
       } finally {
         clearQueryParam("token");
@@ -315,19 +378,32 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     processGoogleAuthRedirect();
   }, [showGoogleAuthError, showGoogleRegistrationSuccess, clearQueryParam]);
 
-  const logoutUser = (): void => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("name");
-    localStorage.removeItem("user");
 
-    clearQueryParam("token");
-    clearQueryParam("error");
-    clearQueryParam("registered");
+  const logoutUser = async () => {
+  const result = await Swal.fire({
+    title: "¿Cerrar sesión?",
+    text: "¿Estás seguro que querés salir?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#f97316",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, salir",
+    cancelButtonText: "Cancelar",
+  });
 
-    setIsLogged(null);
-  };
+  if (!result.isConfirmed) return;
 
-  const registerNewUser = async (values: RegisterValues): Promise<number> => {
+  clearSession();
+  clearQueryParam("token");
+  clearQueryParam("error");
+  clearQueryParam("registered");
+  setIsLogged(null);
+  router.push("/");
+};
+
+  const registerNewUser = async (
+    values: RegisterValues,
+  ): Promise<number> => {
     try {
       const res = await axios.post(`${API_URL}/auth/signup`, values);
       return res.status;
@@ -371,7 +447,12 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     logoutUser,
     registerNewUser,
     registerOwner,
+    updateUser,
   };
 
-  return <UsersContext.Provider value={value}>{children}</UsersContext.Provider>;
+  return (
+    <UsersContext.Provider value={value}>
+      {children}
+    </UsersContext.Provider>
+  );
 };

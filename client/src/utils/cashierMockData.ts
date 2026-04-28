@@ -20,7 +20,7 @@ export const mockReservations: Reservation[] = [
   },
   {
     id: 3,
-    tableId: 11,
+    tableId: 8,
     clientName: "Lucía Martínez",
     phone: "+54 9 11 5567-9923",
     time: "14:00",
@@ -29,11 +29,11 @@ export const mockReservations: Reservation[] = [
   },
   {
     id: 4,
-    tableId: 12,
+    tableId: 10,
     clientName: "Andrés Pérez",
     phone: "+54 9 11 7890-4432",
     time: "20:00",
-    persons: 10,
+    persons: 8,
   },
   {
     id: 5,
@@ -43,18 +43,9 @@ export const mockReservations: Reservation[] = [
     time: "21:00",
     persons: 2,
   },
-  {
-    id: 6,
-    tableId: 6,
-    clientName: "Diego Torres",
-    phone: "+54 9 11 9981-2234",
-    time: "13:00",
-    persons: 2,
-  },
 ];
 
 export const mockTables: Table[] = [
-  // SALÓN
   {
     id: 1,
     zone: "salon",
@@ -137,10 +128,9 @@ export const mockTables: Table[] = [
       createdAt: "12:30 p.m.",
     },
   },
-  // TERRAZA
   {
     id: 6,
-    zone: "terraza",
+    zone: "salon",
     status: "ocupada",
     persons: 2,
     currentOrder: {
@@ -160,41 +150,28 @@ export const mockTables: Table[] = [
   },
   {
     id: 7,
-    zone: "terraza",
+    zone: "salon",
     status: "reservada",
     persons: 2,
     reservation: mockReservations[1],
   },
   {
     id: 8,
-    zone: "terraza",
-    status: "ocupada",
+    zone: "salon",
+    status: "reservada",
     persons: 6,
-    currentOrder: {
-      id: "0045",
-      tableId: 8,
-      status: "pendiente",
-      items: [
-        { quantity: 2, name: "Sorrentinos de ricota", price: 10200 },
-        { quantity: 1, name: "Pan de ajo", price: 1200 },
-      ],
-      subtotal: 11400,
-      iva: 1710,
-      total: 11615,
-      createdAt: "01:10 p.m.",
-    },
+    reservation: mockReservations[2],
   },
   {
     id: 9,
-    zone: "terraza",
+    zone: "salon",
     status: "reservada",
     persons: 2,
     reservation: mockReservations[4],
   },
-  // PRIVADO
   {
     id: 10,
-    zone: "privado",
+    zone: "salon",
     status: "ocupada",
     persons: 6,
     currentOrder: {
@@ -213,27 +190,56 @@ export const mockTables: Table[] = [
       note: "Cumpleaños - traer postre con velita",
     },
   },
+];
+
+export const mockTickets = [
   {
-    id: 11,
-    zone: "privado",
-    status: "reservada",
-    persons: 8,
-    reservation: mockReservations[2],
+    id: "0040",
+    tableId: 1,
+    closedAt: "11:30 a.m.",
+    persons: 2,
+    items: [
+      { quantity: 2, name: "Empanadas x6", price: 6400 },
+      { quantity: 1, name: "Vino tinto copa", price: 3200 },
+      { quantity: 2, name: "Café con leche", price: 5910 },
+    ],
+    subtotal: 15400,
+    iva: 2310,
+    total: 17710,
   },
   {
-    id: 12,
-    zone: "privado",
-    status: "reservada",
-    persons: 10,
-    reservation: mockReservations[3],
+    id: "0039",
+    tableId: 3,
+    closedAt: "11:00 a.m.",
+    persons: 3,
+    items: [
+      { quantity: 3, name: "Milanesa napolitana", price: 12750 },
+      { quantity: 2, name: "Gaseosa", price: 1800 },
+    ],
+    subtotal: 14550,
+    iva: 2182,
+    total: 16732,
+  },
+  {
+    id: "0037",
+    tableId: 5,
+    closedAt: "10:30 a.m.",
+    persons: 2,
+    items: [
+      { quantity: 1, name: "Bife de chorizo", price: 7200 },
+      { quantity: 1, name: "Ensalada mixta", price: 2100 },
+    ],
+    subtotal: 9300,
+    iva: 1395,
+    total: 10695,
   },
 ];
 
 export const mockMetrics: CashierMetrics = {
-  activeOrders: 6,
-  ordersInPreparation: 2,
-  occupiedTables: 6,
-  totalTables: 12,
-  reservedTables: 5,
+  activeOrders: 5,
+  ordersInPreparation: 1,
+  occupiedTables: 5,
+  totalTables: 10,
+  reservedTables: 4,
   reservationsToday: mockReservations.length,
 };

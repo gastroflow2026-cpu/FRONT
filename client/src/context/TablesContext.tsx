@@ -1,6 +1,7 @@
 "use client";
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import axios from "axios";
+import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
@@ -16,7 +17,7 @@ export interface Table {
 interface TablesContextType {
     tables: Table[];
     loading: boolean;
-    getTables: (restaurantId: string) => Promise<void>;
+    getTables: (restaurantId: string, date?: string, time?: string) => Promise<void>;
 }
 
 export const TablesContext = createContext<TablesContextType>({
@@ -29,10 +30,10 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
     const [tables, setTables] = useState<Table[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const getTables = useCallback(async (restaurantId: string) => {
+    const getTables = useCallback(async (restaurantId: string, date?: string, time?: string) => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
+            const token = getToken();
             if (!API_URL || !restaurantId) {
                 setTables([]);
                 return;
@@ -41,9 +42,8 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
             const response = await axios.get(
                 `${API_URL}/restaurants/${restaurantId}/tables/availableTables`,
                 {
-                    headers: token ? {
-                        Authorization: `Bearer ${token}`,
-                    } : undefined,
+                    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                    params: { date, time }, // ← query params
                 }
             );
 

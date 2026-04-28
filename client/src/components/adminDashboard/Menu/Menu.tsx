@@ -1,175 +1,67 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { MenuItemCard } from "./MenuItemCard";
-import { MenuItemFormDialog } from "./MenuItemDialog";
-import { EditMenuItemDialog } from "./EditMenuItemDialog";
-import Swal from "sweetalert2";
 import styles from "./Menu.module.css";
-import { MenuItem } from "@/types/MenuItem";
+import { MenuView } from "./MenuView/MenuView";
+import { CategoriesView } from "./CategoryView/CategoryView";
+import { useMenu } from "@/utils/useMenu";
+import { useCategories } from "@/utils/useCategory";
 
 export function Menu() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    {
-      id: "1",
-      name: "Paella Valenciana",
-      description: "Arroz con mariscos frescos, azafrán y verduras",
-      price: 24.99,
-      image: "https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=400",
-      status: "disponible",
-    },
-    {
-      id: "2",
-      name: "Cordero Asado",
-      description: "Cordero al horno con hierbas aromáticas y patatas",
-      price: 32.50,
-      image: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400",
-      status: "disponible",
-    },
-    {
-      id: "3",
-      name: "Tarta de Chocolate",
-      description: "Deliciosa tarta con ganache de chocolate belga",
-      price: 8.99,
-      image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400",
-      status: "agotado",
-    },
-  ]);
+  const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
 
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [itemToEdit, setItemToEdit] = useState<MenuItem | null>(null);
+  const { menuItems, createItem, updateItem, deleteItem, changeStatus } =
+    useMenu();
 
-  const handleEdit = (id: string) => {
-    const item = menuItems.find((i) => i.id === id);
-    if (item) {
-      setItemToEdit(item);
-      setIsEditDialogOpen(true);
-    }
-  };
+  const { categories, createCategory, updateCategory, deleteCategory } =
+    useCategories();
 
-  const handleDelete = (id: string) => {
-    Swal.fire({
-      title: "¿Eliminar plato?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setMenuItems((prev) => prev.filter((item) => item.id !== id));
-        Swal.fire({
-          title: "Eliminado",
-          text: "El plato ha sido eliminado exitosamente",
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      }
-    });
-  };
-
-  const handleStatusChange = (id: string, status: "disponible" | "agotado" | "inactivo") => {
-    setMenuItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status } : item))
-    );
-
-    const statusMessages = {
-      disponible: "El platillo está ahora disponible",
-      agotado: "El platillo ha sido marcado como agotado",
-      inactivo: "El platillo ha sido desactivado",
-    };
-
-    Swal.fire({
-      icon: "success",
-      title: "Estado actualizado",
-      text: statusMessages[status],
-      timer: 1500,
-      showConfirmButton: false,
-    });
-  };
-
-  const handleCreateItem = (newItem: Omit<MenuItem, "id">) => {
-    const item: MenuItem = {
-      ...newItem,
-      id: Date.now().toString(),
-      status: "disponible",
-    };
-
-    setMenuItems((prev) => [...prev, item]);
-    setIsCreateDialogOpen(false);
-
-    Swal.fire({
-      icon: "success",
-      title: "Platillo creado",
-      text: `${item.name} ha sido agregado al menú exitosamente.`,
-      confirmButtonColor: "#ea580c",
-    });
-  };
-
-  const handleUpdateItem = (updatedItem: MenuItem) => {
-    setMenuItems((prev) =>
-      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-    );
-    setIsEditDialogOpen(false);
-    setItemToEdit(null);
-
-    Swal.fire({
-      icon: "success",
-      title: "Platillo actualizado",
-      text: "Los cambios se guardaron correctamente",
-      timer: 1500,
-      showConfirmButton: false,
-    });
-  };
+    console.log(categories);
+    
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.titleSection}>
-          <h2>Gestión de Menú</h2>
-          <p>Administra los platos del restaurante</p>
-        </div>
-        <button
-          onClick={() => setIsCreateDialogOpen(true)}
-          className={styles.addButton}
-        >
-          <Plus size={18} />
-          Nuevo Plato
-        </button>
+        <h2>Gestión de Menú</h2>
+        <p>Administra categorías y platillos del restaurante</p>
       </header>
 
-      <div className={styles.grid}>
-        {menuItems.map((item) => (
-          <MenuItemCard
-            key={item.id}
-            item={item}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onStatusChange={handleStatusChange}
+      <nav className={styles.tabs}>
+        <button
+          className={activeTab === "menu" ? styles.activeTab : ""}
+          onClick={() => setActiveTab("menu")}
+        >
+          Platillos
+        </button>
+        <button
+          className={activeTab === "categories" ? styles.activeTab : ""}
+          onClick={() => setActiveTab("categories")}
+        >
+          Categorías
+        </button>
+      </nav>
+
+      <main>
+        {activeTab === "menu" && (
+          <MenuView
+            menuItems={menuItems}
+            categories={categories}
+            onCreateItem={createItem}
+            onUpdateItem={updateItem}
+            onDeleteItem={deleteItem}
+            onStatusChange={changeStatus}
           />
-        ))}
-      </div>
+        )}
 
-      <MenuItemFormDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSubmit={handleCreateItem}
-      />
-
-      <EditMenuItemDialog
-        isOpen={isEditDialogOpen}
-        item={itemToEdit}
-        onClose={() => {
-          setIsEditDialogOpen(false);
-          setItemToEdit(null);
-        }}
-        onSubmit={handleUpdateItem}
-      />
+        {activeTab === "categories" && (
+          <CategoriesView
+            categories={categories}
+            onCreateCategory={createCategory}
+            onUpdateCategory={updateCategory}
+            onDeleteCategory={deleteCategory}
+          />
+        )}
+      </main>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Users, Calendar, UtensilsCrossed, BarChart3, ShoppingBag, Menu, X, Settings } from "lucide-react";
 import styles from "./Sidebar.module.css";
+import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -36,18 +37,10 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
         return;
       }
 
-      const storedToken = localStorage.getItem("token");
+      const token = getToken();
 
-      if (!storedToken) {
+      if (!token) {
         return;
-      }
-
-      let token = storedToken;
-
-      try {
-        token = JSON.parse(storedToken) as string;
-      } catch {
-        token = storedToken;
       }
 
       try {
@@ -88,7 +81,6 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
 
       <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarVisible : styles.sidebarHidden}`}>
         <div className="flex flex-col h-full">
-          
           <div className={styles.header}>
             <h2 className="text-2xl font-bold text-orange-600">{restaurantName}</h2>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mt-1">Admin Panel</p>
@@ -98,7 +90,10 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
             {MENU_ITEMS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => { onModuleChange(id); setIsOpen(false); }}
+                onClick={() => {
+                  onModuleChange(id);
+                  setIsOpen(false);
+                }}
                 className={`${styles.navItem} ${activeModule === id ? styles.active : ""}`}
               >
                 <Icon size={18} />
@@ -108,13 +103,14 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
           </nav>
 
           <footer className={styles.footer}>
-            <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold shrink-0">A</div>
+            <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold shrink-0">
+              A
+            </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold truncate text-gray-800">Administrador</p>
               <p className="text-xs text-gray-500 truncate">admin@rest.com</p>
             </div>
           </footer>
-
         </div>
       </aside>
     </>

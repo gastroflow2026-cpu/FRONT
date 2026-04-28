@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "../assets/logo gastro f.webp";
@@ -16,6 +10,7 @@ import {
   fetchAllPublicRestaurants,
   PublicRestaurantCardItem,
 } from "@/utils/publicRestaurants";
+import { UserCircle } from "lucide-react";
 
 type NavbarRestaurant = PublicRestaurantCardItem & {
   description: string;
@@ -23,33 +18,20 @@ type NavbarRestaurant = PublicRestaurantCardItem & {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const { isLogged, logoutUser } = useContext(UsersContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [restaurants, setRestaurants] = useState<NavbarRestaurant[]>([]);
-  const isHydrated = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
 
-  const isOwnerSession = useSyncExternalStore(
-    () => () => {},
-    () => {
-      const storedUser = localStorage.getItem("user");
+  const [mounted, setMounted] = useState(false);
 
-      if (!storedUser) {
-        return false;
-      }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-      try {
-        const parsedUser = JSON.parse(storedUser) as { roles?: string[] };
-        return parsedUser.roles?.includes("rest_admin") ?? false;
-      } catch {
-        return false;
-      }
-    },
-    () => false,
-  );
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     const loadRestaurants = async () => {
@@ -78,8 +60,8 @@ const Navbar = () => {
     );
   }, [restaurants, searchTerm]);
 
-  const hasValidOwnerSession = Boolean(
-    isHydrated && isLogged && isOwnerSession,
+  const hasValidOwnerSession = isHydrated && Boolean(
+    isLogged?.roles?.includes("rest_admin"),
   );
   const primaryUserRoute = hasValidOwnerSession ? "/admin" : "/reservations";
   const primaryUserLabel = hasValidOwnerSession
@@ -88,7 +70,7 @@ const Navbar = () => {
   const greetingName = hasValidOwnerSession
     ? `Owner ${isLogged?.name}`
     : isLogged?.name;
-  const showAuthenticatedActions = Boolean(isHydrated && isLogged);
+  const showAuthenticatedActions = isHydrated && Boolean(isLogged);
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#090b12]/95 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
@@ -129,7 +111,7 @@ const Navbar = () => {
                     className="flex items-center gap-3 border-b border-white/5 p-3 transition-colors last:border-none hover:bg-white/5"
                   >
                     <img
-                      src={restaurant.image ?? undefined}  // <-- null → undefined
+                      src={restaurant.image ?? undefined}
                       alt={restaurant.name}
                       className="h-10 w-10 rounded-lg object-cover"
                     />
@@ -171,12 +153,29 @@ const Navbar = () => {
           <div className="hidden shrink-0 items-center space-x-4 md:flex">
             {showAuthenticatedActions ? (
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-300">
-                  Hola,{" "}
-                  <span className="font-semibold text-white">
-                    {greetingName}!
+                <Link href="/profile" className="flex items-center gap-2 group">
+                  <div className="relative h-8 w-8 overflow-hidden rounded-full border border-gray-600 group-hover:border-white transition">
+                    {isLogged?.imgUrl ? (
+                      <Image
+                        src={isLogged.imgUrl}
+                        alt="Foto de perfil"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <UserCircle
+                        size={32}
+                        className="text-gray-400 transition group-hover:text-white"
+                      />
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-300">
+                    Hola,{" "}
+                    <span className="font-semibold text-white group-hover:text-orange-400 transition">
+                      {greetingName}!
+                    </span>
                   </span>
-                </span>
+                </Link>
                 <button
                   onClick={() => logoutUser()}
                   className="text-sm text-gray-400 transition hover:text-white"
