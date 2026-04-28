@@ -7,7 +7,7 @@ export interface MenuItemCardProps {
     image?: string;
     status: "disponible" | "agotado" | "inactivo";
   };
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onStatusChange: (id: string, status: "disponible" | "agotado" | "inactivo") => void;
+  // onEdit: (id: string) => void;
+  // onDelete: (id: string) => void;
+  // onStatusChange: (id: string, status: "disponible" | "agotado" | "inactivo") => void;
 }
