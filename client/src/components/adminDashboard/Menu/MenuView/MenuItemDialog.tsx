@@ -4,12 +4,13 @@ import { useState } from "react";
 import styles from "./MenuItemDialog.module.css";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { MenuCategory } from "@/types/MenuItem";
+import { Category } from "@/types/Category";
 
 type CreateMenuItemPayload = {
   name: string;
   description: string;
   price: number;
-  image: string;
+  image_url: string;
   status: "disponible";
   category_id: string;
 };
@@ -17,7 +18,7 @@ interface MenuItemFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (item: CreateMenuItemPayload) => void;
-  categories: MenuCategory[];
+  categories: Category[]; // ← Category en lugar de MenuCategory
 }
 
 export function MenuItemFormDialog({
@@ -30,7 +31,7 @@ export function MenuItemFormDialog({
     name: "",
     description: "",
     price: "",
-    image: "",
+    image_url: "",
     status: "disponible",
     category_id: "",
   });
@@ -39,7 +40,7 @@ export function MenuItemFormDialog({
     name: false,
     description: false,
     price: false,
-    image: false,
+    image_url: false,
     category_id: false,
   });
 
@@ -50,7 +51,7 @@ export function MenuItemFormDialog({
       name: !formData.name.trim(),
       description: !formData.description.trim(),
       price: !formData.price || parseFloat(formData.price) <= 0,
-      image: !formData.image,
+      image_url: !formData.image_url,
       category_id: !formData.category_id,
     };
 
@@ -63,7 +64,7 @@ export function MenuItemFormDialog({
       name: "",
       description: "",
       price: "",
-      image: "",
+      image_url: "",
       status: "disponible",
       category_id: "",
     });
@@ -72,7 +73,7 @@ export function MenuItemFormDialog({
       name: false,
       description: false,
       price: false,
-      image: false,
+      image_url: false,
       category_id: false,
     });
 
@@ -88,7 +89,7 @@ export function MenuItemFormDialog({
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
-      image: formData.image,
+      image_url: formData.image_url,
       status: "disponible",
       category_id: formData.category_id,
     });
@@ -109,11 +110,11 @@ export function MenuItemFormDialog({
             <label className={styles.label}>Imagen del Platillo *</label>
 
             <ImageUpload
-              value={formData.image}
-              onChange={(url) => setFormData({ ...formData, image: url })}
+              value={formData.image_url}
+              onChange={(url) => setFormData({ ...formData, image_url: url })}
             />
 
-            {errors.image && (
+            {errors.image_url && (
               <p className={styles.errorMessage}>La imagen es requerida</p>
             )}
           </div>
@@ -136,8 +137,8 @@ export function MenuItemFormDialog({
               <option value="">Selecciona una categoría</option>
 
               {categories.map((category) => (
-                <option key={category.category_id} value={category.category_id}>
-                  {category.category_name}
+                <option key={category.id} value={category.id}>
+                  {category.name}
                 </option>
               ))}
             </select>
