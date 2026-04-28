@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext, useMemo } from "react";
+import { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { Plus, Minus, Trash2, Send, X, ChefHat, CheckCircle2, Clock, Loader2 } from "lucide-react";
@@ -8,10 +8,11 @@ import { MenuCategory, MenuItem } from "@/types/MenuItem";
 import WaiterNavbar from "@/components/waiterDashboard/WaiterNavbar";
 import { UsersContext } from "@/context/UsersContext";
 import { useTables, Table as BackendTable } from "@/context/TablesContext";
+import { getToken } from "@/helpers/getToken";
 
-const MENU_API_URL = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL.trim()}/menu/public`
-  : "http://localhost:3000/menu/public";
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3000";
+const MENU_API_URLS = [`${API_URL}/menu/public`, `${API_URL}/menu/items/public`];
+const ORDERS_API_URL = `${API_URL}/orders`;
 
 // ─── Tipos locales ────────────────────────────────────────────────────────────
 type TableStatus = "libre" | "ocupada" | "reservada" | "listo";
@@ -26,6 +27,33 @@ interface WaiterTable {
   id: string;
   tableNumber: number;
   status: TableStatus;
+}
+
+interface CreateOrderPayload {
+  restaurant_id: string;
+  table_id: string;
+  waiter_id: string;
+  items: Array<{
+    menuItemId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    observations?: string;
+  }>;
+  total_amount: number;
+  observations?: string;
+}
+
+interface CreatedOrderResponse {
+  id?: string;
+  order_id?: string;
+  status?: string;
+}
+
+interface OrderByTableResponse {
+  id?: string;
+  order_id?: string;
+  status?: string;
 }
 
 const TABLE_STATUS_STYLES: Record<TableStatus, string> = {
@@ -73,27 +101,68 @@ export default function WaiterDashboard() {
   const { tables: backendTables, loading: loadingTables, getTables } = useTables();
   const waiterName = isLogged?.name ?? "Mozo";
   const restaurantId = resolveRestaurantId(isLogged as Record<string, unknown> | null);
+  const waiterId = isLogged?.id ?? "";
 
   const [localStatusByTable, setLocalStatusByTable] = useState<Record<string, TableStatus>>({});
+  const [activeOrderByTable, setActiveOrderByTable] = useState<Record<string, string>>({});
+  const [isSendingOrder, setIsSendingOrder] = useState(false);
+  const [isClosingOrder, setIsClosingOrder] = useState(false);
 
   const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [menuError, setMenuError] = useState(false);
+  const [menuErrorMessage, setMenuErrorMessage] = useState("Verificá la conexión con el servidor.");
+
+  const fetchMenu = useCallback(async () => {
+    try {
+      setLoadingMenu(true);
+      setMenuError(false);
+      setMenuErrorMessage("Verificá la conexión con el servidor.");
+
+      let menuData: MenuCategory[] = [];
+      let lastError: unknown;
+
+      for (const endpoint of MENU_API_URLS) {
+        try {
+          const { data } = await axios.get<MenuCategory[]>(endpoint);
+          menuData = Array.isArray(data) ? data : [];
+          lastError = null;
+          break;
+        } catch (error: unknown) {
+          lastError = error;
+
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            continue;
+          }
+
+          throw error;
+        }
+      }
+
+      if (lastError) {
+        throw lastError;
+      }
+
+      setMenu(menuData);
+      if (menuData.length > 0) {
+        setActiveCategory((prev) => prev || menuData[0].category_id);
+      }
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message || "Verificá la conexión con el servidor."
+        : "Verificá la conexión con el servidor.";
+
+      console.error("Error al cargar el menú:", error);
+      setMenuError(true);
+      setMenuErrorMessage(message);
+    } finally {
+      setLoadingMenu(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const { data } = await axios.get<MenuCategory[]>(MENU_API_URL);
-        setMenu(data);
-        if (data.length > 0) setActiveCategory(data[0].category_id);
-      } catch {
-        setMenuError(true);
-      } finally {
-        setLoadingMenu(false);
-      }
-    };
     fetchMenu();
-  }, []);
+  }, [fetchMenu]);
 
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -118,6 +187,44 @@ export default function WaiterDashboard() {
   }, [backendTables, localStatusByTable]);
 
   const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
+
+  const getAuthHeaders = () => {
+    const token = getToken();
+    return token ? { Authorization: `Bearer ${token}` } : undefined;
+  };
+
+  const extractOrderId = (data: CreatedOrderResponse | OrderByTableResponse): string | null => {
+    const directId = typeof data.id === "string" ? data.id : null;
+    const altId = typeof data.order_id === "string" ? data.order_id : null;
+    return directId || altId;
+  };
+
+  const resolveActiveOrderId = async (tableId: string): Promise<string | null> => {
+    const cachedOrderId = activeOrderByTable[tableId];
+    if (cachedOrderId) return cachedOrderId;
+
+    try {
+      const headers = getAuthHeaders();
+      const { data } = await axios.get<OrderByTableResponse[]>(`${ORDERS_API_URL}/table/${tableId}`, {
+        headers,
+      });
+
+      if (!Array.isArray(data) || data.length === 0) return null;
+
+      const activeOrder = [...data]
+        .reverse()
+        .find((order) => ((order.status || "").toLowerCase() !== "closed"));
+
+      if (!activeOrder) return null;
+      const orderId = extractOrderId(activeOrder);
+      if (!orderId) return null;
+
+      setActiveOrderByTable((prev) => ({ ...prev, [tableId]: orderId }));
+      return orderId;
+    } catch {
+      return null;
+    }
+  };
 
   // ─── Carrito ──────────────────────────────────────────────────────────────
   function addToCart(item: MenuItem) {
@@ -182,10 +289,10 @@ export default function WaiterDashboard() {
   }
 
   async function handleSendToKitchen() {
-    if (!selectedTable || cart.length === 0) return;
+    if (!selectedTable || cart.length === 0 || !restaurantId || !waiterId) return;
 
     const result = await Swal.fire({
-      title: `Enviar pedido – Mesa ${selectedTable.id}`,
+      title: `Enviar pedido – Mesa ${selectedTable.tableNumber}`,
       html: `<p>Se enviará el pedido de <strong>${cart.length} ítem(s)</strong> a cocina.</p>`,
       icon: "question",
       showCancelButton: true,
@@ -197,28 +304,77 @@ export default function WaiterDashboard() {
 
     if (!result.isConfirmed) return;
 
-    // Aquí irá la llamada al back: POST /orders
-    setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "ocupada" }));
+    setIsSendingOrder(true);
+    try {
+      const headers = getAuthHeaders();
+      const payload: CreateOrderPayload = {
+        restaurant_id: restaurantId,
+        table_id: selectedTable.id,
+        waiter_id: waiterId,
+        items: cart.map((c) => ({
+          menuItemId: c.item.id,
+          name: c.item.name,
+          price: Number(c.item.price),
+          quantity: c.quantity,
+          observations: c.observation || undefined,
+        })),
+        total_amount: Number(cartTotal.toFixed(2)),
+        observations: generalNote.trim() || undefined,
+      };
 
-    await Swal.fire({
-      title: "¡Pedido enviado!",
-      text: "El chef ya recibió la orden.",
-      icon: "success",
-      confirmButtonColor: "#f97316",
-      timer: 2000,
-      showConfirmButton: false,
-    });
+      const { data: createdOrder } = await axios.post<CreatedOrderResponse>(ORDERS_API_URL, payload, {
+        headers,
+      });
 
-    setCart([]);
-    setGeneralNote("");
-    setSelectedTableId(null);
+      const orderId = extractOrderId(createdOrder);
+      if (!orderId) {
+        throw new Error("No se recibió el id de la orden creada");
+      }
+
+      await axios.patch(
+        `${ORDERS_API_URL}/${orderId}/status`,
+        { status: "cooking" },
+        { headers }
+      );
+
+      setActiveOrderByTable((prev) => ({ ...prev, [selectedTable.id]: orderId }));
+      setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "ocupada" }));
+      await getTables(restaurantId);
+
+      await Swal.fire({
+        title: "Pedido enviado",
+        text: "La orden se creó y fue enviada a cocina.",
+        icon: "success",
+        confirmButtonColor: "#f97316",
+        timer: 1800,
+        showConfirmButton: false,
+      });
+
+      setCart([]);
+      setGeneralNote("");
+      setSelectedTableId(null);
+    } catch (error) {
+      const message =
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || "No se pudo enviar la orden a cocina."
+          : "No se pudo enviar la orden a cocina.";
+
+      await Swal.fire({
+        title: "Error al enviar",
+        text: message,
+        icon: "error",
+        confirmButtonColor: "#f97316",
+      });
+    } finally {
+      setIsSendingOrder(false);
+    }
   }
 
   async function handleCloseOrder() {
-    if (!selectedTable) return;
+    if (!selectedTable || !restaurantId) return;
 
     const result = await Swal.fire({
-      title: `Cerrar orden – Mesa ${selectedTable.id}`,
+      title: `Cerrar orden – Mesa ${selectedTable.tableNumber}`,
       text: "La orden pasará al cajero para su cobro.",
       icon: "question",
       showCancelButton: true,
@@ -230,21 +386,61 @@ export default function WaiterDashboard() {
 
     if (!result.isConfirmed) return;
 
-    // Aquí irá la llamada al back: PATCH /orders/:id/close
-    setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "libre" }));
+    setIsClosingOrder(true);
+    try {
+      const orderId = await resolveActiveOrderId(selectedTable.id);
+      if (!orderId) {
+        await Swal.fire({
+          title: "Sin orden activa",
+          text: "No encontramos una orden abierta para esta mesa.",
+          icon: "info",
+          confirmButtonColor: "#f97316",
+        });
+        return;
+      }
 
-    await Swal.fire({
-      title: "Orden cerrada",
-      text: "La orden fue enviada al cajero correctamente.",
-      icon: "success",
-      confirmButtonColor: "#f97316",
-      timer: 2000,
-      showConfirmButton: false,
-    });
+      const headers = getAuthHeaders();
+      await axios.patch(
+        `${ORDERS_API_URL}/${orderId}/status`,
+        { status: "closed" },
+        { headers }
+      );
 
-    setCart([]);
-    setGeneralNote("");
-    setSelectedTableId(null);
+      setActiveOrderByTable((prev) => {
+        const next = { ...prev };
+        delete next[selectedTable.id];
+        return next;
+      });
+      setLocalStatusByTable((prev) => ({ ...prev, [selectedTable.id]: "libre" }));
+      await getTables(restaurantId);
+
+      await Swal.fire({
+        title: "Orden cerrada",
+        text: "La orden fue enviada al cajero correctamente.",
+        icon: "success",
+        confirmButtonColor: "#f97316",
+        timer: 1800,
+        showConfirmButton: false,
+      });
+
+      setCart([]);
+      setGeneralNote("");
+      setSelectedTableId(null);
+    } catch (error) {
+      const message =
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || "No se pudo cerrar la orden."
+          : "No se pudo cerrar la orden.";
+
+      await Swal.fire({
+        title: "Error al cerrar",
+        text: message,
+        icon: "error",
+        confirmButtonColor: "#f97316",
+      });
+    } finally {
+      setIsClosingOrder(false);
+    }
   }
 
   // ─── Menú activo ──────────────────────────────────────────────────────────
@@ -351,7 +547,14 @@ export default function WaiterDashboard() {
                 ) : menuError ? (
                   <div className="text-center py-12">
                     <p className="text-sm text-red-400 font-medium">No se pudo cargar el menú.</p>
-                    <p className="text-xs text-gray-400 mt-1">Verificá la conexión con el servidor.</p>
+                    <p className="text-xs text-gray-400 mt-1">{menuErrorMessage}</p>
+                    <button
+                      type="button"
+                      onClick={fetchMenu}
+                      className="mt-4 inline-flex items-center justify-center rounded-lg border border-orange-200 px-3 py-2 text-xs font-semibold text-orange-500 transition-colors hover:bg-orange-50"
+                    >
+                      Reintentar
+                    </button>
                   </div>
                 ) : (
                   <>
@@ -534,23 +737,25 @@ export default function WaiterDashboard() {
 
             <button
               onClick={handleSendToKitchen}
-              disabled={!selectedTable || cart.length === 0}
+              disabled={!selectedTable || cart.length === 0 || isSendingOrder || isClosingOrder}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white text-sm transition-all bg-linear-to-r from-orange-500 to-pink-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm mb-2"
             >
-              <Send size={16} />
-              Enviar a cocina
+              {isSendingOrder ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+              {isSendingOrder ? "Enviando..." : "Enviar a cocina"}
             </button>
 
             <button
               onClick={handleCloseOrder}
               disabled={
                 !selectedTable ||
+                isSendingOrder ||
+                isClosingOrder ||
                 selectedTable.status === "libre" ||
                 selectedTable.status === "reservada"
               }
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Cerrar orden → Caja
+              {isClosingOrder ? "Cerrando..." : "Cerrar orden → Caja"}
             </button>
           </div>
         </div>

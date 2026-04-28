@@ -2,6 +2,7 @@
 
 import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import {
   ArrowLeft,
@@ -27,6 +28,31 @@ const LoginForm = () => {
   const router = useRouter();
   const { loginUser, loginUserGoogle } = useContext(UsersContext);
 
+  const WAITER_ROLES = new Set(["waiter", "mesero", "mozo", "staff_waiter"]);
+  const CASHIER_ROLES = new Set(["cashier", "cajero", "staff_cashier"]);
+
+  const getBackendErrorMessage = (error: unknown): string | null => {
+    if (!axios.isAxiosError(error)) return null;
+
+    const data = error.response?.data as
+      | { message?: unknown; error?: unknown }
+      | undefined;
+
+    if (Array.isArray(data?.message) && data.message.length > 0) {
+      return data.message.map((item) => String(item)).join(" | ");
+    }
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+
+    if (typeof data?.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (
     values: typeof loginInitialValues,
     { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void },
@@ -42,18 +68,31 @@ const LoginForm = () => {
         showConfirmButton: false,
       });
       const roles: string[] = user?.roles ?? [];
-      if (roles.includes("waiter") || roles.includes("mesero")) {
+      if (roles.some((role) => WAITER_ROLES.has(role))) {
         router.push("/waiter");
-      } else if (roles.includes("cashier") || roles.includes("cajero")) {
+      } else if (roles.some((role) => CASHIER_ROLES.has(role))) {
         router.push("/cashier");
       } else {
         router.push("/");
       }
     } catch (error: unknown) {
-      const message =
-        error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED"
-          ? "Esta cuenta owner debe iniciar sesion desde el acceso para socios."
-          : "El correo no esta registrado o las credenciales son incorrectas.";
+      let message = "El correo no esta registrado o las credenciales son incorrectas.";
+
+      if (error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED") {
+        message = "Esta cuenta owner debe iniciar sesion desde el acceso para socios.";
+      } else if (error instanceof Error && error.message === "API_URL_NOT_CONFIGURED") {
+        message = "Falta configurar NEXT_PUBLIC_API_URL en .env.local.";
+      } else if (axios.isAxiosError(error)) {
+        const backendMessage = getBackendErrorMessage(error) || "";
+
+        if (error.response?.status === 404) {
+          message =
+            backendMessage ||
+            "No se encontro el endpoint de login en el backend. Revisa la URL del API y las rutas de autenticacion.";
+        } else if (backendMessage) {
+          message = backendMessage;
+        }
+      }
 
       if (
         (typeof error === "object" && error !== null && "response" in error) ||

@@ -18,6 +18,7 @@ export default function WaiterNavbar({
   notificationCount = 0,
 }: WaiterNavbarProps) {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [isHydrated, setIsHydrated] = useState(false);
   const { logoutUser } = useContext(UsersContext);
   const router = useRouter();
 
@@ -39,6 +40,7 @@ export default function WaiterNavbar({
   }
 
   useEffect(() => {
+    setIsHydrated(true);
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
@@ -76,9 +78,9 @@ export default function WaiterNavbar({
       </div>
 
       <div className="flex items-center gap-2 text-gray-400 text-sm">
-        <span>{formattedTime}</span>
+        <span>{isHydrated ? formattedTime : "--:--:--"}</span>
         <span className="text-white/20">|</span>
-        <span className="capitalize">{formattedDate}</span>
+        <span className="capitalize">{isHydrated ? formattedDate : "Cargando fecha"}</span>
       </div>
 
       <div className="flex items-center gap-4">
