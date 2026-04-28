@@ -44,10 +44,9 @@ const LoginForm = () => {
       router.push("/");
     } catch (error: unknown) {
       const message =
-        error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED"
-          ? "Esta cuenta owner debe iniciar sesion desde el acceso para socios."
-          : "El correo no esta registrado o las credenciales son incorrectas.";
-
+      error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED"
+      ? "Esta cuenta owner debe iniciar sesion desde el acceso para socios."
+      : "El correo no esta registrado o las credenciales son incorrectas.";
       if (
         (typeof error === "object" && error !== null && "response" in error) ||
         error instanceof Error
