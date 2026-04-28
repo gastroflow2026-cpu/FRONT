@@ -1,17 +1,38 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import { adminService } from "@/services/adminService";
+import { UsersContext } from "@/context/UsersContext";
+import { MenuItemStatus } from "@/types/MenuItem";
 
 export function useMenu() {
   const [platesList, setPlatesList] = useState([]);
 
+  const { isLogged } = useContext(UsersContext);
+
+  const restaurantId = useMemo(() => {
+    if (!isLogged?.restaurant_id) {
+      return null;
+    }
+    return isLogged.restaurant_id;
+  }, [isLogged]);
+
+  useEffect(() => {
+    if (!restaurantId) {
+      Swal.fire(
+        "Error",
+        "No se detectó el ID del restaurante. Reintente loguear.",
+        "error",
+      );
+    }
+  }, [restaurantId]);
+
   const fetchMenu = async () => {
+    if (!restaurantId) return;
     try {
-      setLoading(true);
       const { categories, menuItems } =
-        await adminService.getAllPlates(isLogged.restaurant_id); // ← pasar restaurant_id
-      setCategories(categories);
-      setMenuItems(menuItems);
+        await adminService.getAllPlates(restaurantId);
+      setPlatesList(categories);
+      console.log(menuItems);
     } catch {
       Swal.fire("Error", "No se pudo cargar el menú", "error");
     }
@@ -32,12 +53,9 @@ export function useMenu() {
   };
 
   const updateItem = async (item: any) => {
+    if (!restaurantId) return;
     try {
-      await adminService.updatePlateInfo(
-        item.id,
-        item,
-        "11111111-1111-1111-1111-111111111111"
-      );
+      await adminService.updatePlateInfo(item.id, item, restaurantId);
       await fetchMenu();
       Swal.fire("Actualizado", "Cambios guardados", "success");
     } catch {
@@ -55,7 +73,7 @@ export function useMenu() {
     }
   };
 
-  const changeStatus = async (id: string, status: string) => {
+  const changeStatus = async (id: string, status: MenuItemStatus) => {
     try {
       await adminService.updatePlateStatus(id, status);
       await fetchMenu();

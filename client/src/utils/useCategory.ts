@@ -10,7 +10,7 @@ export function useCategories() {
   const { isLogged } = useContext(UsersContext);
 
   const fetchCategories = async () => {
-  if (!isLogged?.restaurant_id) return; // ← guard
+  if (!isLogged?.restaurant_id) return;
   try {
     const data = await adminService.getAllCategories(isLogged.restaurant_id);
     setCategories(data);
@@ -27,6 +27,8 @@ export function useCategories() {
     name: string;
     description: string;
   }) => {
+    console.log(isLogged?.restaurant_id);
+    
     try {
       if (!isLogged?.restaurant_id) {
         Swal.fire(
@@ -68,7 +70,7 @@ export function useCategories() {
       const payload = {
         name: category.name,
         description: category.description,
-        restaurant_id: "11111111-1111-1111-1111-111111111111", /*isLogged?.restaurant_id,*/
+        restaurant_id: isLogged?.restaurant_id,
         display_order: originalCategory?.display_order || 0,
       };
 
