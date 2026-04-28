@@ -10,8 +10,8 @@
   gap: 1rem;
 }
 
-.header h2{
-    font-size: 1.5rem;
+.header h2 {
+  font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
@@ -28,7 +28,7 @@
 .title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827; 
+  color: #111827;
   margin: 0;
 }
 
@@ -69,8 +69,21 @@
   border: 1px solid #fef3c7;
   border-radius: 8px;
   padding: 1rem;
-  color: #92400e; 
+  color: #92400e;
   font-size: 0.875rem;
+}
+
+.categoryTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #D6A730;
+  padding: 6px 20px;
+  margin-bottom: 12px;
+  display: inline-block;
+  background: #FFF2D8;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  text-transform: capitalize;
 }
 
 .grid {
