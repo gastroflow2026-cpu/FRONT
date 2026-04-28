@@ -4,5 +4,5 @@ export interface Category {
   description?: string | null;
   display_order?: number;
   createdAt: string;
-  is_active: boolean
+  is_active: boolean;
 }

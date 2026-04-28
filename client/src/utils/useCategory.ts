@@ -9,20 +9,19 @@ export function useCategories() {
 
   const { isLogged } = useContext(UsersContext);
 
-  console.log(isLogged?.restaurant_id);
-
   const fetchCategories = async () => {
-    try {
-      const data = await adminService.getAllCategories();
-      setCategories(data);
-    } catch {
-      Swal.fire("Error", "No se pudieron cargar categorías", "error");
-    }
+  if (!isLogged?.restaurant_id) return; // ← guard
+  try {
+    const data = await adminService.getAllCategories(isLogged.restaurant_id);
+    setCategories(data);
+  } catch {
+    Swal.fire("Error", "No se pudieron cargar categorías", "error");
+  }
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+  fetchCategories();
+  }, [isLogged?.restaurant_id]);
 
   const createCategory = async (category: {
     name: string;
@@ -69,7 +68,7 @@ export function useCategories() {
       const payload = {
         name: category.name,
         description: category.description,
-        restaurant_id: isLogged?.restaurant_id, //"11111111-1111-1111-1111-111111111111"
+        restaurant_id: "11111111-1111-1111-1111-111111111111", /*isLogged?.restaurant_id,*/
         display_order: originalCategory?.display_order || 0,
       };
 

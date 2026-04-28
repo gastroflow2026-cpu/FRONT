@@ -76,24 +76,10 @@ const LoginForm = () => {
         router.push("/");
       }
     } catch (error: unknown) {
-      let message = "El correo no esta registrado o las credenciales son incorrectas.";
-
-      if (error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED") {
-        message = "Esta cuenta owner debe iniciar sesion desde el acceso para socios.";
-      } else if (error instanceof Error && error.message === "API_URL_NOT_CONFIGURED") {
-        message = "Falta configurar NEXT_PUBLIC_API_URL en .env.local.";
-      } else if (axios.isAxiosError(error)) {
-        const backendMessage = getBackendErrorMessage(error) || "";
-
-        if (error.response?.status === 404) {
-          message =
-            backendMessage ||
-            "No se encontro el endpoint de login en el backend. Revisa la URL del API y las rutas de autenticacion.";
-        } else if (backendMessage) {
-          message = backendMessage;
-        }
-      }
-
+      const message =
+      error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED"
+      ? "Esta cuenta owner debe iniciar sesion desde el acceso para socios."
+      : "El correo no esta registrado o las credenciales son incorrectas.";
       if (
         (typeof error === "object" && error !== null && "response" in error) ||
         error instanceof Error

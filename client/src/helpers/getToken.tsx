@@ -10,7 +10,9 @@ export const getToken = (): string | null => {
   } catch {
     return storedToken;
   }
+  
 };
+
 
 export const saveSession = (token: string, user: unknown) => {
   clearSession();

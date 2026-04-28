@@ -1,25 +1,19 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { adminService } from "@/services/adminService";
-import { MenuItem, MenuCategory } from "@/types/MenuItem";
 
 export function useMenu() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<MenuCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [platesList, setPlatesList] = useState([]);
 
   const fetchMenu = async () => {
     try {
       setLoading(true);
       const { categories, menuItems } =
-        await adminService.getAllPlates();
-
+        await adminService.getAllPlates(isLogged.restaurant_id); // ← pasar restaurant_id
       setCategories(categories);
       setMenuItems(menuItems);
     } catch {
       Swal.fire("Error", "No se pudo cargar el menú", "error");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -27,7 +21,7 @@ export function useMenu() {
     fetchMenu();
   }, []);
 
-  const createItem = async (item: Omit<MenuItem, "id">) => {
+  const createItem = async (item: any) => {
     try {
       await adminService.createNewPlate(item);
       await fetchMenu();
@@ -37,9 +31,13 @@ export function useMenu() {
     }
   };
 
-  const updateItem = async (item: MenuItem) => {
+  const updateItem = async (item: any) => {
     try {
-      await adminService.updatePlateInfo(item.id, item);
+      await adminService.updatePlateInfo(
+        item.id,
+        item,
+        "11111111-1111-1111-1111-111111111111"
+      );
       await fetchMenu();
       Swal.fire("Actualizado", "Cambios guardados", "success");
     } catch {
@@ -57,12 +55,9 @@ export function useMenu() {
     }
   };
 
-  const changeStatus = async (
-    id: string,
-    status: "disponible" | "agotado" | "inactivo"
-  ) => {
+  const changeStatus = async (id: string, status: string) => {
     try {
-      await adminService.updatePlateStatusFlexible(id, status);
+      await adminService.updatePlateStatus(id, status);
       await fetchMenu();
     } catch {
       Swal.fire("Error", "No se pudo actualizar estado", "error");
@@ -70,13 +65,10 @@ export function useMenu() {
   };
 
   return {
-    menuItems,
-    categories,
-    loading,
+    platesList,
     createItem,
     updateItem,
     deleteItem,
     changeStatus,
-    refetch: fetchMenu,
   };
 }
