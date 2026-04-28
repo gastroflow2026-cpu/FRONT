@@ -88,11 +88,10 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
                     }
                     throw error;
                 }
-            }
 
-            if (lastError) {
-                throw lastError;
+                throw error;
             }
+        }
 
         
             setTables(loadedTables);
@@ -106,6 +105,14 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setLoading(false);
         }
+
+        setTables(loadedTables);
+    } catch (error: any) {
+        console.warn(error.response?.data?.message || 'Error al obtener las mesas');
+        setTables([]);
+    } finally {
+        setLoading(false);
+    }
     }, []);
 
     const value: TablesContextType = useMemo(() => ({

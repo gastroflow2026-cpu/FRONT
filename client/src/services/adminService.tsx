@@ -115,7 +115,7 @@ export const adminService = {
     description: item.description,
     price: Number(item.price),
     image: item.image_url, // ← image_url del backend → image para el frontend
-    status: mapBackendStatusToFront(item.status),
+    status: mapStatusFromAPI(item.status),
     category_id: item.category_id,
   }))
 );
