@@ -5,6 +5,14 @@ import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
+const buildTableCandidates = (baseUrl: string, restaurantId: string) => [
+    `${baseUrl}/restaurants/${restaurantId}/tables/availableTables`,
+    `${baseUrl}/restaurants/${restaurantId}/tables/available`,
+    `${baseUrl}/restaurants/${restaurantId}/tables`,
+    `${baseUrl}/tables/restaurant/${restaurantId}`,
+    `${baseUrl}/tables/restaurant/${restaurantId}/available`,
+];
+
 export interface Table {
     id: string;
     table_number: number;
@@ -45,9 +53,34 @@ const TablesProvider = ({ children }: { children: ReactNode }) => {
                     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                     params: { date, time }, // ← query params
                 }
-            );
+                : undefined;
 
-            setTables(Array.isArray(response.data) ? response.data : []);
+            const candidates = buildTableCandidates(API_URL, restaurantId);
+            let loadedTables: Table[] = [];
+            let lastError: unknown;
+
+            for (const endpoint of candidates) {
+                try {
+                    const response = await axios.get(endpoint, { headers });
+                    loadedTables = Array.isArray(response.data) ? response.data : [];
+                    lastError = null;
+                    break;
+                } catch (error: unknown) {
+                    lastError = error;
+
+                    if (axios.isAxiosError(error) && error.response?.status === 404) {
+                        continue;
+                    }
+
+                    throw error;
+                }
+            }
+
+            if (lastError) {
+                throw lastError;
+            }
+
+            setTables(loadedTables);
         } catch (error: any) {
             console.warn(error.response?.data?.message || 'Error al obtener las mesas');
             setTables([]);
