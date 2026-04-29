@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -14,6 +14,11 @@ import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
 import type { Table } from "@/context/TablesContext";
+import Chatbot from 'react-chatbot-kit';
+import 'react-chatbot-kit/build/main.css';
+import ActionProvider from '@/chatbot/ActionProvider';
+import MessageParser from '@/chatbot/MessageParser';
+import config from '@/chatbot/config';
 
 type PublicMenuItem = {
   id: string;
@@ -85,6 +90,17 @@ const RestaurantDetail = () => {
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
+  //CHATBOT
+  const sessionId = useRef('session_' + Math.random().toString(36).substr(2, 9)).current;
+
+  const chatConfig = {
+  ...config,
+  state: {
+    ...config.state,
+    restaurantId,
+    sessionId,
+  },
+  };
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const { tables, loading: loadingTables, getTables } = useTables();
@@ -717,6 +733,22 @@ const RestaurantDetail = () => {
         </section>
       </main>
       <Footer />
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          width: '350px',
+          zIndex: 9999,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '16px',
+          overflow: 'hidden',
+        }}>
+      <Chatbot
+        config={chatConfig}
+        actionProvider={ActionProvider}
+        messageParser={MessageParser}
+        />
+</div>
     </div>
   );
 };
