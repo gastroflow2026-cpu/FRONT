@@ -29,40 +29,45 @@ export const PopUp: React.FC<PopUpProps> = ({ setShowPop, id }) => {
     setPreview(URL.createObjectURL(selected));
   };
 
-   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!file) return;
 
-    const token = getAuthHeaders();
-    if (!file) return;
+  const formData = new FormData();
+  formData.append("file", file);
 
-    const formData = new FormData();
-    formData.append("file", file);
+  const token = getAuthHeaders().headers.Authorization; // ← solo el token
 
-    try {
-      const res = await axios.post(`${API_URL}/files/upload-image/${id}`, formData, token);
-      
-      updateUser({ imgUrl: res.data.imgUrl });
-        await Swal.fire({
-        icon: "success",
-        title: "Foto actualizada",
-        text: "Tu foto de perfil fue actualizada correctamente.",
-        confirmButtonColor: "#f97316",
-        timer: 2000,
-        showConfirmButton: false,
-        });
+  try {
+    const res = await axios.post(
+      `${API_URL}/files/upload-image/${id}`,
+      formData,
+      {
+        headers: {
+          Authorization: token, // ← solo Authorization, sin Content-Type
+        },
+      }
+    );
 
-        setShowPop(false);
-      } 
-      catch{
-        await Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se pudo actualizar la foto. Intentá de nuevo.",
-          confirmButtonColor: "#f97316",
-        });
-      };
-    };
-    
+    updateUser({ imgUrl: res.data.imgUrl });
+    await Swal.fire({
+      icon: "success",
+      title: "Foto actualizada",
+      text: "Tu foto de perfil fue actualizada correctamente.",
+      confirmButtonColor: "#f97316",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+    setShowPop(false);
+  } catch {
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudo actualizar la foto. Intentá de nuevo.",
+      confirmButtonColor: "#f97316",
+    });
+  }
+};
 
   return (
     <div className={styles.popupOverlay}>
