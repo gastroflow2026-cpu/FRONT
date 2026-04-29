@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -14,6 +14,11 @@ import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
 import type { Table } from "@/context/TablesContext";
+import Chatbot from 'react-chatbot-kit';
+import 'react-chatbot-kit/build/main.css';
+import ActionProvider from '@/chatbot/ActionProvider';
+import MessageParser from '@/chatbot/MessageParser';
+import config from '@/chatbot/config';
 
 type PublicMenuItem = {
   id: string;
@@ -85,6 +90,17 @@ const RestaurantDetail = () => {
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
+  //CHATBOT
+  const sessionId = useRef('session_' + Math.random().toString(36).substr(2, 9)).current;
+
+  const chatConfig = {
+  ...config,
+  state: {
+    ...config.state,
+    restaurantId,
+    sessionId,
+  },
+  };
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const { tables, loading: loadingTables, getTables } = useTables();
@@ -118,7 +134,7 @@ const RestaurantDetail = () => {
     const fetchMenu = async () => {
       try {
         const { data } = await axios.get<PublicMenuCategory[]>(
-          "http://localhost:3000/menu/public",
+          `${API_URL}/menu/${restaurantId}/public`,
         );
         setCategories(data);
       } catch (error) {
@@ -208,10 +224,9 @@ const RestaurantDetail = () => {
 
   // EFECTO 2: Carga de mesas desde el back
   useEffect(() => {
-    if (restaurantId) {
-      getTables(restaurantId);
-    }
-  }, [restaurantId, getTables]);
+    if (!restaurantId || !formValues.date) return; // ← no llama sin fecha
+    getTables(restaurantId, formValues.date, formValues.time);
+}, [restaurantId, formValues.date, formValues.time]);
 
   // EFECTO 3: Persistencia de datos
   useEffect(() => {
@@ -665,14 +680,17 @@ const RestaurantDetail = () => {
                   <label className="mb-2 block text-sm font-semibold text-slate-900">
                     Selecciona tu mesa
                   </label>
-                  {loadingTables ? (
+                  {!formValues.date ? (
+                    <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-4 text-center text-sm text-slate-500">
+                      Seleccioná una fecha para ver las mesas disponibles
+                    </p>
+                  ) : loadingTables ? (
                     <p className="text-center text-sm text-slate-500 py-4">
                       Cargando mesas...
                     </p>
                   ) : filteredTables.length === 0 ? (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
-                      No hay mesas disponibles para este restaurante en este
-                      momento.
+                      No hay mesas disponibles para este restaurante en este momento.
                     </p>
                   ) : (
                     <TableGrid
@@ -715,6 +733,22 @@ const RestaurantDetail = () => {
         </section>
       </main>
       <Footer />
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          width: '350px',
+          zIndex: 9999,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '16px',
+          overflow: 'hidden',
+        }}>
+      <Chatbot
+        config={chatConfig}
+        actionProvider={ActionProvider}
+        messageParser={MessageParser}
+        />
+</div>
     </div>
   );
 };

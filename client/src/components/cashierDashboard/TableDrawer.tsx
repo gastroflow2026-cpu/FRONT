@@ -1,12 +1,13 @@
 "use client";
 
-import { X, UtensilsCrossed, Users, MapPin, Clock, Phone, Info, CheckCircle } from "lucide-react";
-import { Table } from "@/types/cashier";
+import { useState } from "react";
+import { X, UtensilsCrossed, Users, MapPin, Clock, Phone, Info, CheckCircle, Banknote, ArrowLeftRight, QrCode, CreditCard } from "lucide-react";
+import { Table, PaymentMethod } from "@/types/cashier";
 
 interface TableDrawerProps {
   table: Table | null;
   onClose: () => void;
-  onCloseOrder: (table: Table) => void;
+  onCloseOrder: (table: Table, paymentMethod: PaymentMethod) => void;
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
@@ -41,17 +42,40 @@ const ZONE_LABELS: Record<string, string> = {
   privado: "Privado",
 };
 
+const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ReactNode }[] = [
+  { value: "efectivo", label: "Efectivo", icon: <Banknote size={15} /> },
+  { value: "transferencia", label: "Transferencia", icon: <ArrowLeftRight size={15} /> },
+  { value: "qr", label: "QR", icon: <QrCode size={15} /> },
+  { value: "debito", label: "Débito", icon: <CreditCard size={15} /> },
+  { value: "credito", label: "Crédito", icon: <CreditCard size={15} /> },
+];
+
 export default function TableDrawer({ table, onClose, onCloseOrder }: TableDrawerProps) {
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
+
   if (!table) return null;
 
   const statusStyle = STATUS_STYLES[table.status];
+  const canPay =
+    table.status === "ocupada" &&
+    table.currentOrder &&
+    (table.currentOrder.status === "servido" || table.currentOrder.status === "preparacion");
+
+  function handleCobrar() {
+    if (!selectedPayment || !table) return;
+    onCloseOrder(table, selectedPayment);
+    setSelectedPayment(null);
+  }
 
   return (
     <>
       {/* Overlay */}
       <div
         className="fixed inset-0 bg-black/30 z-40 transition-opacity"
-        onClick={onClose}
+        onClick={() => {
+          setSelectedPayment(null);
+          onClose();
+        }}
       />
 
       {/* Drawer */}
@@ -76,14 +100,16 @@ export default function TableDrawer({ table, onClose, onCloseOrder }: TableDrawe
               </div>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => {
+                setSelectedPayment(null);
+                onClose();
+              }}
               className="p-1.5 hover:bg-white/60 rounded-lg transition-colors"
             >
               <X size={16} className="text-gray-500" />
             </button>
           </div>
 
-          {/* Meta */}
           <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
             {table.persons && (
               <span className="flex items-center gap-1">
@@ -100,37 +126,60 @@ export default function TableDrawer({ table, onClose, onCloseOrder }: TableDrawe
 
         {/* Contenido */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {/* Mesa LIBRE */}
-          {table.status === "libre" && (
-            <LibreContent table={table} />
-          )}
-
-          {/* Mesa OCUPADA */}
+          {table.status === "libre" && <LibreContent table={table} />}
           {table.status === "ocupada" && table.currentOrder && (
             <OcupadaContent table={table} />
           )}
-
-          {/* Mesa RESERVADA */}
           {table.status === "reservada" && table.reservation && (
             <ReservadaContent table={table} />
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100">
-          {table.status === "ocupada" && table.currentOrder &&
-            (table.currentOrder.status === "servido" || table.currentOrder.status === "preparacion") && (
-            <button
-              onClick={() => onCloseOrder(table)}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-            >
-              <CheckCircle size={16} />
-              Cobrar y cerrar orden
-            </button>
+        <div className="p-4 border-t border-gray-100 space-y-3">
+          {canPay && (
+            <>
+              {/* Métodos de pago */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-2">
+                  Método de pago
+                </p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {PAYMENT_METHODS.map((method) => (
+                    <button
+                      key={method.value}
+                      onClick={() => setSelectedPayment(method.value)}
+                      className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl border text-xs font-medium transition-all ${
+                        selectedPayment === method.value
+                          ? "border-orange-400 bg-orange-50 text-orange-600"
+                          : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {method.icon}
+                      <span className="text-[10px]">{method.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Botón cobrar */}
+              <button
+                onClick={handleCobrar}
+                disabled={!selectedPayment}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <CheckCircle size={16} />
+                {selectedPayment ? "Cobrar" : "Seleccioná un método de pago"}
+              </button>
+            </>
           )}
+
           {(table.status === "libre" || table.status === "reservada") && (
             <button
-              onClick={onClose}
+              onClick={() => {
+                setSelectedPayment(null);
+                onClose();
+              }}
               className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
             >
               <X size={14} />
@@ -172,7 +221,6 @@ function OcupadaContent({ table }: { table: Table }) {
 
   return (
     <div className="space-y-3">
-      {/* Header orden */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock size={14} className="text-gray-400" />
@@ -185,7 +233,6 @@ function OcupadaContent({ table }: { table: Table }) {
         </span>
       </div>
 
-      {/* Items */}
       <div className="space-y-2">
         {order.items.map((item, i) => (
           <div key={i} className="flex justify-between text-sm text-gray-600">
@@ -198,7 +245,6 @@ function OcupadaContent({ table }: { table: Table }) {
         ))}
       </div>
 
-      {/* Totales */}
       <div className="border-t border-gray-100 pt-3 space-y-1.5">
         <div className="flex justify-between text-xs text-gray-400">
           <span>Subtotal</span>
@@ -214,7 +260,6 @@ function OcupadaContent({ table }: { table: Table }) {
         </div>
       </div>
 
-      {/* Nota */}
       {order.note && (
         <div className="flex items-start gap-2 bg-orange-50 border border-orange-100 rounded-xl px-3 py-2.5">
           <Info size={13} className="text-orange-400 mt-0.5 shrink-0" />
@@ -222,7 +267,6 @@ function OcupadaContent({ table }: { table: Table }) {
         </div>
       )}
 
-      {/* Hora */}
       <div className="flex items-center gap-1 text-xs text-gray-400">
         <Clock size={11} />
         <span>Ingresada a las {order.createdAt}</span>
@@ -242,18 +286,13 @@ function ReservadaContent({ table }: { table: Table }) {
       </div>
 
       <div className="border border-gray-100 rounded-xl p-4 space-y-3">
-        {/* Nombre */}
         <p className="text-sm font-semibold text-gray-800">
           {reservation.clientName}
         </p>
-
-        {/* Teléfono */}
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Phone size={12} />
           <span>{reservation.phone}</span>
         </div>
-
-        {/* Meta */}
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1">
             <Clock size={12} />
@@ -264,8 +303,6 @@ function ReservadaContent({ table }: { table: Table }) {
             {reservation.persons} personas
           </span>
         </div>
-
-        {/* Nota */}
         {reservation.note && (
           <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
             <Info size={12} className="text-blue-400 mt-0.5 shrink-0" />

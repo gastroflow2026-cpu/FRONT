@@ -12,7 +12,7 @@ type EditMenuItemPayload = {
   name: string;
   description: string;
   price: number;
-  image: string;
+  image_url: string;
   status: MenuItemStatus;
 };
 
@@ -37,7 +37,7 @@ export function EditMenuItemDialog({
     name: "",
     description: "",
     price: "",
-    image: "",
+    image_url: "",
     status: "disponible" as MenuItemStatus,
   });
 
@@ -45,7 +45,7 @@ export function EditMenuItemDialog({
     name: false,
     description: false,
     price: false,
-    image: false,
+    image_url: false,
   });
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function EditMenuItemDialog({
         name: item.name,
         description: item.description,
         price: item.price.toString(),
-        image: item.image,
+        image_url: item.image_url,
         status: item.status,
       });
     }, 0);
@@ -70,7 +70,7 @@ export function EditMenuItemDialog({
       name: !formData.name.trim(),
       description: !formData.description.trim(),
       price: !formData.price || parseFloat(formData.price) <= 0,
-      image: !formData.image,
+      image_url: !formData.image_url,
     };
 
     setErrors(newErrors);
@@ -87,7 +87,7 @@ export function EditMenuItemDialog({
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
-      image: formData.image,
+      image_url: formData.image_url,
       status: formData.status,
     });
 
@@ -99,7 +99,7 @@ export function EditMenuItemDialog({
       name: false,
       description: false,
       price: false,
-      image: false,
+      image_url: false,
     });
 
     onClose();
@@ -136,11 +136,11 @@ export function EditMenuItemDialog({
             <label className={styles.label}>Imagen del Platillo *</label>
 
             <ImageUpload
-              value={formData.image}
-              onChange={(url) => setFormData({ ...formData, image: url })}
+              value={formData.image_url}
+              onChange={(url) => setFormData({ ...formData, image_url: url })}
             />
 
-            {errors.image && (
+            {errors.image_url && (
               <span className={styles.errorText}>La imagen es requerida</span>
             )}
           </div>
