@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useContext } from "react";
+import { useContext } from "react";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import Image from "next/image";
@@ -33,11 +33,6 @@ const fieldClassName =
 export default function OwnerOnboardingForm() {
   const router = useRouter();
   const { completeOwnerOnboarding, uploadRestaurantVerificationDocument, isLogged } = useContext(UsersContext);
-
-  const handleFileChange = (fieldName: keyof OwnerOnboardingFormValues) => (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0] ?? null;
-    formik.setFieldValue(fieldName, file);
-  };
 
   const getBackendMessage = (data: unknown) => {
     if (!data || typeof data !== "object") {
@@ -77,7 +72,7 @@ export default function OwnerOnboardingForm() {
           }),
         );
 
-        const result = await completeOwnerOnboarding(payload as OwnerRestaurantOnboardingPayload);
+        const hasRestaurant = Boolean(isLogged?.restaurant_id);
         const documentUploads = [
           {
             type: "official_id" as const,
@@ -93,17 +88,52 @@ export default function OwnerOnboardingForm() {
           },
         ];
 
-        for (const documentUpload of documentUploads) {
-          if (!documentUpload.file) {
-            throw new Error("DOCUMENT_FILE_REQUIRED");
+        const uploadRequiredDocuments = async () => {
+          for (const documentUpload of documentUploads) {
+            if (!documentUpload.file) {
+              throw new Error("DOCUMENT_FILE_REQUIRED");
+            }
+
+            const uploadResult = await uploadRestaurantVerificationDocument(documentUpload.type, documentUpload.file);
+
+            if (uploadResult.status < 200 || uploadResult.status >= 300) {
+              throw new Error("DOCUMENT_UPLOAD_FAILED");
+            }
           }
+        };
 
-          const uploadResult = await uploadRestaurantVerificationDocument(documentUpload.type, documentUpload.file);
+        if (!hasRestaurant) {
+          const result = await completeOwnerOnboarding(payload as OwnerRestaurantOnboardingPayload);
 
-          if (uploadResult.status < 200 || uploadResult.status >= 300) {
-            throw new Error("DOCUMENT_UPLOAD_FAILED");
+          if (result.status < 200 || result.status >= 300) {
+            const backendMessage = getBackendMessage(result.data);
+
+            await Swal.fire({
+              theme: "dark",
+              icon: "error",
+              title: "No se pudo continuar",
+              text: backendMessage,
+              confirmButtonColor: "#f97316",
+            });
+
+            return;
           }
         }
+
+        try {
+          await uploadRequiredDocuments();
+        } catch {
+          await Swal.fire({
+            theme: "dark",
+            icon: "error",
+            title: "No pudimos cargar todos los documentos",
+            text: "Tu restaurante fue registrado, pero no pudimos cargar todos los documentos. Intenta subir nuevamente la documentación.",
+            confirmButtonColor: "#f97316",
+          });
+
+          return;
+        }
+
         {
           localStorage.setItem("restaurantName", values.name.trim());
 
@@ -119,15 +149,6 @@ export default function OwnerOnboardingForm() {
           return;
         }
 
-        const backendMessage = getBackendMessage(result.data);
-
-        await Swal.fire({
-          theme: "dark",
-          icon: "error",
-          title: "No se pudo continuar",
-          text: backendMessage,
-          confirmButtonColor: "#f97316",
-        });
       } finally {
         setSubmitting(false);
       }
