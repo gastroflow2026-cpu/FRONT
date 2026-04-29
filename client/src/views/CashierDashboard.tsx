@@ -9,7 +9,7 @@ import TableDrawer from "@/components/cashierDashboard/TableDrawer";
 import ReservationsTab from "@/components/cashierDashboard/ReservationsTab";
 import TicketsTab from "@/components/cashierDashboard/TicketsTab";
 import { mockMetrics, mockTables } from "@/utils/cashierMockData";
-import { Table } from "@/types/cashier";
+import { PaymentMethod, Table } from "@/types/cashier";
 
 type MainTab = "mesas" | "reservas" | "tickets";
 
@@ -31,29 +31,34 @@ export default function CashierDashboard() {
     setSelectedTable(null);
   }
 
-  async function handleCloseOrder(table: Table) {
-    const result = await Swal.fire({
-      title: "¿Cobrar orden?",
-      html: `¿Confirmás el cobro de la orden <strong>#${table.currentOrder?.id}</strong> de la mesa <strong>${table.id}</strong>?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, cobrar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#f97316",
-      cancelButtonColor: "#6b7280",
-    });
+  async function handleCloseOrder(table: Table, paymentMethod: PaymentMethod) {
+  const result = await Swal.fire({
+    title: "¿Cobrar orden?",
+    html: `¿Confirmás el cobro de la orden <strong>#${table.currentOrder?.id}</strong> de la mesa <strong>${table.id}</strong>?`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, cobrar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#f97316",
+    cancelButtonColor: "#6b7280",
+  });
 
-    if (result.isConfirmed) {
-      await Swal.fire({
-        title: "¡Cobro registrado!",
-        text: "El pago fue registrado correctamente.",
-        icon: "success",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#f97316",
-      });
-      setSelectedTable(null);
-    }
+  if (result.isConfirmed) {
+    await Swal.fire({
+      title: "¡Cobro registrado!",
+      text: `Pago registrado correctamente con ${paymentMethod}.`,
+      icon: "success",
+      confirmButtonText: "OK",
+      confirmButtonColor: "#f97316",
+    });
+    // TODO: cuando el back esté listo, enviar paymentMethod junto con el cobro
+    // Ejemplo: await fetch(`/api/orders/${table.currentOrder?.id}/pay`, {
+    //   method: "POST",
+    //   body: JSON.stringify({ paymentMethod }),
+    // });
+    setSelectedTable(null);
   }
+}
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -198,6 +198,7 @@ export const mockTickets = [
     tableId: 1,
     closedAt: "11:30 a.m.",
     persons: 2,
+    paymentMethod: "efectivo",
     items: [
       { quantity: 2, name: "Empanadas x6", price: 6400 },
       { quantity: 1, name: "Vino tinto copa", price: 3200 },
@@ -212,6 +213,7 @@ export const mockTickets = [
     tableId: 3,
     closedAt: "11:00 a.m.",
     persons: 3,
+    paymentMethod: "debito",
     items: [
       { quantity: 3, name: "Milanesa napolitana", price: 12750 },
       { quantity: 2, name: "Gaseosa", price: 1800 },
@@ -225,6 +227,7 @@ export const mockTickets = [
     tableId: 5,
     closedAt: "10:30 a.m.",
     persons: 2,
+    paymentMethod: "transferencia",
     items: [
       { quantity: 1, name: "Bife de chorizo", price: 7200 },
       { quantity: 1, name: "Ensalada mixta", price: 2100 },
