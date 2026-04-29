@@ -323,8 +323,6 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
 
       const res = await axios.post<AuthResponse>(buildApiUrl("/auth/owner/signin"), payload);
 
-      console.log("OWNER RAW RESPONSE:", res.data);
-      
       if (!res.data?.user || !res.data?.token) {
         return {
           status: 500,

@@ -119,7 +119,7 @@ export default function PlatformDashboardPage() {
 
   const handleLogout = () => {
     clearSession();
-    router.push("/platform/login");
+    window.location.href = "/";
   };
 
   return (
