@@ -1,11 +1,11 @@
 "use client";
 
-import { useContext } from "react";
+import { ChangeEvent, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import Image from "next/image";
 import Swal from "sweetalert2";
-import { Building2, Globe, ImageIcon, Mail, MapPin, Phone, Save, ScrollText } from "lucide-react";
+import { Building2, FileText, Globe, ImageIcon, Mail, MapPin, Phone, Save, ScrollText } from "lucide-react";
 import { UsersContext } from "@/context/UsersContext";
 import {
   ownerOnboardingInitialValues,
@@ -13,21 +13,63 @@ import {
   OwnerOnboardingFormValues,
 } from "@/validations/ownerOnboardingSchema";
 
+type OwnerRestaurantOnboardingPayload = {
+  name: string;
+  slug?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  image_url?: string;
+  description?: string;
+  category?: string;
+  about?: string;
+};
+
 const fieldClassName =
   "w-full rounded-xl border border-orange-500/30 bg-[#111526] px-4 py-3 text-white outline-none transition focus:border-orange-400";
 
 export default function OwnerOnboardingForm() {
   const router = useRouter();
-  const { completeOwnerOnboarding, isLogged } = useContext(UsersContext);
+  const { completeOwnerOnboarding, uploadRestaurantVerificationDocument, isLogged } = useContext(UsersContext);
 
+  const handleFileChange = (fieldName: keyof OwnerOnboardingFormValues) => (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0] ?? null;
+    formik.setFieldValue(fieldName, file);
+  };
+
+  const getBackendMessage = (data: unknown) => {
+    if (!data || typeof data !== "object") {
+      return "No fue posible completar el onboarding del restaurante.";
+    }
+
+    const parsed = data as { message?: unknown; error?: unknown };
+
+    if (Array.isArray(parsed.message)) {
+      return parsed.message.map(String).join(" | ");
+    }
+
+    if (typeof parsed.message === "string") {
+      return parsed.message;
+    }
+
+    if (typeof parsed.error === "string") {
+      return parsed.error;
+    }
+
+    return "No fue posible completar el onboarding del restaurante.";
+  };
   const formik = useFormik<OwnerOnboardingFormValues>({
     initialValues: ownerOnboardingInitialValues,
     validationSchema: ownerOnboardingValidationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
+        const { official_id, tax_or_business_document, proof_of_address, ...restaurantValues } = values;
+
         const payload = Object.fromEntries(
-          Object.entries(values).filter(([key, value]) => {
-            if (key === "name" || key === "is_active") {
+          Object.entries(restaurantValues).filter(([key, value]) => {
+            if (key === "name") {
               return true;
             }
 
@@ -35,16 +77,41 @@ export default function OwnerOnboardingForm() {
           }),
         );
 
-        const result = await completeOwnerOnboarding(payload as OwnerOnboardingFormValues);
+        const result = await completeOwnerOnboarding(payload as OwnerRestaurantOnboardingPayload);
+        const documentUploads = [
+          {
+            type: "official_id" as const,
+            file: official_id,
+          },
+          {
+            type: "tax_or_business_document" as const,
+            file: tax_or_business_document,
+          },
+          {
+            type: "proof_of_address" as const,
+            file: proof_of_address,
+          },
+        ];
 
-        if ((result.status === 200 || result.status === 201) && result.data && "user" in result.data) {
+        for (const documentUpload of documentUploads) {
+          if (!documentUpload.file) {
+            throw new Error("DOCUMENT_FILE_REQUIRED");
+          }
+
+          const uploadResult = await uploadRestaurantVerificationDocument(documentUpload.type, documentUpload.file);
+
+          if (uploadResult.status < 200 || uploadResult.status >= 300) {
+            throw new Error("DOCUMENT_UPLOAD_FAILED");
+          }
+        }
+        {
           localStorage.setItem("restaurantName", values.name.trim());
 
           await Swal.fire({
             theme: "dark",
             icon: "success",
-            title: "Restaurante creado",
-            text: "Tu restaurante fue configurado correctamente.",
+            title: "Solicitud recibida",
+            text: "Tu solicitud está en proceso de revisión. Estamos validando la información y documentos de tu restaurante. Te avisaremos cuando tu cuenta sea activada.",
             confirmButtonColor: "#f97316",
           });
 
@@ -52,10 +119,7 @@ export default function OwnerOnboardingForm() {
           return;
         }
 
-        const backendMessage =
-          result.data && "message" in result.data && typeof result.data.message === "string"
-            ? result.data.message
-            : "No fue posible completar el onboarding del restaurante.";
+        const backendMessage = getBackendMessage(result.data);
 
         await Swal.fire({
           theme: "dark",
@@ -305,20 +369,71 @@ export default function OwnerOnboardingForm() {
               />
             </div>
 
-            <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-white/75">
-              <input
-                id="is_active"
-                name="is_active"
-                type="checkbox"
-                className="mt-1 h-4 w-4 accent-orange-500"
-                checked={formik.values.is_active}
-                onChange={formik.handleChange}
-              />
-              <span>
-                <strong className="block text-white">Restaurante activo</strong>
-                Marca esta opcion si quieres crear el restaurante con estado activo.
-              </span>
-            </label>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-white/80">
+                <FileText className="h-4 w-4 text-orange-300" />
+                Documentación para verificación
+              </div>
+
+              <div className="grid gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white/80">
+                    Identificación oficial del dueño o representante
+                  </label>
+                  <input
+                    id="official_id"
+                    name="official_id"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className={fieldClassName}
+                    onChange={(event) => {
+                      formik.setFieldValue("official_id", event.currentTarget.files?.[0] ?? null);
+                    }}
+                  />
+                  {formik.touched.official_id && formik.errors.official_id && (
+                    <p className="mt-2 text-sm text-red-400">{formik.errors.official_id}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white/80">
+                    Comprobante fiscal o documento comercial del restaurante
+                  </label>
+                  <input
+                    id="tax_or_business_document"
+                    name="tax_or_business_document"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className={fieldClassName}
+                    onChange={(event) => {
+                      formik.setFieldValue("tax_or_business_document", event.currentTarget.files?.[0] ?? null);
+                    }}
+                  />
+                  {formik.touched.tax_or_business_document && formik.errors.tax_or_business_document && (
+                    <p className="mt-2 text-sm text-red-400">{formik.errors.tax_or_business_document}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white/80">
+                    Comprobante de domicilio del restaurante
+                  </label>
+                  <input
+                    id="proof_of_address"
+                    name="proof_of_address"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className={fieldClassName}
+                    onChange={(event) => {
+                      formik.setFieldValue("proof_of_address", event.currentTarget.files?.[0] ?? null);
+                    }}
+                  />
+                  {formik.touched.proof_of_address && formik.errors.proof_of_address && (
+                    <p className="mt-2 text-sm text-red-400">{formik.errors.proof_of_address}</p>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <button
               type="submit"
@@ -326,7 +441,7 @@ export default function OwnerOnboardingForm() {
               className="mt-auto inline-flex items-center justify-center gap-3 rounded-2xl bg-linear-to-r from-orange-500 to-pink-500 px-6 py-4 text-lg font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save className="h-5 w-5" />
-              {formik.isSubmitting ? "Creando restaurante..." : "Finalizar onboarding"}
+              {formik.isSubmitting ? "Enviando solicitud..." : "Enviar solicitud de revisión"}{" "}
             </button>
           </div>
         </form>
