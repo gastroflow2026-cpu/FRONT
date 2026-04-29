@@ -1,135 +1,97 @@
 "use client";
 
-import { useState } from "react";
 import { Plus } from "lucide-react";
-import { MenuItemCard } from "./MenuItemCard";
-import { MenuItemFormDialog } from "./MenuItemDialog";
-import { EditMenuItemDialog } from "./EditMenuItemDialog";
-import Swal from "sweetalert2";
 import styles from "./MenuView.module.css";
-import { MenuItem, MenuCategory } from "@/types/MenuItem";
+import { useState } from "react";
+
+import { MenuItemCard } from "./MenuItemCard";
+import { MenuCategory, MenuItem } from "@/types/MenuItem";
+import { MenuItemDialog } from "./MenuItemDialog";
 import { Category } from "@/types/Category";
 
 interface Props {
-  menuItems: MenuItem[];
+  platesList: MenuCategory[];
+  onCreateItem: (item: any) => void;
+  onUpdateItem: (item: any) => void;
   categories: Category[];
-  onCreateItem: (item: Omit<MenuItem, "id">) => void;
-  onUpdateItem: (item: MenuItem) => void;
   onDeleteItem: (id: string) => void;
-  onStatusChange: (id: string, status: "disponible" | "agotado" | "inactivo") => void;
+  onStatusChange?: (id: string, status: MenuItem["status"]) => void;
 }
 
 export function MenuView({
-  menuItems,
-  categories,
+  platesList,
   onCreateItem,
   onUpdateItem,
+  categories,
   onDeleteItem,
   onStatusChange,
 }: Props) {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editDialog, setEditDialog] = useState<{
-    isOpen: boolean;
-    item: MenuItem | null;
-  }>({
-    isOpen: false,
-    item: null,
-  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit">("create");
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
-  const handleEdit = (id: string) => {
-    const item = menuItems.find((i) => i.id === id);
-    if (item) setEditDialog({ isOpen: true, item });
+  const handleOpenCreate = () => {
+    setMode("create");
+    setSelectedItem(null);
+    setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    Swal.fire({
-      title: "¿Eliminar plato?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) onDeleteItem(id);
-    });
+  const handleOpenEdit = (item: MenuItem) => {
+    setMode("edit");
+    setSelectedItem(item);
+    setIsDialogOpen(true);
   };
 
-  const activeCategories = categories.filter((c) => c.is_active);
+  const handleClose = () => {
+    setIsDialogOpen(false);
+    setSelectedItem(null);
+  };
+
+  const handleSubmit = (data: any) => {
+    if (mode === "create") {
+      onCreateItem(data);
+    } else {
+      onUpdateItem(data);
+    }
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div>
-          <h2 className={styles.title}>Platillos del Menú</h2>
-          <p className={styles.subtitle}>
-            Gestiona todos los platillos disponibles
-          </p>
-        </div>
+        <h2>Platillos del Menú</h2>
 
-        <button
-          onClick={() => setIsCreateDialogOpen(true)}
-          className={styles.addButton}
-          disabled={activeCategories.length === 0}
-        >
-          <Plus size={18} />
-          Nuevo Platillo
+        <button className={styles.addButton} onClick={handleOpenCreate}>
+          <Plus size={18} /> Nuevo Platillo
         </button>
       </div>
 
-      {activeCategories.length === 0 && (
-        <div className={styles.warningBox}>
-          Debes crear al menos una categoría activa antes de agregar platillos.
-        </div>
-      )}
+      {platesList.map((category) => (
+        <div key={category.id} className={styles.categorySection}>
+          <h2 className={styles.categoryTitle}>{category.name}</h2>
 
-      {menuItems.length > 0 ? (
-        <div className={styles.grid}>
-          {menuItems.map((item) => (
-            <MenuItemCard
-              key={item.id}
-              item={item}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onStatusChange={onStatusChange}
-            />
-          ))}
+          <div className={styles.grid}>
+            {category.items.map((item) => (
+              <MenuItemCard
+                key={item.id}
+                item={item}
+                onEdit={handleOpenEdit}
+                onDelete={onDeleteItem}
+                onStatusChange={(id, status) =>
+                  onStatusChange?.(id, status)
+                }
+              />
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className={styles.emptyState}>
-          <p>No hay platillos creados</p>
+      ))}
 
-          {activeCategories.length > 0 && (
-            <button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className={styles.emptyButton}
-            >
-              <Plus size={16} />
-              Crear Primer Platillo
-            </button>
-          )}
-        </div>
-      )}
-
-      <MenuItemFormDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSubmit={(item) => {
-          onCreateItem(item);
-          setIsCreateDialogOpen(false);
-        }}
+      <MenuItemDialog
+        isOpen={isDialogOpen}
+        onClose={handleClose}
+        onSubmit={handleSubmit}
         categories={categories}
-      />
-
-      <EditMenuItemDialog
-        isOpen={editDialog.isOpen}
-        item={editDialog.item}
-        onClose={() => setEditDialog({ isOpen: false, item: null })}
-        onSubmit={(item) => {
-          onUpdateItem(item);
-          setEditDialog({ isOpen: false, item: null });
-        }}
+        mode={mode}
+        item={selectedItem}
       />
     </div>
   );

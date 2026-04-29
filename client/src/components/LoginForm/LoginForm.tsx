@@ -2,6 +2,7 @@
 
 import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import {
   ArrowLeft,
@@ -27,12 +28,37 @@ const LoginForm = () => {
   const router = useRouter();
   const { loginUser, loginUserGoogle } = useContext(UsersContext);
 
+  const WAITER_ROLES = new Set(["waiter", "mesero", "mozo", "staff_waiter"]);
+  const CASHIER_ROLES = new Set(["cashier", "cajero", "staff_cashier"]);
+
+  const getBackendErrorMessage = (error: unknown): string | null => {
+    if (!axios.isAxiosError(error)) return null;
+
+    const data = error.response?.data as
+      | { message?: unknown; error?: unknown }
+      | undefined;
+
+    if (Array.isArray(data?.message) && data.message.length > 0) {
+      return data.message.map((item) => String(item)).join(" | ");
+    }
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+
+    if (typeof data?.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (
     values: typeof loginInitialValues,
     { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void },
   ) => {
     try {
-      await loginUser(values);
+      const { user } = await loginUser(values);
       await Swal.fire({
         icon: "success",
         title: "Bienvenido",
@@ -41,7 +67,14 @@ const LoginForm = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      router.push("/");
+      const roles: string[] = user?.roles ?? [];
+      if (roles.some((role) => WAITER_ROLES.has(role))) {
+        router.push("/waiter");
+      } else if (roles.some((role) => CASHIER_ROLES.has(role))) {
+        router.push("/cashier");
+      } else {
+        router.push("/");
+      }
     } catch (error: unknown) {
       const message =
       error instanceof Error && error.message === "OWNER_LOGIN_RESTRICTED"

@@ -23,9 +23,239 @@
   padding: 1.5rem;
 }
 
+.statusMain {
+  flex: 1;
+  margin-top: 80px;
+  padding: 1.5rem 1rem;
+}
+
+.statusContainer {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.statusPanel {
+  overflow: hidden;
+  border: 1px solid #fed7aa;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.statusHeader {
+  border-bottom: 1px solid #ffedd5;
+  background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
+  padding: 1.5rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  background: #ffedd5;
+  padding: 0.5rem 0.875rem;
+  color: #c2410c;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.statusTitle {
+  margin-bottom: 0.75rem;
+  color: #111827;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.statusDescription {
+  max-width: 48rem;
+  color: #4b5563;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.statusGrid {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem;
+}
+
+.statusContent {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.statusCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: #f9fafb;
+  padding: 1rem;
+}
+
+.statusCardWhite {
+  background: #ffffff;
+}
+
+.statusCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.statusCardTitle h2 {
+  color: #111827;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.statusSteps {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.statusStep {
+  min-width: 0;
+  border-radius: 0.875rem;
+  background: #ffffff;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.statusStepActive {
+  outline: 1px solid #fed7aa;
+}
+
+.statusStepDisabled {
+  opacity: 0.65;
+}
+
+.statusStepTitle {
+  color: #111827;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.statusStepText {
+  margin-top: 0.25rem;
+  color: #6b7280;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.documentList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.documentItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border: 1px solid #f3f4f6;
+  border-radius: 0.875rem;
+  background: #f9fafb;
+  padding: 1rem;
+}
+
+.documentItem span {
+  min-width: 0;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.statusAside {
+  border: 1px solid #1f2937;
+  border-radius: 1rem;
+  background: #111827;
+  padding: 1.25rem;
+  color: #ffffff;
+}
+
+.statusAside h2 {
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.statusAsideDescription {
+  margin-bottom: 1.5rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.restaurantNameBox {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1rem;
+}
+
+.restaurantNameLabel {
+  color: #fdba74;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.restaurantName {
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.statusMessage {
+  display: grid;
+  min-height: 18rem;
+  place-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 2rem;
+  color: #374151;
+  text-align: center;
+}
+
 @media (min-width: 1024px) {
   .container {
     padding: 2rem;
+  }
+
+  .statusMain {
+    padding: 2rem;
+  }
+
+  .statusGrid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+    padding: 2rem;
+  }
+
+  .statusTitle {
+    font-size: 2.25rem;
+  }
+
+  .statusSteps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .statusMain {
+    padding: 1rem;
+  }
+
+  .statusHeader,
+  .statusCard,
+  .statusAside {
+    padding: 1rem;
   }
 }
 

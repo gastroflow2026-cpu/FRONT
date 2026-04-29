@@ -1,40 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./MenuItemDialog.module.css";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { MenuCategory } from "@/types/MenuItem";
 import { Category } from "@/types/Category";
+import { MenuItem } from "@/types/MenuItem";
 
-type CreateMenuItemPayload = {
+type Mode = "create" | "edit";
+
+type Payload = {
+  id?: string;
   name: string;
   description: string;
   price: number;
-  image_url: string;
-  status: "disponible";
+  image: string;
   category_id: string;
+  allergens: string;
+  tags: string;
+  prep_time_minutes: number;
+  display_order: number;
 };
-interface MenuItemFormDialogProps {
+
+interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (item: CreateMenuItemPayload) => void;
-  categories: Category[]; // ← Category en lugar de MenuCategory
+  onSubmit: (item: Payload) => void;
+  categories: Category[];
+  mode: Mode;
+  item?: MenuItem | null;
 }
 
-export function MenuItemFormDialog({
+type FormState = {
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+  category_id: string;
+  allergens: string;
+  tags: string;
+  prep_time_minutes: string;
+  display_order: string;
+};
+
+const INITIAL_STATE: FormState = {
+  name: "",
+  description: "",
+  price: "",
+  image: "",
+  category_id: "",
+  allergens: "",
+  tags: "",
+  prep_time_minutes: "15",
+  display_order: "1",
+};
+
+export function MenuItemDialog({
   isOpen,
   onClose,
   onSubmit,
   categories,
-}: MenuItemFormDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    image_url: "",
-    status: "disponible",
-    category_id: "",
-  });
+  mode,
+  item,
+}: Props) {
+  const [formData, setFormData] = useState<FormState>(INITIAL_STATE);
 
   const [errors, setErrors] = useState({
     name: false,
@@ -44,31 +72,45 @@ export function MenuItemFormDialog({
     category_id: false,
   });
 
+  useEffect(() => {
+    if (mode === "edit" && item) {
+      setFormData({
+        name: item.name,
+        description: item.description,
+        price: item.price.toString(),
+        image: item.image ?? item.image_url ?? "",
+        category_id: item.category_id ?? "",
+        allergens: "",
+        tags: "",
+        prep_time_minutes: "15",
+        display_order: "1",
+      });
+    } else {
+      setFormData(INITIAL_STATE);
+    }
+  }, [mode, item]);
+
   if (!isOpen) return null;
+
+  const updateField = (field: keyof FormState, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const validateForm = () => {
     const newErrors = {
       name: !formData.name.trim(),
       description: !formData.description.trim(),
       price: !formData.price || parseFloat(formData.price) <= 0,
-      image_url: !formData.image_url,
+      image_url: !formData.image,
       category_id: !formData.category_id,
     };
 
     setErrors(newErrors);
-    return !Object.values(newErrors).some((error) => error);
+    return !Object.values(newErrors).some(Boolean);
   };
 
   const resetAndClose = () => {
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      image_url: "",
-      status: "disponible",
-      category_id: "",
-    });
-
+    setFormData(INITIAL_STATE);
     setErrors({
       name: false,
       description: false,
@@ -76,26 +118,35 @@ export function MenuItemFormDialog({
       image_url: false,
       category_id: false,
     });
-
     onClose();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
     onSubmit({
+      ...(mode === "edit" && item ? { id: item.id } : {}),
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
-      image_url: formData.image_url,
-      status: "disponible",
+      image: formData.image,
       category_id: formData.category_id,
+      allergens: formData.allergens || "",
+      tags: formData.tags || "",
+      prep_time_minutes: parseInt(formData.prep_time_minutes) || 15,
+      display_order: parseInt(formData.display_order) || 1,
     });
 
     resetAndClose();
   };
+
+  const title =
+    mode === "create" ? "Crear Nuevo Platillo" : "Editar Platillo";
+
+  const submitText =
+    mode === "create" ? "Crear Platillo" : "Guardar Cambios";
 
   return (
     <div
@@ -103,15 +154,16 @@ export function MenuItemFormDialog({
       onClick={(e) => e.target === e.currentTarget && resetAndClose()}
     >
       <div className={styles.modal}>
-        <h2 className={styles.title}>Crear Nuevo Platillo</h2>
+        <h2 className={styles.title}>{title}</h2>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* IMAGEN */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}>Imagen del Platillo *</label>
+            <label className={styles.label}>Imagen *</label>
 
             <ImageUpload
-              value={formData.image_url}
-              onChange={(url) => setFormData({ ...formData, image_url: url })}
+              value={formData.image}
+              onChange={(url) => updateField("image", url)}
             />
 
             {errors.image_url && (
@@ -119,20 +171,16 @@ export function MenuItemFormDialog({
             )}
           </div>
 
+          {/* CATEGORÍA */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label} htmlFor="category_id">
-              Categoría *
-            </label>
+            <label className={styles.label}>Categoría *</label>
+
             <select
-              id="category_id"
-              name="category_id"
               className={`${styles.input} ${
                 errors.category_id ? styles.inputError : ""
               }`}
               value={formData.category_id}
-              onChange={(e) =>
-                setFormData({ ...formData, category_id: e.target.value })
-              }
+              onChange={(e) => updateField("category_id", e.target.value)}
             >
               <option value="">Selecciona una categoría</option>
 
@@ -142,30 +190,18 @@ export function MenuItemFormDialog({
                 </option>
               ))}
             </select>
-
-            {errors.category_id && (
-              <p className={styles.errorMessage}>La categoría es requerida</p>
-            )}
           </div>
 
+          {/* NOMBRE + PRECIO */}
           <div className={styles.row}>
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Título del Platillo *</label>
+              <label className={styles.label}>Nombre *</label>
 
               <input
-                className={`${styles.input} ${
-                  errors.name ? styles.inputError : ""
-                }`}
+                className={styles.input}
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Ej: Paella Valenciana"
+                onChange={(e) => updateField("name", e.target.value)}
               />
-
-              {errors.name && (
-                <p className={styles.errorMessage}>El título es requerido</p>
-              )}
             </div>
 
             <div className={styles.fieldGroup}>
@@ -176,44 +212,75 @@ export function MenuItemFormDialog({
 
                 <input
                   type="number"
-                  step="0.01"
-                  className={`${styles.input} ${styles.priceInput} ${
-                    errors.price ? styles.inputError : ""
-                  }`}
+                  className={`${styles.input} ${styles.priceInput}`}
                   value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                  placeholder="0.00"
+                  onChange={(e) => updateField("price", e.target.value)}
                 />
               </div>
-
-              {errors.price && (
-                <p className={styles.errorMessage}>Precio inválido</p>
-              )}
             </div>
           </div>
 
+          {/* DESCRIPCIÓN */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Descripción *</label>
 
             <textarea
-              className={`${styles.textarea} ${
-                errors.description ? styles.inputError : ""
-              }`}
+              className={styles.textarea}
               value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Describe el platillo..."
-              rows={4}
+              onChange={(e) => updateField("description", e.target.value)}
             />
-
-            {errors.description && (
-              <p className={styles.errorMessage}>La descripción es requerida</p>
-            )}
           </div>
 
+          {/* OPCIONALES */}
+          <div className={styles.optionalDivider}>
+            <span>Opcionales</span>
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>Alérgenos</label>
+            <input
+              className={styles.input}
+              value={formData.allergens}
+              onChange={(e) => updateField("allergens", e.target.value)}
+            />
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>Tags</label>
+            <input
+              className={styles.input}
+              value={formData.tags}
+              onChange={(e) => updateField("tags", e.target.value)}
+            />
+          </div>
+
+          <div className={styles.row}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Tiempo (min)</label>
+              <input
+                type="number"
+                className={styles.input}
+                value={formData.prep_time_minutes}
+                onChange={(e) =>
+                  updateField("prep_time_minutes", e.target.value)
+                }
+              />
+            </div>
+
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Orden</label>
+              <input
+                type="number"
+                className={styles.input}
+                value={formData.display_order}
+                onChange={(e) =>
+                  updateField("display_order", e.target.value)
+                }
+              />
+            </div>
+          </div>
+
+          {/* ACTIONS */}
           <div className={styles.actions}>
             <button
               type="button"
@@ -227,7 +294,7 @@ export function MenuItemFormDialog({
               type="submit"
               className={`${styles.btn} ${styles.btnSubmit}`}
             >
-              Crear Platillo
+              {submitText}
             </button>
           </div>
         </form>

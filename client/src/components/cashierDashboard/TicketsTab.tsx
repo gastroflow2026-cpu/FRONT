@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Clock, Users, Printer, UtensilsCrossed } from "lucide-react";
+import { Clock, Users, Printer, UtensilsCrossed, CreditCard } from "lucide-react";
 import { mockTickets } from "@/utils/cashierMockData";
 
 type Ticket = (typeof mockTickets)[number];
@@ -126,6 +126,17 @@ export default function TicketsTab() {
                 {selectedTicket.persons} pers.
               </span>
             </div>
+          </div>
+
+          {/* Método de pago */}
+          <div className="flex items-center gap-2 mb-4 bg-gray-50 rounded-xl px-3 py-2">
+            <CreditCard size={13} className="text-gray-400" />
+            <span className="text-xs text-gray-500">
+              Método de pago:{" "}
+              <span className="font-semibold text-gray-700 capitalize">
+                {selectedTicket.paymentMethod}
+              </span>
+            </span>
           </div>
 
           {/* Items */}

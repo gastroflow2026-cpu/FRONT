@@ -1,17 +1,23 @@
-import { Category } from "./Category";
+export type MenuItemStatus = "disponible" | "agotado" | "inactivo";
 
-// src/types/MenuItem.ts
 export interface MenuItem {
   id: string;
   name: string;
   description: string;
-  price: number; // ← solo number, no string | number
-  image_url: string;
-  image?: string; // ← agregar para EditMenuItemDialog
-  status: "disponible" | "agotado" | "inactivo"; // ← union literal, no string genérico
+  price: number;
+  image?: string | null;
+  image_url?: string | null;
+  status: MenuItemStatus;
   category_id?: string;
 }
 
-export interface MenuCategory extends Category {
+export interface MenuCategory {
+  id?: string;
+  name?: string;
+  description?: string | null;
+  display_order?: number;
+  category_id?: string;
+  category_name?: string;
+  category_description?: string | null;
   items: MenuItem[];
 }

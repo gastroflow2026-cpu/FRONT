@@ -75,29 +75,29 @@ export default function CashierNavbar({
     .slice(0, 2);
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+    <nav className="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
       {/* Logo + nombre restaurante */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-orange-500 to-pink-500">
           <UtensilsCrossed size={18} className="text-white" />
         </div>
         <div className="leading-tight">
-          <p className="font-semibold text-gray-800 text-sm">{restaurantName}</p>
+          <p className="font-semibold text-white text-sm">{restaurantName}</p>
           <p className="text-xs text-gray-400">Sistema de gestión</p>
         </div>
       </div>
 
       {/* Hora y fecha */}
-      <div className="flex items-center gap-2 text-gray-500 text-sm">
-        <RefreshCw size={14} className="text-gray-400" />
+      <div className="flex items-center gap-2 text-gray-400 text-sm">
+        <RefreshCw size={14} className="text-gray-500" />
         {mounted ? (
           <>
             <span>{formattedTime}</span>
-            <span className="text-gray-300">|</span>
+            <span className="text-gray-600">|</span>
             <span className="capitalize">{formattedDate}</span>
           </>
         ) : (
-          <span className="text-gray-300">--:--:-- --</span>
+          <span className="text-gray-600">--:--:-- --</span>
         )}
       </div>
 
@@ -105,18 +105,18 @@ export default function CashierNavbar({
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-2 py-1 transition-colors"
+          className="flex items-center gap-2 hover:bg-gray-800 rounded-lg px-2 py-1 transition-colors"
         >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
             <span className="text-white text-xs font-semibold">{initials}</span>
           </div>
           <div className="leading-tight text-left">
-            <p className="text-sm font-medium text-gray-800">{cashierName}</p>
+            <p className="text-sm font-medium text-white">{cashierName}</p>
             <p className="text-xs text-gray-400">Cajero</p>
           </div>
           <ChevronDown
             size={14}
-            className={`text-gray-400 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+            className={`text-gray-500 transition-transform ${menuOpen ? "rotate-180" : ""}`}
           />
         </button>
 
