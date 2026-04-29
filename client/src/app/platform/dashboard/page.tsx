@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { Building2, Clock3, Eye, LogOut, RefreshCw, ShieldCheck } from "lucide-react";
+import { Building2, Clock3, Eye, Home, LogOut, RefreshCw, ShieldCheck } from "lucide-react";
 import { clearSession, getToken } from "@/helpers/getToken";
 import { isPlatformSessionUser } from "@/helpers/platformSession";
 
@@ -137,18 +137,29 @@ export default function PlatformDashboardPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/10"
-          >
-            <LogOut className="h-4 w-4" />
-            Salir
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/10"
+            >
+              <Home className="h-4 w-4" />
+              Inicio
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/10"
+            >
+              <LogOut className="h-4 w-4" />
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="mb-6 flex flex-wrap gap-3">
+      <div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-3 px-6 py-6">
         {STATUS_TABS.map((tab) => {
           const isActive = selectedStatus === tab.value;
 
