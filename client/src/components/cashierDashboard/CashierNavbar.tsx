@@ -35,6 +35,15 @@ export default function CashierNavbar({
   };
 }, []);
 
+    useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
