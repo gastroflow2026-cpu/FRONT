@@ -263,22 +263,23 @@ export const UsersContext = createContext<UsersContextType>({
 
 export const UsersProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter()
-  const [isLogged, setIsLogged] = useState<SessionUser | null>(() => {
-    if (typeof window === "undefined") return null;
-    
+  const [isLogged, setIsLogged] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    
-    if (!storedUser) return null;
-    
-    try {
-      return JSON.parse(storedUser);
-    } catch {
-      return null;
+
+    if (!storedUser) {
+      setIsLogged(null);
+      return;
     }
-  });
-  
-  
-  
+
+    try {
+      setIsLogged(JSON.parse(storedUser));
+    } catch {
+      setIsLogged(null);
+    }
+  }, []);
+
   const saveAuthSession = useCallback(
     (token: string, user: AuthResponseUser) => {
       saveSession(token, user);
