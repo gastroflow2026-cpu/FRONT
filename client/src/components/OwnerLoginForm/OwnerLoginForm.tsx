@@ -25,6 +25,26 @@ const OwnerLoginForm = ({
   const router = useRouter();
   const { loginOwner } = useContext(UsersContext);
 
+  const getBackendErrorMessage = (data: unknown): string | null => {
+    if (!data || typeof data !== "object") return null;
+
+    const parsed = data as { message?: unknown; error?: unknown };
+
+    if (Array.isArray(parsed.message) && parsed.message.length > 0) {
+      return parsed.message.map((item) => String(item)).join(" | ");
+    }
+
+    if (typeof parsed.message === "string" && parsed.message.trim()) {
+      return parsed.message;
+    }
+
+    if (typeof parsed.error === "string" && parsed.error.trim()) {
+      return parsed.error;
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (
     values: typeof loginInitialValues,
     { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void },
@@ -56,11 +76,8 @@ const OwnerLoginForm = ({
       }
 
       const backendMessage =
-        result.data &&
-        "message" in result.data &&
-        typeof result.data.message === "string"
-          ? result.data.message
-          : "El usuario no pertenece al rol REST_ADMIN o las credenciales son invalidas.";
+        getBackendErrorMessage(result.data) ||
+        "El usuario no pertenece al rol REST_ADMIN o las credenciales son invalidas.";
 
       await Swal.fire({
         theme: "dark",
