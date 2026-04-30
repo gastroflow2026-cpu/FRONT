@@ -14,11 +14,17 @@ import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
 import type { Table } from "@/context/TablesContext";
-import Chatbot from 'react-chatbot-kit';
-import 'react-chatbot-kit/build/main.css';
-import ActionProvider from '@/chatbot/ActionProvider';
-import MessageParser from '@/chatbot/MessageParser';
-import config from '@/chatbot/config';
+import dynamic from "next/dynamic";
+import "react-chatbot-kit/build/main.css";
+import ActionProvider from "@/chatbot/ActionProvider";
+import MessageParser from "@/chatbot/MessageParser";
+import config from "@/chatbot/config";
+
+// SSR desactivado — evita el error "class constructors must be invoked with new"
+const Chatbot = dynamic(
+  () => import("react-chatbot-kit").then((m) => m.default),
+  { ssr: false }
+);
 
 type PublicMenuItem = {
   id: string;
@@ -83,29 +89,33 @@ const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [loadingRestaurant, setLoadingRestaurant] = useState(true);
-  const [restaurant, setRestaurant] = useState<RestaurantDetailData | null>(
-    null,
-  );
+  const [restaurant, setRestaurant] = useState<RestaurantDetailData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
-  //CHATBOT
-  const sessionId = useRef('session_' + Math.random().toString(36).substr(2, 9)).current;
+
+  // ── Chatbot state ──────────────────────────────────────────────
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatKey, setChatKey] = useState(0);
+
+  const sessionId = useRef(
+    "session_" + Math.random().toString(36).substr(2, 9)
+  ).current;
 
   const chatConfig = {
-  ...config,
-  state: {
-    ...config.state,
-    restaurantId,
-    sessionId,
-  },
+    ...config,
+    state: {
+      ...config.state,
+      restaurantId,
+      sessionId,
+    },
   };
+  // ──────────────────────────────────────────────────────────────
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const { tables, loading: loadingTables, getTables } = useTables();
 
-  // Fecha mínima para el atributo 'min' del input date
   const today = new Date();
   const minReservationDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
@@ -134,7 +144,7 @@ const RestaurantDetail = () => {
     const fetchMenu = async () => {
       try {
         const { data } = await axios.get<PublicMenuCategory[]>(
-          `${API_URL}/menu/${restaurantId}/public`,
+          `${API_URL}/menu/${restaurantId}/public`
         );
         setCategories(data);
       } catch (error) {
@@ -144,20 +154,16 @@ const RestaurantDetail = () => {
         setLoadingMenu(false);
       }
     };
-
     fetchMenu();
   }, []);
 
+  // EFECTO 2: Carga de restaurante
   useEffect(() => {
     const buildLocation = (restaurantData: PublicRestaurantResponse) => {
       const cityCountry = [restaurantData.city, restaurantData.country]
         .filter((value): value is string => Boolean(value && value.trim()))
         .join(", ");
-
-      if (cityCountry) {
-        return cityCountry;
-      }
-
+      if (cityCountry) return cityCountry;
       return restaurantData.address?.trim() || "-";
     };
 
@@ -167,25 +173,16 @@ const RestaurantDetail = () => {
         setLoadingRestaurant(false);
         return;
       }
-
       try {
         const { data } = await axios.get<PublicRestaurantResponse[]>(
-          `${API_URL}/restaurant/public/all`,
+          `${API_URL}/restaurant/public/all`
         );
-
-        if (!Array.isArray(data)) {
-          setRestaurant(null);
-          return;
-        }
+        if (!Array.isArray(data)) { setRestaurant(null); return; }
 
         const matchedRestaurant = data.find(
-          (item) => item.id === restaurantId || item.slug === restaurantId,
+          (item) => item.id === restaurantId || item.slug === restaurantId
         );
-
-        if (!matchedRestaurant) {
-          setRestaurant(null);
-          return;
-        }
+        if (!matchedRestaurant) { setRestaurant(null); return; }
 
         const ratingValue = matchedRestaurant.rating;
         const normalizedRating =
@@ -218,32 +215,28 @@ const RestaurantDetail = () => {
         setLoadingRestaurant(false);
       }
     };
-
     fetchRestaurant();
   }, [restaurantId]);
 
-  // EFECTO 2: Carga de mesas desde el back
+  // EFECTO 3: Carga de mesas
   useEffect(() => {
-    if (!restaurantId || !formValues.date) return; // ← no llama sin fecha
+    if (!restaurantId || !formValues.date) return;
     getTables(restaurantId, formValues.date, formValues.time);
-}, [restaurantId, formValues.date, formValues.time]);
+  }, [restaurantId, formValues.date, formValues.time]);
 
-  // EFECTO 3: Persistencia de datos
+  // EFECTO 4: Persistencia de datos
   useEffect(() => {
     const savedBookingData = localStorage.getItem("gastroflow_temp_booking");
     if (savedBookingData) {
       const parsedData = JSON.parse(savedBookingData);
-      // Solo restaurar si es para este restaurante
       if (parsedData.restaurantId === restaurantId) {
         setFormValues((prev) => ({ ...prev, ...parsedData.bookingDetails }));
         console.log("Datos de reserva recuperados exitosamente");
-        // Limpiar LocalStorage inmediatamente después de restaurar
         localStorage.removeItem("gastroflow_temp_booking");
       }
     }
   }, [restaurantId]);
 
-  // Handler para validar campos individuales con Yup
   const validateField = async (name: string, value: any, allValues: any) => {
     try {
       await reservationSchema.validateAt(name, allValues);
@@ -254,7 +247,7 @@ const RestaurantDetail = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     const updatedValues = { ...formValues, [name]: value };
@@ -268,8 +261,6 @@ const RestaurantDetail = () => {
     setFormValues(updatedValues);
     validateField("guests", newValue, updatedValues);
   };
-
-  // El formulario es válido si no hay errores y todos los campos obligatorios tienen valor
 
   const getMenuItemImage = (item: PublicMenuItem) => {
     return item.image_url?.trim() || FALLBACK_MENU_IMAGE;
@@ -287,23 +278,12 @@ const RestaurantDetail = () => {
 
   const handleConfirmReservation = async () => {
     try {
-      // Validar formulario completo con Yup
       await reservationSchema.validate(formValues, { abortEarly: false });
-
       if (!isLogged) {
-        // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
-        console.log("Usuario no logueado, guardando datos temporalmente");
-        const dataToSave = {
-          restaurantId: restaurantId,
-          bookingDetails: formValues,
-        };
-        localStorage.setItem(
-          "gastroflow_temp_booking",
-          JSON.stringify(dataToSave),
-        );
+        const dataToSave = { restaurantId, bookingDetails: formValues };
+        localStorage.setItem("gastroflow_temp_booking", JSON.stringify(dataToSave));
         router.push("/login");
       } else {
-        // Si ESTÁ logueado, mostrar alerta de éxito
         const [year, month, day] = formValues.date.split("-");
         const formattedDate = `${day}/${month}/${year}`;
         Swal.fire({
@@ -313,7 +293,6 @@ const RestaurantDetail = () => {
           confirmButtonText: "¡Buen provecho!",
           confirmButtonColor: "#ff7e5f",
         });
-        // Aquí iría la lógica de axios.post al backend para crear la reserva
         console.log("Reserva válida enviando al backend:", formValues);
       }
     } catch (err: any) {
@@ -330,21 +309,110 @@ const RestaurantDetail = () => {
 
   if (loadingRestaurant)
     return <div className="p-10">Cargando restaurante...</div>;
-  if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
+  if (!restaurant)
+    return <div className="p-10">Restaurante no encontrado</div>;
 
-  // Filtrar mesas por capacidad >= comensales y que estén disponibles
   const filteredTables = tables.filter(
     (t) =>
       t.capacity >= formValues.guests &&
       (t.status === "DISPONIBLE" || t.status === "RESERVADA") &&
-      t.is_active,
+      t.is_active
   );
+
+  // ── Estilos del chatbot ────────────────────────────────────────
+  const chatbotWrapperStyle: React.CSSProperties = {
+    position: "fixed",
+    bottom: "24px",
+    right: "16px",
+    width: "350px",
+    maxWidth: "calc(100vw - 32px)",
+    zIndex: 9999,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+    borderRadius: "16px",
+    overflow: "hidden",
+    display: isChatOpen ? "block" : "none",
+  };
+
+  const chatbotHeaderStyle: React.CSSProperties = {
+    background: "linear-gradient(135deg, #f97316, #db2777)",
+    padding: "10px 14px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  };
+
+  const headerBtnStyle: React.CSSProperties = {
+    background: "rgba(255,255,255,0.2)",
+    border: "none",
+    borderRadius: "6px",
+    color: "white",
+    width: "28px",
+    height: "28px",
+    cursor: "pointer",
+    fontSize: "15px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    lineHeight: 1,
+  };
+
+  const fabStyle: React.CSSProperties = {
+    position: "fixed",
+    bottom: "24px",
+    right: "16px",
+    width: "56px",
+    height: "56px",
+    borderRadius: "50%",
+    background: "linear-gradient(135deg, #f97316, #db2777)",
+    border: "none",
+    cursor: "pointer",
+    zIndex: 9999,
+    display: isChatOpen ? "none" : "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+    fontSize: "24px",
+    transition: "transform 0.15s ease",
+  };
+  // ──────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* ── Overrides CSS del kit ── */}
+      <style>{`
+        .react-chatbot-kit-chat-header {
+          display: none !important;
+        }
+        .react-chatbot-kit-chat-container,
+        .react-chatbot-kit-chat-inner-container,
+        .react-chatbot-kit-chat-message-container,
+        .react-chatbot-kit-chat-input-container,
+        .react-chatbot-kit-chat-input-form {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .react-chatbot-kit-chat-input-container {
+          display: flex !important;
+        }
+        .react-chatbot-kit-chat-input {
+          flex: 1 !important;
+          width: auto !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+        }
+        .react-chatbot-kit-chat-btn-send {
+          width: 56px !important;
+          min-width: 56px !important;
+          max-width: 56px !important;
+          flex-shrink: 0 !important;
+        }
+      `}</style>
+
       <Navbar />
 
       <main className="grow pt-20">
+        {/* Hero */}
         <section className="relative h-[40vh] w-full">
           <img
             src={restaurant.image}
@@ -371,6 +439,8 @@ const RestaurantDetail = () => {
             </div>
           </div>
         </section>
+
+        {/* Contenido principal */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Columna Izquierda */}
           <div className="lg:col-span-2 space-y-8">
@@ -425,17 +495,15 @@ const RestaurantDetail = () => {
                   .filter((category: PublicMenuCategory) =>
                     selectedCategory
                       ? category.category_id === selectedCategory
-                      : true,
+                      : true
                   )
                   .map((category: PublicMenuCategory) => {
                     if (!category.items?.length) return null;
-
                     return (
                       <div key={category.category_id} className="mb-8">
                         <h3 className="mb-4 text-xl font-semibold text-slate-800">
                           {category.category_name}
                         </h3>
-
                         <div className="space-y-4">
                           {category.items.map((item: PublicMenuItem) => (
                             <div
@@ -454,57 +522,38 @@ const RestaurantDetail = () => {
                                     }}
                                   />
                                 </div>
-
                                 <div className="min-w-0">
                                   <h4 className="font-semibold text-slate-900">
                                     {item.name}
                                   </h4>
-
                                   <p className="mt-1 text-sm text-slate-600">
                                     {item.description || "Sin descripción"}
                                   </p>
-
                                   {!!item.allergens?.trim() && (
-                                    <>
-                                      <div className="mt-2 flex flex-wrap gap-2">
-                                        {item.allergens
-                                          .split(",")
-                                          .map(
-                                            (
-                                              allergen: string,
-                                              index: number,
-                                            ) => {
-                                              const key = allergen
-                                                .trim()
-                                                .toLowerCase();
-
-                                              const allergenLabels: Record<
-                                                string,
-                                                string
-                                              > = {
-                                                gluten: "Gluten",
-                                                lacteos: "Lácteos",
-                                                huevo: "Huevo",
-                                                sulfitos: "Sulfitos",
-                                              };
-
-                                              return (
-                                                <span
-                                                  key={`${item.id}-allergen-${index}`}
-                                                  className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-                                                >
-                                                  {allergenLabels[key] ||
-                                                    allergen.trim()}
-                                                </span>
-                                              );
-                                            },
-                                          )}
-                                      </div>
-                                    </>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      {item.allergens
+                                        .split(",")
+                                        .map((allergen: string, index: number) => {
+                                          const key = allergen.trim().toLowerCase();
+                                          const allergenLabels: Record<string, string> = {
+                                            gluten: "Gluten",
+                                            lacteos: "Lácteos",
+                                            huevo: "Huevo",
+                                            sulfitos: "Sulfitos",
+                                          };
+                                          return (
+                                            <span
+                                              key={`${item.id}-allergen-${index}`}
+                                              className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                                            >
+                                              {allergenLabels[key] || allergen.trim()}
+                                            </span>
+                                          );
+                                        })}
+                                    </div>
                                   )}
                                 </div>
                               </div>
-
                               <div className="font-bold text-slate-900 md:text-right">
                                 {new Intl.NumberFormat("en-US", {
                                   style: "currency",
@@ -530,7 +579,6 @@ const RestaurantDetail = () => {
               <h3 className="mb-6 text-xl font-bold text-slate-900">
                 Reserva tu mesa
               </h3>
-
               <div className="space-y-5">
                 {/* Nombre */}
                 <div>
@@ -546,9 +594,7 @@ const RestaurantDetail = () => {
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.name ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
                   {formErrors.name && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.name}
-                    </p>
+                    <p className="mt-1 text-xs text-rose-500">{formErrors.name}</p>
                   )}
                 </div>
 
@@ -566,9 +612,7 @@ const RestaurantDetail = () => {
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.email ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
                   {formErrors.email && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.email}
-                    </p>
+                    <p className="mt-1 text-xs text-rose-500">{formErrors.email}</p>
                   )}
                 </div>
 
@@ -586,9 +630,7 @@ const RestaurantDetail = () => {
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.phone ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
                   {formErrors.phone && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.phone}
-                    </p>
+                    <p className="mt-1 text-xs text-rose-500">{formErrors.phone}</p>
                   )}
                 </div>
 
@@ -606,9 +648,7 @@ const RestaurantDetail = () => {
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.date ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
                   {formErrors.date && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.date}
-                    </p>
+                    <p className="mt-1 text-xs text-rose-500">{formErrors.date}</p>
                   )}
                 </div>
 
@@ -637,9 +677,7 @@ const RestaurantDetail = () => {
                     <option>23:00</option>
                   </select>
                   {formErrors.time && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.time}
-                    </p>
+                    <p className="mt-1 text-xs text-rose-500">{formErrors.time}</p>
                   )}
                 </div>
 
@@ -669,9 +707,7 @@ const RestaurantDetail = () => {
                     </button>
                   </div>
                   {formErrors.guests && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.guests}
-                    </p>
+                    <p className="mt-1 text-xs text-rose-500">{formErrors.guests}</p>
                   )}
                 </div>
 
@@ -732,23 +768,59 @@ const RestaurantDetail = () => {
           </div>
         </section>
       </main>
+
       <Footer />
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          width: '350px',
-          zIndex: 9999,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-          borderRadius: '16px',
-          overflow: 'hidden',
-        }}>
-      <Chatbot
-        config={chatConfig}
-        actionProvider={ActionProvider}
-        messageParser={MessageParser}
+
+      {/* ── FAB: visible cuando el chat está cerrado/minimizado ── */}
+      <button
+        onClick={() => setIsChatOpen(true)}
+        style={fabStyle}
+        aria-label="Abrir asistente"
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      >
+        💬
+      </button>
+
+      {/* ── Panel del chatbot ── */}
+      <div style={chatbotWrapperStyle}>
+        <div style={chatbotHeaderStyle}>
+          <span style={{ color: "white", fontWeight: 600, fontSize: "14px" }}>
+            💬 Asistente GastroFlow
+          </span>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {/* Minimizar: conserva el historial */}
+            <button
+              onClick={() => setIsChatOpen(false)}
+              style={headerBtnStyle}
+              aria-label="Minimizar chat"
+              title="Minimizar"
+            >
+              —
+            </button>
+            {/* Cerrar: reinicia el historial */}
+            <button
+              onClick={() => {
+                setIsChatOpen(false);
+                setChatKey((k) => k + 1);
+              }}
+              style={headerBtnStyle}
+              aria-label="Cerrar chat"
+              title="Cerrar y limpiar historial"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <Chatbot
+          key={chatKey}
+          config={chatConfig}
+          actionProvider={ActionProvider}
+          messageParser={MessageParser}
+          placeholderText="Escribí tu mensaje..."
         />
-</div>
+      </div>
     </div>
   );
 };
