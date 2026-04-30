@@ -30,6 +30,7 @@ const LoginForm = () => {
 
   const WAITER_ROLES = new Set(["waiter", "mesero", "mozo", "staff_waiter"]);
   const CASHIER_ROLES = new Set(["cashier", "cajero", "staff_cashier"]);
+  const CHEF_ROLES = new Set(["chef", "cocinero", "staff_chef", "kitchen", "kitchen_staff"]);
 
   const getBackendErrorMessage = (error: unknown): string | null => {
     if (!axios.isAxiosError(error)) return null;
@@ -70,6 +71,8 @@ const LoginForm = () => {
       const roles: string[] = user?.roles ?? [];
       if (roles.some((role) => WAITER_ROLES.has(role))) {
         router.push("/waiter");
+      } else if (roles.some((role) => CHEF_ROLES.has(role))) {
+        router.push("/kitchen");
       } else if (roles.some((role) => CASHIER_ROLES.has(role))) {
         router.push("/cashier");
       } else {

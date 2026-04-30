@@ -5,6 +5,7 @@ import { KitchenOrder, KitchenOrderStatus } from "@/types/kitchen";
 
 interface Props {
   order: KitchenOrder | null;
+  displayId: number | null;
   isLoading: boolean;
   onChangeStatus: (orderId: string, newStatus: KitchenOrderStatus) => void;
   onClose: () => void;
@@ -24,6 +25,7 @@ const STATUS_LABELS: Record<KitchenOrderStatus, string> = {
 
 export default function KitchenOrderDetail({
   order,
+  displayId,
   isLoading,
   onChangeStatus,
   onClose,
@@ -55,7 +57,7 @@ export default function KitchenOrderDetail({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-base font-bold text-gray-800">
-              Orden #{order.id}
+              Orden {displayId ?? "-"}
             </h2>
             <span
               className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
@@ -65,7 +67,7 @@ export default function KitchenOrderDetail({
               {STATUS_LABELS[order.status]}
             </span>
           </div>
-          <p className="text-xs text-gray-400">Mesa {order.tableId}</p>
+          <p className="text-xs text-gray-400">{order.tableLabel}</p>
         </div>
         <button
           onClick={onClose}
@@ -105,7 +107,7 @@ export default function KitchenOrderDetail({
             key={i}
             className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0"
           >
-            <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+            <span className="w-7 h-7 rounded-lg bg-linear-to-br from-orange-500 to-pink-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
               {item.quantity}
             </span>
             <span className="text-sm text-gray-700">{item.name}</span>
@@ -133,7 +135,7 @@ export default function KitchenOrderDetail({
             {canStart && (
               <button
                 onClick={() => onChangeStatus(order.id, "preparacion")}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                className="w-full py-3 rounded-xl bg-linear-to-r from-orange-500 to-pink-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
               >
                 <Play size={15} />
                 Iniciar preparación
@@ -142,7 +144,7 @@ export default function KitchenOrderDetail({
             {canFinish && (
               <button
                 onClick={() => onChangeStatus(order.id, "servido")}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-400 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                className="w-full py-3 rounded-xl bg-linear-to-r from-teal-500 to-teal-400 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
               >
                 <CheckCircle size={15} />
                 Finalizar orden

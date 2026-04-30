@@ -9,6 +9,29 @@ import Swal from "sweetalert2";
 import styles from "./Employees.module.css";
 import { CreateEmployeePayload, Employee } from "@/types/Employee";
 import { adminService } from "@/services/adminService";
+import axios from "axios";
+
+const getBackendErrorMessage = (error: unknown): string | null => {
+  if (!axios.isAxiosError(error)) return null;
+
+  const data = error.response?.data as
+    | { message?: unknown; error?: unknown }
+    | undefined;
+
+  if (Array.isArray(data?.message) && data.message.length > 0) {
+    return data.message.map((item) => String(item)).join(" | ");
+  }
+
+  if (typeof data?.message === "string" && data.message.trim()) {
+    return data.message;
+  }
+
+  if (typeof data?.error === "string" && data.error.trim()) {
+    return data.error;
+  }
+
+  return null;
+};
 
 export function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -89,10 +112,19 @@ export function Employees() {
     } catch (err) {
       console.error("Error creando empleado", err);
 
+      const backendMessage = getBackendErrorMessage(err);
+      const isConflict = axios.isAxiosError(err) && err.response?.status === 409;
+      const fallbackConflictMessage =
+        "Ya existe un usuario con ese email. Probá con otro correo.";
+      const fallbackGenericMessage =
+        "No se pudo crear el empleado. Revisá los datos e intentá nuevamente.";
+
       Swal.fire({
         icon: "error",
         title: "Error creando empleado",
-        text: "No se pudo crear el empleado. Revisa los datos e intenta nuevamente.",
+        text:
+          backendMessage ||
+          (isConflict ? fallbackConflictMessage : fallbackGenericMessage),
         confirmButtonColor: "#ea580c",
       });
     }
