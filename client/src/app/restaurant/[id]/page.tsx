@@ -789,7 +789,6 @@ const RestaurantDetail = () => {
             💬 Asistente GastroFlow
           </span>
           <div style={{ display: "flex", gap: "6px" }}>
-            {/* Minimizar: conserva el historial */}
             <button
               onClick={() => setIsChatOpen(false)}
               style={headerBtnStyle}
@@ -798,7 +797,6 @@ const RestaurantDetail = () => {
             >
               —
             </button>
-            {/* Cerrar: reinicia el historial */}
             <button
               onClick={() => {
                 setIsChatOpen(false);
