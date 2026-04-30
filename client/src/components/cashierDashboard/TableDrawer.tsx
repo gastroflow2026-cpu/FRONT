@@ -26,6 +26,7 @@ const ORDER_STATUS_STYLES: Record<string, string> = {
   pendiente: "bg-orange-100 text-orange-600",
   preparacion: "bg-blue-100 text-blue-600",
   servido: "bg-purple-100 text-purple-600",
+  lista_para_pagar: "bg-indigo-100 text-indigo-600",
   pagado: "bg-green-100 text-green-600",
 };
 
@@ -33,6 +34,7 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   pendiente: "Pendiente",
   preparacion: "En preparación",
   servido: "Servido",
+  lista_para_pagar: "Lista para pagar",
   pagado: "Pagado",
 };
 
@@ -59,7 +61,7 @@ export default function TableDrawer({ table, onClose, onCloseOrder }: TableDrawe
   const canPay =
     table.status === "ocupada" &&
     table.currentOrder &&
-    (table.currentOrder.status === "servido" || table.currentOrder.status === "preparacion");
+    table.currentOrder.status === "lista_para_pagar";
 
   function handleCobrar() {
     if (!selectedPayment || !table) return;
@@ -84,7 +86,7 @@ export default function TableDrawer({ table, onClose, onCloseOrder }: TableDrawe
         <div className={`p-5 border-b border-gray-100 ${statusStyle.bg}`}>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-orange-500 to-pink-500 flex items-center justify-center">
                 <UtensilsCrossed size={18} className="text-white" />
               </div>
               <div>
@@ -166,7 +168,7 @@ export default function TableDrawer({ table, onClose, onCloseOrder }: TableDrawe
               <button
                 onClick={handleCobrar}
                 disabled={!selectedPayment}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-3 rounded-xl bg-linear-to-r from-orange-500 to-pink-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <CheckCircle size={16} />
                 {selectedPayment ? "Cobrar" : "Seleccioná un método de pago"}
@@ -225,7 +227,7 @@ function OcupadaContent({ table }: { table: Table }) {
         <div className="flex items-center gap-2">
           <Clock size={14} className="text-gray-400" />
           <span className="text-sm font-semibold text-gray-800">
-            Orden #{order.id}
+            Orden #{order.id.slice(0, 8)}
           </span>
         </div>
         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${ORDER_STATUS_STYLES[order.status]}`}>
