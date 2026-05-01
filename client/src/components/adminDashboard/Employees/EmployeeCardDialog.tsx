@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styles from "./EmployeeCardDialog.module.css";
 import { CreateEmployeePayload, EmployeeRole } from "@/types/Employee";
+import { Eye, EyeOff } from "lucide-react";
 
 interface EmployeeFormDialogProps {
   isOpen: boolean;
@@ -10,13 +11,22 @@ interface EmployeeFormDialogProps {
   onSubmit: (data: CreateEmployeePayload) => Promise<void> | void;
 }
 
-export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDialogProps) {
+export function EmployeeFormDialog({
+  isOpen,
+  onClose,
+  onSubmit,
+}: EmployeeFormDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     lastName: "",
     email: "",
     password: "",
     role: "" as EmployeeRole | "",
+  });
+
+  const [showPassword, setShowPassword] = useState({
+    new: false,
+    confirm: false,
   });
 
   if (!isOpen) return null;
@@ -33,7 +43,10 @@ export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDi
   };
 
   return (
-    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className={styles.overlay}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className={styles.modal}>
         <h2 className={styles.title}>Crear Nuevo Empleado</h2>
 
@@ -43,7 +56,9 @@ export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDi
             <input
               className={styles.input}
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               required
             />
           </div>
@@ -53,7 +68,9 @@ export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDi
             <input
               className={styles.input}
               value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, lastName: e.target.value })
+              }
               required
             />
           </div>
@@ -64,31 +81,61 @@ export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDi
               className={styles.input}
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               required
             />
           </div>
 
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Contraseña</label>
-            <input
-              className={styles.input}
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-            />
+            <div className={styles.passwordField}>
+              <input
+                className={styles.input}
+                type={showPassword.confirm ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                required
+              />
+              <button
+                type="button"
+                className={styles.eyeBtn}
+                onClick={() =>
+                  setShowPassword((prev) => ({
+                    ...prev,
+                    confirm: !prev.confirm,
+                  }))
+                }
+                aria-label="Mostrar contraseña"
+              >
+                {showPassword.confirm ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Rol</label>
-            <select 
+            <select
               className={styles.select}
-              value={formData.role} 
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as EmployeeRole })}
+              value={formData.role}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  role: e.target.value as EmployeeRole,
+                })
+              }
               required
             >
-              <option value="" disabled>Seleccionar rol</option>
+              <option value="" disabled>
+                Seleccionar rol
+              </option>
               <option value="cocinero">Cocinero</option>
               <option value="cajero">Cajero</option>
               <option value="mesero">Mesero</option>
@@ -96,10 +143,17 @@ export function EmployeeFormDialog({ isOpen, onClose, onSubmit }: EmployeeFormDi
           </div>
 
           <div className={styles.actions}>
-            <button type="button" className={`${styles.btn} ${styles.btnCancel}`} onClick={onClose}>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnCancel}`}
+              onClick={onClose}
+            >
               Cancelar
             </button>
-            <button type="submit" className={`${styles.btn} ${styles.btnSubmit}`}>
+            <button
+              type="submit"
+              className={`${styles.btn} ${styles.btnSubmit}`}
+            >
               Crear Empleado
             </button>
           </div>
