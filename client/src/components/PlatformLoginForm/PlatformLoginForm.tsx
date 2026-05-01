@@ -119,7 +119,6 @@ const PlatformLoginForm = () => {
                     <Field
                       type="email"
                       name="email"
-                      placeholder="superadmin@gastroflow.com"
                       className="w-full bg-transparent text-white outline-none placeholder:text-white/25"
                     />
                   </div>

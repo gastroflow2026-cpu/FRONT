@@ -65,25 +65,25 @@ export function MenuView({
         </button>
       </div>
 
-      {platesList.map((category) => (
-        <div key={category.id} className={styles.categorySection}>
-          <h2 className={styles.categoryTitle}>{category.name}</h2>
+      {platesList
+        .filter((category) => category.items && category.items.length > 0)
+        .map((category) => (
+          <div key={category.id} className={styles.categorySection}>
+            <h2 className={styles.categoryTitle}>{category.name}</h2>
 
-          <div className={styles.grid}>
-            {category.items.map((item) => (
-              <MenuItemCard
-                key={item.id}
-                item={item}
-                onEdit={handleOpenEdit}
-                onDelete={onDeleteItem}
-                onStatusChange={(id, status) =>
-                  onStatusChange?.(id, status)
-                }
-              />
-            ))}
+            <div className={styles.grid}>
+              {category.items.map((item) => (
+                <MenuItemCard
+                  key={item.id}
+                  item={item}
+                  onEdit={handleOpenEdit}
+                  onDelete={onDeleteItem}
+                  onStatusChange={(id, status) => onStatusChange?.(id, status)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
       <MenuItemDialog
         isOpen={isDialogOpen}
