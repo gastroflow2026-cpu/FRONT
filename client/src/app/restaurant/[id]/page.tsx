@@ -19,6 +19,8 @@ import 'react-chatbot-kit/build/main.css';
 import ActionProvider from '@/chatbot/ActionProvider';
 import MessageParser from '@/chatbot/MessageParser';
 import config from '@/chatbot/config';
+import { getToken } from "@/helpers/getToken";
+import { is } from "react-day-picker/locale";
 
 type PublicMenuItem = {
   id: string;
@@ -226,8 +228,8 @@ const RestaurantDetail = () => {
   useEffect(() => {
     if (!restaurantId || !formValues.date) return; // ← no llama sin fecha
     getTables(restaurantId, formValues.date, formValues.time);
-}, [restaurantId, formValues.date, formValues.time]);
-
+  }, [restaurantId, formValues.date, formValues.time]);
+  
   // EFECTO 3: Persistencia de datos
   useEffect(() => {
     const savedBookingData = localStorage.getItem("gastroflow_temp_booking");
@@ -242,7 +244,7 @@ const RestaurantDetail = () => {
       }
     }
   }, [restaurantId]);
-
+  
   // Handler para validar campos individuales con Yup
   const validateField = async (name: string, value: any, allValues: any) => {
     try {
@@ -252,7 +254,7 @@ const RestaurantDetail = () => {
       setFormErrors((prev) => ({ ...prev, [name]: err.message }));
     }
   };
-
+  
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -261,49 +263,89 @@ const RestaurantDetail = () => {
     setFormValues(updatedValues);
     validateField(name, value, updatedValues);
   };
-
+  
   const updateGuests = (delta: number) => {
     const newValue = Math.max(1, formValues.guests + delta);
     const updatedValues = { ...formValues, guests: newValue };
     setFormValues(updatedValues);
     validateField("guests", newValue, updatedValues);
   };
-
+  
   // El formulario es válido si no hay errores y todos los campos obligatorios tienen valor
-
+  
   const getMenuItemImage = (item: PublicMenuItem) => {
     return item.image_url?.trim() || FALLBACK_MENU_IMAGE;
   };
-
+  
   const isFormValid =
-    Object.values(formErrors).every((err) => err === "") &&
-    formValues.name !== "" &&
-    formValues.email !== "" &&
-    formValues.phone !== "" &&
-    formValues.date !== "";
-
+  Object.values(formErrors).every((err) => err === "") &&
+  formValues.name !== "" &&
+  formValues.email !== "" &&
+  formValues.phone !== "" &&
+  formValues.date !== "";
+  
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
-
+  const { handleReservation } = useContext(ReservationsContext);
   const handleConfirmReservation = async () => {
     try {
-      // Validar formulario completo con Yup
       await reservationSchema.validate(formValues, { abortEarly: false });
-
+      if (!restaurantId) return;
+      
       if (!isLogged) {
-        // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
-        console.log("Usuario no logueado, guardando datos temporalmente");
         const dataToSave = {
           restaurantId: restaurantId,
           bookingDetails: formValues,
         };
-        localStorage.setItem(
-          "gastroflow_temp_booking",
-          JSON.stringify(dataToSave),
-        );
+        
+        localStorage.setItem("gastroflow_temp_booking", JSON.stringify(dataToSave));
         router.push("/login");
+        
+        const token = getToken();
+        const { data: userReservations } = await axios.get(
+          `${API_URL}/users/${isLogged!.id}/reservations`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const alreadyReserved = userReservations.some(
+          (r: any) =>
+            r.restaurant.id === restaurantId &&
+          (r.status === "PENDIENTE" || r.status === "CONFIRMADO")
+        );
+        
+        if (alreadyReserved) {
+          Swal.fire({
+            icon: "warning",
+            title: "Ya tenés una reserva",
+            text: "Ya tenés una reserva activa en este restaurante. Podés verla en tu historial de reservas.",
+            confirmButtonText: "Ver mis reservas",
+            confirmButtonColor: "#ff7e5f",
+            showCancelButton: true,
+            cancelButtonText: "Cerrar",
+          }).then((result) => {
+            if (result.isConfirmed) router.push("/reservations");
+          });
+          return;
+        }
+        
       } else {
-        // Si ESTÁ logueado, mostrar alerta de éxito
+        const reservationPayload = {
+          customer_name: formValues.name,
+          customer_email: formValues.email,
+          customer_phone: Number(formValues.phone),
+          reservation_date: formValues.date,           
+          start_time: `${formValues.date}T${formValues.time}:00.000Z`,           
+          guests_count: formValues.guests,
+          notes: "",
+          table_id: selectedTable!.id,
+        };
+        
+        const result = await handleReservation(restaurantId, reservationPayload);
+        
+        if (result?.url) {
+          window.location.href = result.url;
+          return; 
+        } 
         const [year, month, day] = formValues.date.split("-");
         const formattedDate = `${day}/${month}/${year}`;
         Swal.fire({
@@ -313,12 +355,9 @@ const RestaurantDetail = () => {
           confirmButtonText: "¡Buen provecho!",
           confirmButtonColor: "#ff7e5f",
         });
-        // Aquí iría la lógica de axios.post al backend para crear la reserva
-        console.log("Reserva válida enviando al backend:", formValues);
       }
     } catch (err: any) {
       const errorMessage = err?.message || "No se pudo crear la reserva";
-      console.warn("Error al crear reserva:", errorMessage);
       Swal.fire({
         icon: "error",
         title: "No se pudo confirmar la reserva",
@@ -327,19 +366,16 @@ const RestaurantDetail = () => {
       });
     }
   };
-
   if (loadingRestaurant)
     return <div className="p-10">Cargando restaurante...</div>;
   if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
-
+  
   // Filtrar mesas por capacidad >= comensales y que estén disponibles
   const filteredTables = tables.filter(
     (t) =>
       t.capacity >= formValues.guests &&
-      (t.status === "DISPONIBLE" || t.status === "RESERVADA") &&
-      t.is_active,
+    t.is_active,
   );
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />

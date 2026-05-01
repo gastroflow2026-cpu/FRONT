@@ -2,6 +2,7 @@ import "./globals.css";
 import { UsersProvider } from '../context/UsersContext';
 import ReservationsProvider from '../context/ReservationsContext';
 import TablesProvider from "../context/TablesContext";
+import SubscriptionsProvider from '../context/SubscriptionsContext';
 import { SocketProvider } from "../context/SocketContext";
 
 
@@ -11,12 +12,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning> 
         <UsersProvider>
           <SocketProvider>
-            <ReservationsProvider>
-              <TablesProvider>
+          <ReservationsProvider>
+            <TablesProvider>
+              <SubscriptionsProvider>
                 {children}
-              </TablesProvider>
-            </ReservationsProvider>
-          </SocketProvider>
+              </SubscriptionsProvider>
+            </TablesProvider>
+          </ReservationsProvider>
+         </SocketProvider>
         </UsersProvider>
       </body>
     </html>

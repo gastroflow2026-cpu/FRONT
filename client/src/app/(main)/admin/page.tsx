@@ -14,6 +14,10 @@ import styles from "./Admin.module.css";
 import axios from "axios";
 import { getToken } from "@/helpers/getToken";
 import { CheckCircle2, Clock3, FileText, LockKeyhole, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useContext } from "react";
+import { UsersContext } from "@/context/UsersContext";
+
 
 type RestaurantVerificationStatus = "pending" | "approved" | "rejected" | "suspended";
 
@@ -44,9 +48,12 @@ const buildApiUrl = (path: string) => {
 };
 
 export default function Admin() {
+  const router = useRouter();
+  const { isLogged } = useContext(UsersContext);
   const [activeModule, setActiveModule] = useState("employees");
   const [restaurantProfile, setRestaurantProfile] = useState<RestaurantProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   const modules: Record<string, React.ReactNode> = {
@@ -85,6 +92,32 @@ export default function Admin() {
     fetchRestaurantProfile();
   }, []);
 
+  useEffect(() => {
+  const checkSubscription = async () => {
+    if (!restaurantProfile || restaurantProfile.verification_status !== "approved") return;
+    if (!isLogged?.restaurant_id) return;
+
+    setIsLoadingSubscription(true);
+    try {
+      const token = getToken();
+      await axios.get(
+        buildApiUrl(`/subscriptions/restaurant/${isLogged.restaurant_id}`),
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Si llega acá tiene suscripción activa → no hace nada, muestra el dashboard
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        // No tiene suscripción activa → redirigir a planes
+        router.push("admin/subscription");
+      }
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  };
+
+    checkSubscription();
+  }, [restaurantProfile, isLogged?.restaurant_id]);
+
   if (isLoadingProfile) {
     return (
       <div className={styles.rootContainer}>
@@ -106,6 +139,19 @@ export default function Admin() {
         <main className={styles.statusMain}>
           <div className={styles.statusContainer}>
             <p className={styles.statusMessage}>{profileError}</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  if (isLoadingSubscription) {
+    return (
+      <div className={styles.rootContainer}>
+        <Navbar />
+        <main className={styles.statusMain}>
+          <div className={styles.statusContainer}>
+            <p className={styles.statusMessage}>Verificando suscripción...</p>
           </div>
         </main>
         <Footer />
