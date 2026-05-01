@@ -1,6 +1,6 @@
 export type TableStatus = "libre" | "ocupada" | "reservada";
 export type TableZone = "salon" | "terraza" | "privado";
-export type OrderStatus = "pendiente" | "preparacion" | "servido" | "pagado";
+export type OrderStatus = "pendiente" | "preparacion" | "servido" | "lista_para_pagar" | "pagado";
 export type PaymentMethod = "efectivo" | "transferencia" | "qr" | "debito" | "credito";
 
 export interface OrderItem {
