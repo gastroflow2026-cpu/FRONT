@@ -17,11 +17,11 @@ interface ReservationValues {
 }
 
 interface ReservationsContextType {
-    handleReservation: (restaurantId: string, values: ReservationValues) => Promise<void>;
+    handleReservation: (restaurantId: string, values: ReservationValues) => Promise<{ url?: string } | undefined>;
 }
 
 export const ReservationsContext = createContext<ReservationsContextType>({
-    handleReservation: async () => {},
+    handleReservation: async () => undefined,
 });
 
 const ReservationsProvider = ({ children }: { children: ReactNode }) => {
@@ -42,10 +42,11 @@ const ReservationsProvider = ({ children }: { children: ReactNode }) => {
                     } : undefined,
                 }
             );
-            const { url } = response.data;
+            const { url } = response.data;  
             console.log(url);
             if (url) {
-                window.location.href = url; // redirige a Stripe
+                window.location.href = url; 
+                return { url };
             }
             return response.data;
         } catch (error: any) {
