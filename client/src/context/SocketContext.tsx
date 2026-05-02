@@ -13,7 +13,8 @@ import { UsersContext } from "@/context/UsersContext";
 import { getToken } from "@/helpers/getToken";
 import { resolveRestaurantId } from "@/services/orderLifecycle";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3000";
 
 type SocketContextValue = {
   socket: Socket | null;
@@ -36,34 +37,29 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = getToken();
 
-    if (!token || !restaurantId) {
-      setSocket((currentSocket) => {
-        currentSocket?.disconnect();
-        return null;
-      });
-      setIsConnected(false);
-      return;
-    }
-
     const nextSocket = io(API_URL, {
-      autoConnect: false,
       transports: ["websocket"],
-      auth: { token },
+      auth: token ? { token } : undefined,
     });
 
     const handleConnect = () => {
+      setSocket(nextSocket);
       setIsConnected(true);
-      nextSocket.emit("join-restaurant", { restaurant_id: restaurantId });
+
+      if (restaurantId) {
+        nextSocket.emit("join-restaurant", { restaurant_id: restaurantId });
+      }
     };
 
     const handleDisconnect = () => {
       setIsConnected(false);
+      setSocket(null);
     };
 
     nextSocket.on("connect", handleConnect);
     nextSocket.on("disconnect", handleDisconnect);
+
     nextSocket.connect();
-    setSocket(nextSocket);
 
     return () => {
       nextSocket.off("connect", handleConnect);
@@ -74,10 +70,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     };
   }, [restaurantId]);
 
-  const value = useMemo(
-    () => ({ socket, isConnected }),
-    [isConnected, socket],
-  );
+  const value = useMemo(() => ({ socket, isConnected }), [isConnected, socket]);
 
   return (
     <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
