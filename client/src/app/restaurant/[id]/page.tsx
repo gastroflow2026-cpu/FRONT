@@ -14,17 +14,13 @@ import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
 import type { Table } from "@/context/TablesContext";
-import dynamic from "next/dynamic";
-import "react-chatbot-kit/build/main.css";
-import ActionProvider from "@/chatbot/ActionProvider";
-import MessageParser from "@/chatbot/MessageParser";
-import config from "@/chatbot/config";
-
-// SSR desactivado — evita el error "class constructors must be invoked with new"
-const Chatbot = dynamic(
-  () => import("react-chatbot-kit").then((m) => m.default),
-  { ssr: false }
-);
+import Chatbot from 'react-chatbot-kit';
+import 'react-chatbot-kit/build/main.css';
+import ActionProvider from '@/chatbot/ActionProvider';
+import MessageParser from '@/chatbot/MessageParser';
+import config from '@/chatbot/config';
+import { getToken } from "@/helpers/getToken";
+import { is } from "react-day-picker/locale";
 
 type PublicMenuItem = {
   id: string;
@@ -223,8 +219,8 @@ const RestaurantDetail = () => {
     if (!restaurantId || !formValues.date) return;
     getTables(restaurantId, formValues.date, formValues.time);
   }, [restaurantId, formValues.date, formValues.time]);
-
-  // EFECTO 4: Persistencia de datos
+  
+  // EFECTO 3: Persistencia de datos
   useEffect(() => {
     const savedBookingData = localStorage.getItem("gastroflow_temp_booking");
     if (savedBookingData) {
@@ -236,7 +232,8 @@ const RestaurantDetail = () => {
       }
     }
   }, [restaurantId]);
-
+  
+  // Handler para validar campos individuales con Yup
   const validateField = async (name: string, value: any, allValues: any) => {
     try {
       await reservationSchema.validateAt(name, allValues);
@@ -245,7 +242,7 @@ const RestaurantDetail = () => {
       setFormErrors((prev) => ({ ...prev, [name]: err.message }));
     }
   };
-
+  
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -254,36 +251,89 @@ const RestaurantDetail = () => {
     setFormValues(updatedValues);
     validateField(name, value, updatedValues);
   };
-
+  
   const updateGuests = (delta: number) => {
     const newValue = Math.max(1, formValues.guests + delta);
     const updatedValues = { ...formValues, guests: newValue };
     setFormValues(updatedValues);
     validateField("guests", newValue, updatedValues);
   };
-
+  
+  // El formulario es válido si no hay errores y todos los campos obligatorios tienen valor
+  
   const getMenuItemImage = (item: PublicMenuItem) => {
     return item.image_url?.trim() || FALLBACK_MENU_IMAGE;
   };
-
+  
   const isFormValid =
-    Object.values(formErrors).every((err) => err === "") &&
-    formValues.name !== "" &&
-    formValues.email !== "" &&
-    formValues.phone !== "" &&
-    formValues.date !== "";
-
+  Object.values(formErrors).every((err) => err === "") &&
+  formValues.name !== "" &&
+  formValues.email !== "" &&
+  formValues.phone !== "" &&
+  formValues.date !== "";
+  
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
-
+  const { handleReservation } = useContext(ReservationsContext);
   const handleConfirmReservation = async () => {
     try {
       await reservationSchema.validate(formValues, { abortEarly: false });
+      if (!restaurantId) return;
+      
       if (!isLogged) {
-        const dataToSave = { restaurantId, bookingDetails: formValues };
+        const dataToSave = {
+          restaurantId: restaurantId,
+          bookingDetails: formValues,
+        };
+        
         localStorage.setItem("gastroflow_temp_booking", JSON.stringify(dataToSave));
         router.push("/login");
+        
+        const token = getToken();
+        const { data: userReservations } = await axios.get(
+          `${API_URL}/users/${isLogged!.id}/reservations`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const alreadyReserved = userReservations.some(
+          (r: any) =>
+            r.restaurant.id === restaurantId &&
+          (r.status === "PENDIENTE" || r.status === "CONFIRMADO")
+        );
+        
+        if (alreadyReserved) {
+          Swal.fire({
+            icon: "warning",
+            title: "Ya tenés una reserva",
+            text: "Ya tenés una reserva activa en este restaurante. Podés verla en tu historial de reservas.",
+            confirmButtonText: "Ver mis reservas",
+            confirmButtonColor: "#ff7e5f",
+            showCancelButton: true,
+            cancelButtonText: "Cerrar",
+          }).then((result) => {
+            if (result.isConfirmed) router.push("/reservations");
+          });
+          return;
+        }
+        
       } else {
+        const reservationPayload = {
+          customer_name: formValues.name,
+          customer_email: formValues.email,
+          customer_phone: Number(formValues.phone),
+          reservation_date: formValues.date,           
+          start_time: `${formValues.date}T${formValues.time}:00.000Z`,           
+          guests_count: formValues.guests,
+          notes: "",
+          table_id: selectedTable!.id,
+        };
+        
+        const result = await handleReservation(restaurantId, reservationPayload);
+        
+        if (result?.url) {
+          window.location.href = result.url;
+          return; 
+        } 
         const [year, month, day] = formValues.date.split("-");
         const formattedDate = `${day}/${month}/${year}`;
         Swal.fire({
@@ -293,11 +343,9 @@ const RestaurantDetail = () => {
           confirmButtonText: "¡Buen provecho!",
           confirmButtonColor: "#ff7e5f",
         });
-        console.log("Reserva válida enviando al backend:", formValues);
       }
     } catch (err: any) {
       const errorMessage = err?.message || "No se pudo crear la reserva";
-      console.warn("Error al crear reserva:", errorMessage);
       Swal.fire({
         icon: "error",
         title: "No se pudo confirmar la reserva",
@@ -306,76 +354,16 @@ const RestaurantDetail = () => {
       });
     }
   };
-
   if (loadingRestaurant)
     return <div className="p-10">Cargando restaurante...</div>;
-  if (!restaurant)
-    return <div className="p-10">Restaurante no encontrado</div>;
-
+  if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
+  
+  // Filtrar mesas por capacidad >= comensales y que estén disponibles
   const filteredTables = tables.filter(
     (t) =>
       t.capacity >= formValues.guests &&
-      (t.status === "DISPONIBLE" || t.status === "RESERVADA") &&
-      t.is_active
+    t.is_active,
   );
-
-  // ── Estilos del chatbot ────────────────────────────────────────
-  const chatbotWrapperStyle: React.CSSProperties = {
-    position: "fixed",
-    bottom: "24px",
-    right: "16px",
-    width: "350px",
-    maxWidth: "calc(100vw - 32px)",
-    zIndex: 9999,
-    boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-    borderRadius: "16px",
-    overflow: "hidden",
-    display: isChatOpen ? "block" : "none",
-  };
-
-  const chatbotHeaderStyle: React.CSSProperties = {
-    background: "linear-gradient(135deg, #f97316, #db2777)",
-    padding: "10px 14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  };
-
-  const headerBtnStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.2)",
-    border: "none",
-    borderRadius: "6px",
-    color: "white",
-    width: "28px",
-    height: "28px",
-    cursor: "pointer",
-    fontSize: "15px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    lineHeight: 1,
-  };
-
-  const fabStyle: React.CSSProperties = {
-    position: "fixed",
-    bottom: "24px",
-    right: "16px",
-    width: "56px",
-    height: "56px",
-    borderRadius: "50%",
-    background: "linear-gradient(135deg, #f97316, #db2777)",
-    border: "none",
-    cursor: "pointer",
-    zIndex: 9999,
-    display: isChatOpen ? "none" : "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
-    fontSize: "24px",
-    transition: "transform 0.15s ease",
-  };
-  // ──────────────────────────────────────────────────────────────
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* ── Overrides CSS del kit ── */}

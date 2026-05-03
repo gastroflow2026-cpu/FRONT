@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { BadgeDollarSign, LogIn, Mail, MapPin, Phone } from "lucide-react";
+import { BadgeDollarSign, LogIn, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 import Logo from "../assets/logo gastro f.webp";
 
 const Footer = () => {
@@ -10,41 +10,28 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="space-y-6">
-            <Image
-              src={Logo}
-              alt="GastroFlow"
-              width={180}
-              height={60}
-              className="h-12 w-auto"
-            />
+            <Image src={Logo} alt="GastroFlow" width={180} height={60} className="h-12 w-auto" />
             <p className="text-gray-400 leading-relaxed">
-              Transformando la manera en que descubres y reservas en los mejores
-              restaurantes de la ciudad.
+              Transformando la manera en que descubres y reservas en los mejores restaurantes de la ciudad.
             </p>
             <div className="flex space-x-4">
               <a
                 href="#"
                 className="p-2 bg-gray-900 rounded-full hover:bg-linear-to-tr hover:from-gastro-coral hover:to-gastro-magenta transition-all duration-300"
               >
-                <span className="flex h-5 w-5 items-center justify-center text-xs font-bold">
-                  IG
-                </span>
+                <span className="flex h-5 w-5 items-center justify-center text-xs font-bold">IG</span>
               </a>
               <a
                 href="#"
                 className="p-2 bg-gray-900 rounded-full hover:bg-linear-to-tr hover:from-gastro-coral hover:to-gastro-magenta transition-all duration-300"
               >
-                <span className="flex h-5 w-5 items-center justify-center text-xs font-bold">
-                  FB
-                </span>
+                <span className="flex h-5 w-5 items-center justify-center text-xs font-bold">FB</span>
               </a>
               <a
                 href="#"
                 className="p-2 bg-gray-900 rounded-full hover:bg-linear-to-tr hover:from-gastro-coral hover:to-gastro-magenta transition-all duration-300"
               >
-                <span className="flex h-5 w-5 items-center justify-center text-xs font-bold">
-                  X
-                </span>
+                <span className="flex h-5 w-5 items-center justify-center text-xs font-bold">X</span>
               </a>
             </div>
           </div>
@@ -60,18 +47,12 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/about"
-                  className="hover:text-white transition-colors"
-                >
+                <Link href="/about" className="hover:text-white transition-colors">
                   Nosotros
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/restaurants"
-                  className="hover:text-white transition-colors"
-                >
+                <Link href="/restaurants" className="hover:text-white transition-colors">
                   Restaurantes
                 </Link>
               </li>
@@ -92,21 +73,24 @@ const Footer = () => {
                 </Link>
               </li> */}
               <li>
-                <Link
-                  href="/join#planes"
-                  className="inline-flex items-center gap-2 hover:text-white transition-colors"
-                >
+                <Link href="/join#planes" className="inline-flex items-center gap-2 hover:text-white transition-colors">
                   <BadgeDollarSign size={16} />
                   <span>Planes para restaurantes</span>
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/owner/login"
-                  className="inline-flex items-center gap-2 hover:text-white transition-colors"
-                >
+                <Link href="/owner/login" className="inline-flex items-center gap-2 hover:text-white transition-colors">
                   <LogIn size={16} />
                   <span>Inicio de sesión restaurantes</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/platform/login"
+                  className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors"
+                >
+                  <ShieldCheck size={16} />
+                  <span>Acceso plataforma</span>
                 </Link>
               </li>
             </ul>
@@ -174,10 +158,7 @@ const Footer = () => {
         </div>
 
         <div className="pt-8 border-t border-gray-900 text-center text-gray-500 text-sm">
-          <p>
-            &copy; {new Date().getFullYear()} GastroFlow. Todos los derechos
-            reservados.
-          </p>
+          <p>&copy; {new Date().getFullYear()} GastroFlow. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

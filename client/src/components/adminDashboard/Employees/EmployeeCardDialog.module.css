@@ -108,3 +108,19 @@
     transform: scale(1);
   }
 }
+
+.passwordField {
+  position: relative;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+}
