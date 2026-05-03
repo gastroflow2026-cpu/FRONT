@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Users, Calendar, UtensilsCrossed, BarChart3, ShoppingBag, Menu, X, Settings } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { getToken } from "@/helpers/getToken";
+import { UsersContext } from "@/context/UsersContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -24,6 +25,7 @@ interface SidebarProps {
 export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [restaurantName, setRestaurantName] = useState("Mi Restaurante");
+  const { isLogged } = useContext(UsersContext);
 
   useEffect(() => {
     const loadRestaurantName = async () => {
@@ -108,7 +110,7 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold truncate text-gray-800">Administrador</p>
-              <p className="text-xs text-gray-500 truncate">admin@rest.com</p>
+              <p className="text-xs text-gray-500 truncate">{isLogged?.email}</p>
             </div>
           </footer>
         </div>

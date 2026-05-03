@@ -1,28 +1,33 @@
 import "./globals.css";
-import { UsersProvider } from '../context/UsersContext';
-import ReservationsProvider from '../context/ReservationsContext';
+import { UsersProvider } from "../context/UsersContext";
+import ReservationsProvider from "../context/ReservationsContext";
 import TablesProvider from "../context/TablesContext";
-import SubscriptionsProvider from '../context/SubscriptionsContext';
+import SubscriptionsProvider from "../context/SubscriptionsContext";
 import { SocketProvider } from "../context/SocketContext";
 import ReservationsPaymentProdiver from "@/context/ReservationsPayments";
+import ChatbotApp from "@/chatbot/app";
 
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning> 
+      <body suppressHydrationWarning>
         <UsersProvider>
           <SocketProvider>
-          <ReservationsProvider>
-            <ReservationsPaymentProdiver>
+            <ReservationsProvider>
+              <ReservationsPaymentProdiver>
               <TablesProvider>
-              <SubscriptionsProvider>
-                {children}
-              </SubscriptionsProvider>
-             </TablesProvider>
-            </ReservationsPaymentProdiver>
-          </ReservationsProvider>
-         </SocketProvider>
+                <SubscriptionsProvider>
+                  {children}
+                  <ChatbotApp />
+                </SubscriptionsProvider>
+              </TablesProvider>
+             </ReservationsPaymentProdiver>
+            </ReservationsProvider>
+          </SocketProvider>
         </UsersProvider>
       </body>
     </html>
