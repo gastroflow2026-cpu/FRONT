@@ -6,6 +6,7 @@ import axios from "axios";
 import { Building2, Clock3, Eye, Home, LogOut, RefreshCw, ShieldCheck } from "lucide-react";
 import { clearSession, getToken } from "@/helpers/getToken";
 import { isPlatformSessionUser } from "@/helpers/platformSession";
+import { SuperAdminChatWidget } from "@/components/chat/SuperAdminChatWidget";
 
 type RestaurantVerificationStatus = "pending" | "approved" | "rejected" | "suspended";
 type StatusFilter = "all" | RestaurantVerificationStatus;
@@ -91,7 +92,10 @@ export default function PlatformDashboardPage() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const endpoint = status === "all" ? "/platform/restaurants" : `/platform/restaurants?status=${status}`;
+      const endpoint =
+        status === "all"
+          ? "/platform/restaurants"
+          : `/platform/restaurants?status=${status}`;
 
       const response = await axios.get<PlatformRestaurant[]>(buildApiUrl(endpoint), {
         headers: {
@@ -101,7 +105,10 @@ export default function PlatformDashboardPage() {
 
       setRestaurants(response.data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+      if (
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
         clearSession();
         router.push("/platform/login");
         return;
@@ -132,7 +139,9 @@ export default function PlatformDashboardPage() {
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-orange-300">GastroFlow Platform</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-orange-300">
+                GastroFlow Platform
+              </p>
               <h1 className="text-xl font-bold">Revisión de restaurantes</h1>
             </div>
           </div>
@@ -216,7 +225,9 @@ export default function PlatformDashboardPage() {
         )}
 
         {!isLoading && errorMessage && (
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">{errorMessage}</div>
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
+            {errorMessage}
+          </div>
         )}
 
         {!isLoading && !errorMessage && restaurants.length === 0 && (
@@ -252,11 +263,14 @@ export default function PlatformDashboardPage() {
 
                     <td className="px-5 py-4 text-white/70">
                       <p>{restaurant.email || "Sin email"}</p>
-                      <p className="text-xs text-white/40">{restaurant.phone || "Sin teléfono"}</p>
+                      <p className="text-xs text-white/40">
+                        {restaurant.phone || "Sin teléfono"}
+                      </p>
                     </td>
 
                     <td className="px-5 py-4 text-white/70">
-                      {[restaurant.city, restaurant.country].filter(Boolean).join(", ") || "Sin ubicación"}
+                      {[restaurant.city, restaurant.country].filter(Boolean).join(", ") ||
+                        "Sin ubicación"}
                     </td>
 
                     <td className="px-5 py-4">
@@ -286,6 +300,8 @@ export default function PlatformDashboardPage() {
           </div>
         )}
       </section>
+
+      <SuperAdminChatWidget />
     </main>
   );
 }
