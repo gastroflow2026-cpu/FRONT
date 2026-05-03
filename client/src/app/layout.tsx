@@ -4,6 +4,7 @@ import ReservationsProvider from '../context/ReservationsContext';
 import TablesProvider from "../context/TablesContext";
 import SubscriptionsProvider from '../context/SubscriptionsContext';
 import { SocketProvider } from "../context/SocketContext";
+import ReservationsPaymentProdiver from "@/context/ReservationsPayments";
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -13,11 +14,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <UsersProvider>
           <SocketProvider>
           <ReservationsProvider>
-            <TablesProvider>
+            <ReservationsPaymentProdiver>
+              <TablesProvider>
               <SubscriptionsProvider>
                 {children}
               </SubscriptionsProvider>
-            </TablesProvider>
+             </TablesProvider>
+            </ReservationsPaymentProdiver>
           </ReservationsProvider>
          </SocketProvider>
         </UsersProvider>
