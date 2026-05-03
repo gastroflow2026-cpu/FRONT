@@ -14,13 +14,11 @@ import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
 import type { Table } from "@/context/TablesContext";
-import Chatbot from 'react-chatbot-kit';
-import 'react-chatbot-kit/build/main.css';
-import ActionProvider from '@/chatbot/ActionProvider';
-import MessageParser from '@/chatbot/MessageParser';
-import config from '@/chatbot/config';
+import "react-chatbot-kit/build/main.css";
+import ActionProvider from "@/chatbot/ActionProvider";
+import MessageParser from "@/chatbot/MessageParser";
+import config from "@/chatbot/config";
 import { getToken } from "@/helpers/getToken";
-import { is } from "react-day-picker/locale";
 
 type PublicMenuItem = {
   id: string;
@@ -64,6 +62,24 @@ type RestaurantDetailData = {
   about: string;
 };
 
+type ReservationFormValues = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  guests: number;
+};
+
+type ReservationFormErrors = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  guests: string;
+};
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 const FALLBACK_RESTAURANT_IMAGE =
   "https://res.cloudinary.com/dgzp5pfmp/image/upload/v1777002092/Pastas_portada_Bella_Vita_t43c1o.png";
@@ -78,7 +94,7 @@ type PublicRestaurant = {
   country?: string;
   description?: string;
   tables?: Table[];
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 const RestaurantDetail = () => {
@@ -93,15 +109,17 @@ const RestaurantDetail = () => {
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
   //CHATBOT
-  const sessionId = useRef('session_' + Math.random().toString(36).substr(2, 9)).current;
+  const sessionId = useRef(
+    "session_" + Math.random().toString(36).substr(2, 9),
+  ).current;
 
   const chatConfig = {
-  ...config,
-  state: {
-    ...config.state,
-    restaurantId,
-    sessionId,
-  },
+    ...config,
+    state: {
+      ...config.state,
+      restaurantId,
+      sessionId,
+    },
   };
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -229,7 +247,7 @@ const RestaurantDetail = () => {
     if (!restaurantId || !formValues.date) return; // ← no llama sin fecha
     getTables(restaurantId, formValues.date, formValues.time);
   }, [restaurantId, formValues.date, formValues.time]);
-  
+
   // EFECTO 3: Persistencia de datos
   useEffect(() => {
     const savedBookingData = localStorage.getItem("gastroflow_temp_booking");
@@ -244,46 +262,53 @@ const RestaurantDetail = () => {
       }
     }
   }, [restaurantId]);
-  
+
   // Handler para validar campos individuales con Yup
-  const validateField = async (name: string, value: any, allValues: any) => {
+  const validateField = async (
+    name: keyof ReservationFormValues,
+    value: ReservationFormValues[keyof ReservationFormValues],
+    allValues: ReservationFormValues,
+  ) => {
     try {
       await reservationSchema.validateAt(name, allValues);
       setFormErrors((prev) => ({ ...prev, [name]: "" }));
-    } catch (err: any) {
-      setFormErrors((prev) => ({ ...prev, [name]: err.message }));
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Error de validación";
+      setFormErrors((prev) => ({ ...prev, [name]: message }));
     }
   };
-  
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
-    const { name, value } = e.target;
+    const name = e.target.name as keyof ReservationFormValues;
+    const { value } = e.target;
     const updatedValues = { ...formValues, [name]: value };
     setFormValues(updatedValues);
     validateField(name, value, updatedValues);
   };
-  
+
   const updateGuests = (delta: number) => {
     const newValue = Math.max(1, formValues.guests + delta);
     const updatedValues = { ...formValues, guests: newValue };
     setFormValues(updatedValues);
     validateField("guests", newValue, updatedValues);
   };
-  
+
   // El formulario es válido si no hay errores y todos los campos obligatorios tienen valor
-  
+
   const getMenuItemImage = (item: PublicMenuItem) => {
     return item.image_url?.trim() || FALLBACK_MENU_IMAGE;
   };
-  
+
   const isFormValid =
-  Object.values(formErrors).every((err) => err === "") &&
-  formValues.name !== "" &&
-  formValues.email !== "" &&
-  formValues.phone !== "" &&
-  formValues.date !== "";
-  
+    Object.values(formErrors).every((err) => err === "") &&
+    formValues.name !== "" &&
+    formValues.email !== "" &&
+    formValues.phone !== "" &&
+    formValues.date !== "";
+
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
   const { handleReservation } = useContext(ReservationsContext);
@@ -291,28 +316,31 @@ const RestaurantDetail = () => {
     try {
       await reservationSchema.validate(formValues, { abortEarly: false });
       if (!restaurantId) return;
-      
+
       if (!isLogged) {
         const dataToSave = {
           restaurantId: restaurantId,
           bookingDetails: formValues,
         };
-        
-        localStorage.setItem("gastroflow_temp_booking", JSON.stringify(dataToSave));
+
+        localStorage.setItem(
+          "gastroflow_temp_booking",
+          JSON.stringify(dataToSave),
+        );
         router.push("/login");
-        
+
         const token = getToken();
         const { data: userReservations } = await axios.get(
           `${API_URL}/users/${isLogged!.id}/reservations`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
-        
+
         const alreadyReserved = userReservations.some(
-          (r: any) =>
+          (r: { restaurant: { id: string }; status: string }) =>
             r.restaurant.id === restaurantId &&
-          (r.status === "PENDIENTE" || r.status === "CONFIRMADO")
+            (r.status === "PENDIENTE" || r.status === "CONFIRMADO"),
         );
-        
+
         if (alreadyReserved) {
           Swal.fire({
             icon: "warning",
@@ -327,25 +355,27 @@ const RestaurantDetail = () => {
           });
           return;
         }
-        
       } else {
         const reservationPayload = {
           customer_name: formValues.name,
           customer_email: formValues.email,
           customer_phone: Number(formValues.phone),
-          reservation_date: formValues.date,           
-          start_time: `${formValues.date}T${formValues.time}:00.000Z`,           
+          reservation_date: formValues.date,
+          start_time: `${formValues.date}T${formValues.time}:00.000Z`,
           guests_count: formValues.guests,
           notes: "",
           table_id: selectedTable!.id,
         };
-        
-        const result = await handleReservation(restaurantId, reservationPayload);
-        
+
+        const result = await handleReservation(
+          restaurantId,
+          reservationPayload,
+        );
+
         if (result?.url) {
           window.location.href = result.url;
-          return; 
-        } 
+          return;
+        }
         const [year, month, day] = formValues.date.split("-");
         const formattedDate = `${day}/${month}/${year}`;
         Swal.fire({
@@ -356,8 +386,9 @@ const RestaurantDetail = () => {
           confirmButtonColor: "#ff7e5f",
         });
       }
-    } catch (err: any) {
-      const errorMessage = err?.message || "No se pudo crear la reserva";
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "No se pudo crear la reserva";
       Swal.fire({
         icon: "error",
         title: "No se pudo confirmar la reserva",
@@ -369,12 +400,10 @@ const RestaurantDetail = () => {
   if (loadingRestaurant)
     return <div className="p-10">Cargando restaurante...</div>;
   if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
-  
+
   // Filtrar mesas por capacidad >= comensales y que estén disponibles
   const filteredTables = tables.filter(
-    (t) =>
-      t.capacity >= formValues.guests &&
-    t.is_active,
+    (t) => t.capacity >= formValues.guests && t.is_active,
   );
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -610,10 +639,14 @@ const RestaurantDetail = () => {
 
                 {/* Teléfono */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  <label
+                    htmlFor="phone"
+                    className="mb-2 block text-sm font-semibold text-slate-900"
+                  >
                     Teléfono
                   </label>
                   <input
+                    id="phone"
                     type="tel"
                     name="phone"
                     value={formValues.phone}
@@ -630,10 +663,14 @@ const RestaurantDetail = () => {
 
                 {/* Fecha */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  <label
+                    htmlFor="date"
+                    className="mb-2 block text-sm font-semibold text-slate-900"
+                  >
                     Fecha
                   </label>
                   <input
+                    id="date"
                     type="date"
                     name="date"
                     min={minReservationDate}
@@ -650,10 +687,14 @@ const RestaurantDetail = () => {
 
                 {/* Hora */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  <label
+                    htmlFor="time"
+                    className="mb-2 block text-sm font-semibold text-slate-900"
+                  >
                     Hora
                   </label>
                   <select
+                    id="time"
                     aria-label="Seleccionar hora"
                     name="time"
                     value={formValues.time}
@@ -726,7 +767,8 @@ const RestaurantDetail = () => {
                     </p>
                   ) : filteredTables.length === 0 ? (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
-                      No hay mesas disponibles para este restaurante en este momento.
+                      No hay mesas disponibles para este restaurante en este
+                      momento.
                     </p>
                   ) : (
                     <TableGrid
@@ -769,22 +811,7 @@ const RestaurantDetail = () => {
         </section>
       </main>
       <Footer />
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          width: '350px',
-          zIndex: 9999,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-          borderRadius: '16px',
-          overflow: 'hidden',
-        }}>
-      <Chatbot
-        config={chatConfig}
-        actionProvider={ActionProvider}
-        messageParser={MessageParser}
-        />
-</div>
+      <div className="fixed bottom-6 right-6 w-87.5 z-9999 shadow-[0_8px_32px_rgba(0,0,0,0.18)] rounded-2xl overflow-hidden"></div>
     </div>
   );
 };
