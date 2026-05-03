@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Employees } from "@/components/adminDashboard/Employees/Employees";
 import { Menu } from "@/components/adminDashboard/Menu/Menu";
@@ -10,6 +9,7 @@ import { Settings } from "@/components/adminDashboard/Settings/Settings";
 import { Sidebar } from "@/components/adminDashboard/Sidebar/Sidebar";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
+import { ChatWidget } from "@/components/chat/chatWidget";
 import styles from "./Admin.module.css";
 
 export default function Admin() {
@@ -27,20 +27,18 @@ export default function Admin() {
   return (
     <div className={styles.rootContainer}>
       <Navbar />
-
       <div className={styles.middleSection}>
         <Sidebar activeModule={activeModule} onModuleChange={setActiveModule} />
-
         <main className={styles.mainContent}>
           <div className={styles.container}>
             {modules[activeModule] || <Employees />}
           </div>
         </main>
       </div>
-
       <footer className={styles.footerWrapper}>
         <Footer />
       </footer>
+      <ChatWidget />
     </div>
   );
 }

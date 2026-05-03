@@ -23,3 +23,14 @@ export const saveSession = (token: string, user: unknown) => {
 export const clearSession = () => {
   AUTH_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
 };
+
+
+export const getCurrentUser = (): { id: string; email: string; role: string } | null => {
+  const storedUser = localStorage.getItem("user");
+  if (!storedUser) return null;
+  try {
+    return JSON.parse(storedUser);
+  } catch {
+    return null;
+  }
+};
