@@ -22,13 +22,14 @@ export interface Order {
 }
 
 export interface Reservation {
-  id: number;
+  id: string | number;
   tableId: number;
   clientName: string;
   phone: string;
   time: string;
   persons: number;
   note?: string;
+  status?: string;
 }
 
 export interface Table {
