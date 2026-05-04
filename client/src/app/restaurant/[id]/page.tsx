@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useMemo, useState, useRef } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -96,6 +96,20 @@ type PublicRestaurant = {
   tables?: Table[];
   [key: string]: unknown;
 };
+
+const hasTableLayout = (table: Table) =>
+  typeof table.layout_x === "number" && typeof table.layout_y === "number";
+
+const isPublicVisibleTable = (table: Table) =>
+  table.is_active === true && table.is_visible !== false && hasTableLayout(table);
+
+const isBlockedTable = (table: Table) => {
+  const status = (table.status || "").toUpperCase();
+  return status === "RESERVADA" || status === "OCUPADA" || !table.is_active;
+};
+
+const isSelectableTable = (table: Table) =>
+  isPublicVisibleTable(table) && !isBlockedTable(table);
 
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
@@ -312,10 +326,51 @@ const RestaurantDetail = () => {
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
   const { handleReservation } = useContext(ReservationsContext);
+
+  const publicLayoutTables = useMemo(
+    () => tables.filter(isPublicVisibleTable),
+    [tables],
+  );
+
+  const filteredTables = useMemo(
+    () =>
+      publicLayoutTables.filter(
+        (table) => table.capacity >= formValues.guests,
+      ),
+    [publicLayoutTables, formValues.guests],
+  );
+
+  const selectableTables = useMemo(
+    () => filteredTables.filter(isSelectableTable),
+    [filteredTables],
+  );
+
+  useEffect(() => {
+    if (!selectedTable) return;
+
+    const isStillSelectable = selectableTables.some(
+      (table) => table.id === selectedTable.id,
+    );
+
+    if (!isStillSelectable) {
+      setSelectedTable(null);
+    }
+  }, [selectedTable, selectableTables]);
+
   const handleConfirmReservation = async () => {
     try {
       await reservationSchema.validate(formValues, { abortEarly: false });
       if (!restaurantId) return;
+
+      if (!selectedTable) {
+        Swal.fire({
+          icon: "warning",
+          title: "Selecciona una mesa",
+          text: "Debes seleccionar una mesa disponible en el plano para continuar.",
+          confirmButtonColor: "#ff7e5f",
+        });
+        return;
+      }
 
       if (!isLogged) {
         const dataToSave = {
@@ -364,7 +419,7 @@ const RestaurantDetail = () => {
           start_time: `${formValues.date}T${formValues.time}:00.000Z`,
           guests_count: formValues.guests,
           notes: "",
-          table_id: selectedTable!.id,
+          table_id: selectedTable.id,
         };
 
         const result = await handleReservation(
@@ -401,10 +456,6 @@ const RestaurantDetail = () => {
     return <div className="p-10">Cargando restaurante...</div>;
   if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
 
-  // Filtrar mesas por capacidad >= comensales y que estén disponibles
-  const filteredTables = tables.filter(
-    (t) => t.capacity >= formValues.guests && t.is_active,
-  );
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
@@ -765,10 +816,15 @@ const RestaurantDetail = () => {
                     <p className="text-center text-sm text-slate-500 py-4">
                       Cargando mesas...
                     </p>
+                  ) : publicLayoutTables.length === 0 ? (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
+                      Este restaurante aún no tiene mesas disponibles para
+                      seleccionar en el plano.
+                    </p>
                   ) : filteredTables.length === 0 ? (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
-                      No hay mesas disponibles para este restaurante en este
-                      momento.
+                      No hay mesas disponibles para este horario y cantidad de
+                      comensales.
                     </p>
                   ) : (
                     <TableGrid
