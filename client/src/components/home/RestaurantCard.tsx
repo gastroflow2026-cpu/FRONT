@@ -47,12 +47,12 @@ const RestaurantCard = ({
           {displayCategory}
         </div>
 
-        {comingSoon && (
+        {/* {comingSoon && (
           <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-orange-500/90 px-3 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-sm">
             <Zap size={12} />
             PROXIMAMENTE
           </div>
-        )}
+        )} */}
       </div>
 
       <div className="p-6">
@@ -62,7 +62,9 @@ const RestaurantCard = ({
           </h3>
           <div className="flex items-center gap-1 rounded-lg bg-orange-50 px-2 py-1">
             <Star size={14} className="fill-orange-500 text-orange-500" />
-            <span className="text-sm font-bold text-orange-700">{displayRating}</span>
+            <span className="text-sm font-bold text-orange-700">
+              {displayRating}
+            </span>
           </div>
         </div>
 
