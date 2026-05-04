@@ -2,10 +2,10 @@
 
 import { useContext, useEffect, useState } from "react";
 import { useFormik } from "formik";
-import Image from "next/image";
 import Swal from "sweetalert2";
 import { Building2, Globe, ImageIcon, Mail, MapPin, Phone, Save, ScrollText } from "lucide-react";
 import { UsersContext } from "@/context/UsersContext";
+import { getToken } from "@/helpers/getToken";
 import styles from "./Settings.module.css";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -47,17 +47,11 @@ export function Settings() {
 
   useEffect(() => {
     const fetchRestaurantData = async () => {
-      const storedToken = localStorage.getItem("token");
-      if (!storedToken || !API_URL) {
+      const token = getToken();
+
+      if (!token || !API_URL) {
         setIsLoading(false);
         return;
-      }
-
-      let token = storedToken;
-      try {
-        token = JSON.parse(storedToken) as string;
-      } catch {
-        token = storedToken;
       }
 
       try {
@@ -102,8 +96,9 @@ export function Settings() {
     enableReinitialize: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const storedToken = localStorage.getItem("token");
-        if (!storedToken || !API_URL) {
+        const token = getToken();
+
+        if (!token || !API_URL) {
           await Swal.fire({
             theme: "dark",
             icon: "error",
@@ -113,13 +108,6 @@ export function Settings() {
           });
           setSubmitting(false);
           return;
-        }
-
-        let token = storedToken;
-        try {
-          token = JSON.parse(storedToken) as string;
-        } catch {
-          token = storedToken;
         }
 
         const { image_url, ...rest } = values;
@@ -386,11 +374,7 @@ export function Settings() {
           </span>
         </label>
 
-        <button
-          type="submit"
-          disabled={formik.isSubmitting}
-          className={styles.submitButton}
-        >
+        <button type="submit" disabled={formik.isSubmitting} className={styles.submitButton}>
           <Save className={styles.buttonIcon} />
           {formik.isSubmitting ? "Guardando..." : "Guardar Cambios"}
         </button>

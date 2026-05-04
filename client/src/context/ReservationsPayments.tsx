@@ -1,6 +1,8 @@
 "use client";
 import { createContext, ReactNode } from "react";
 import axios from "axios";
+import { getToken } from "@/helpers/getToken";
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
 interface ReservationsPaymentContextType {
     stripeCheckout: (reservationId: string) => Promise<void>;
@@ -13,8 +15,18 @@ export const ReservationsPaymentContext = createContext<ReservationsPaymentConte
 const ReservationsPaymentProvider = ({ children }: { children: ReactNode }) => {
 
     const stripeCheckout = async (reservationId: string) => {
-        const res = await axios.post("http://localhost:3000/reservations-payment/:reservationId/checkout");
-        window.location.href = res.data.url
+        const token = getToken();
+       const res = await axios.post(
+        `${API_URL}/reservations-payment/${reservationId}/checkout`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log('Stripe response:', res.data);
+        if (!res.data.url) {
+            console.error('No URL recibida'); 
+            return;
+        }
+        window.location.href = res.data.url;
     };
 
     const value: ReservationsPaymentContextType = {

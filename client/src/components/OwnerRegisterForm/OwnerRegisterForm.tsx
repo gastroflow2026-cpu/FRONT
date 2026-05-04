@@ -17,9 +17,7 @@ interface OwnerRegisterFormProps {
   hideFooterLink?: boolean;
 }
 
-export default function OwnerRegisterForm({
-  hideFooterLink = false,
-}: OwnerRegisterFormProps) {
+export default function OwnerRegisterForm({ hideFooterLink = false }: OwnerRegisterFormProps) {
   const router = useRouter();
   const { registerOwner } = useContext(UsersContext);
   const [showPassword, setShowPassword] = useState(false);
@@ -32,11 +30,7 @@ export default function OwnerRegisterForm({
       try {
         const result = await registerOwner(values);
 
-        if (
-          result.status === 201 &&
-          result.data &&
-          "user" in result.data
-        ) {
+        if (result.status === 201 && result.data && "user" in result.data) {
           await Swal.fire({
             theme: "dark",
             icon: "success",
@@ -51,11 +45,11 @@ export default function OwnerRegisterForm({
 
         if (result.status === 400 || result.status === 409) {
           const backendMessage =
-            result.data &&
-            "message" in result.data &&
-            typeof result.data.message === "string"
-              ? result.data.message
-              : "No se pudo registrar el owner. Verifica si el email ya existe o si ya hay un REST_ADMIN creado.";
+            result.data && "message" in result.data && Array.isArray(result.data.message)
+              ? result.data.message.map(String).join(" | ")
+              : result.data && "message" in result.data && typeof result.data.message === "string"
+                ? result.data.message
+                : "No se pudo registrar el owner. Verifica los datos ingresados.";
 
           await Swal.fire({
             theme: "dark",
@@ -83,14 +77,11 @@ export default function OwnerRegisterForm({
   return (
     <div className="owner-register-form">
       <div className="owner-register-form__header">
-        <span className="owner-register-form__eyebrow">
-          Acceso para aliados GastroFlow
-        </span>
+        <span className="owner-register-form__eyebrow">Acceso para aliados GastroFlow</span>
         <h1 className="owner-register-form__title">Crea tu cuenta owner</h1>
         <p className="owner-register-form__subtitle">
-          Crea el acceso administrativo principal de tu restaurante para
-          comenzar la configuracion inicial de la operacion dentro de
-GastroFlow.
+          Crea el acceso administrativo principal de tu restaurante para comenzar la configuracion inicial de la
+          operacion dentro de GastroFlow.
         </p>
       </div>
 
@@ -106,7 +97,7 @@ GastroFlow.
                 id="first_name"
                 name="first_name"
                 type="text"
-                placeholder="Hiram"
+                placeholder="Pedro"v
                 className="owner-register-form__input"
                 value={formik.values.first_name}
                 onChange={formik.handleChange}
@@ -158,9 +149,7 @@ GastroFlow.
               onBlur={formik.handleBlur}
             />
           </div>
-          <p className="owner-register-form__helper">
-            Este correo sera el acceso principal de administracion.
-          </p>
+          <p className="owner-register-form__helper">Este correo sera el acceso principal de administracion.</p>
           {formik.touched.email && formik.errors.email && (
             <p className="owner-register-form__error">{formik.errors.email}</p>
           )}
@@ -199,10 +188,7 @@ GastroFlow.
           </div>
 
           <div className="owner-register-form__field">
-            <label
-              className="owner-register-form__label"
-              htmlFor="confirmPassword"
-            >
+            <label className="owner-register-form__label" htmlFor="confirmPassword">
               Confirmar contrasena
             </label>
             <div className="owner-register-form__input-wrapper">
@@ -222,26 +208,18 @@ GastroFlow.
                 tabIndex={-1}
                 className="owner-register-form__eye-btn"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
-                aria-label={
-                  showConfirmPassword ? "Ocultar contrasena" : "Mostrar contrasena"
-                }
+                aria-label={showConfirmPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-              <p className="owner-register-form__error">
-                {formik.errors.confirmPassword}
-              </p>
+              <p className="owner-register-form__error">{formik.errors.confirmPassword}</p>
             )}
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="owner-register-form__submit"
-          disabled={formik.isSubmitting}
-        >
+        <button type="submit" className="owner-register-form__submit" disabled={formik.isSubmitting}>
           <span className="owner-register-form__submit-text">
             {formik.isSubmitting ? (
               "Creando cuenta..."

@@ -1,6 +1,7 @@
 "use client";
 import { createContext, ReactNode, useContext } from "react";
 import axios from "axios";
+import { getToken } from "@/helpers/getToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
@@ -16,11 +17,11 @@ interface ReservationValues {
 }
 
 interface ReservationsContextType {
-    handleReservation: (restaurantId: string, values: ReservationValues) => Promise<void>;
+    handleReservation: (restaurantId: string, values: ReservationValues) => Promise<{ url?: string } | undefined>;
 }
 
 export const ReservationsContext = createContext<ReservationsContextType>({
-    handleReservation: async () => {},
+    handleReservation: async () => undefined,
 });
 
 const ReservationsProvider = ({ children }: { children: ReactNode }) => {
@@ -31,7 +32,7 @@ const ReservationsProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('API URL o Restaurant ID no están configurados');
             }
 
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const response = await axios.post(
                 `${API_URL}/restaurants/${restaurantId}/reservations/newReservation`,
                 values,
@@ -41,10 +42,11 @@ const ReservationsProvider = ({ children }: { children: ReactNode }) => {
                     } : undefined,
                 }
             );
-            const { url } = response.data;
+            const { url } = response.data;  
             console.log(url);
             if (url) {
-                window.location.href = url; // redirige a Stripe
+                window.location.href = url; 
+                return { url };
             }
             return response.data;
         } catch (error: any) {

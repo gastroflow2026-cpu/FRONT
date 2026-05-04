@@ -62,6 +62,16 @@
   box-shadow: 0 0 0 4px #ffedd5;
 }
 
+.inputError {
+  border-color: #dc2626;
+}
+
+.errorMessage {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin: 0;
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
@@ -107,4 +117,20 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.passwordField {
+  position: relative;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
 }

@@ -1,6 +1,6 @@
 import { Check, X, Star } from "lucide-react";
 import { Plan, BillingCycle, ActiveSubscription } from "@/types/subscription";
-import { PLANS, getPrice } from "@/utils/subscriptionData";
+import { PLANS, getAnnualMonthlyPrice, getAnnualTotal, getPrice } from "@/utils/subscriptionData";
 
 interface Props {
   billingCycle: BillingCycle;
@@ -71,24 +71,19 @@ export default function PlanSelector({
                 </div>
 
                 {/* Precio */}
-                <div className="mb-5">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-gray-900">
-                      ${price}
-                    </span>
-                    <span className="text-gray-400 text-sm">/mes</span>
-                  </div>
-                  {billingCycle === "anual" && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Facturación anual · ${price * 12}/año
-                    </p>
-                  )}
-                  {billingCycle === "mensual" && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Facturación mensual · sin contrato
-                    </p>
-                  )}
-                </div>
+               <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-gray-900">
+                  ${price} {/* 👈 en vez de getAnnualTotal(plan) */}
+                </span>
+                <span className="text-gray-400 text-sm">
+                  {billingCycle === "anual" ? "/año" : "/mes"}
+                </span>
+              </div>
+              {billingCycle === "mensual" && (
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Facturación mensual · sin contrato
+                </p>
+              )}
 
                 {/* Features */}
                 <div className="space-y-2.5 mb-5">

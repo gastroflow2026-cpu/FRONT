@@ -54,33 +54,51 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   return (
     <div className={styles.container}>
       {!value ? (
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`${styles.dropzone} ${isDragging ? styles.dragging : ""}`}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <div className={styles.content}>
-            <div className={styles.iconWrapper}>
-              <Upload size={28} />
+        <>
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`${styles.dropzone} ${isDragging ? styles.dragging : ""}`}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className={styles.content}>
+              <div className={styles.iconWrapper}>
+                <Upload size={28} />
+              </div>
+              <div>
+                <p className={styles.textMain}>
+                  Arrastra una imagen o{" "}
+                  <span className={styles.browseBtn}>
+                    selecciona un archivo
+                  </span>
+                </p>
+                <p className={styles.textSub}>PNG, JPG hasta 2MB</p>
+              </div>
             </div>
-            <div>
-              <p className={styles.textMain}>
-                Arrastra una imagen o{" "}
-                <span className={styles.browseBtn}>selecciona un archivo</span>
-              </p>
-              <p className={styles.textSub}>PNG, JPG hasta 5MB</p>
-            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className={styles.hiddenInput}
+            />
           </div>
+
           <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className={styles.hiddenInput}
+            type="url"
+            placeholder="O pega una URL de Cloudinary"
+            onChange={(e) => onChange(e.target.value)}
+            style={{
+              marginTop: "10px",
+              width: "100%",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #d1d5db",
+            }}
           />
-        </div>
+        </>
       ) : (
         <div className={styles.previewWrapper}>
           <img src={value} alt="Preview" className={styles.previewImage} />
@@ -92,6 +110,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               handleRemove();
             }}
             title="Eliminar imagen"
+            aria-label="Eliminar imagen"
           >
             <X size={18} />
           </button>
