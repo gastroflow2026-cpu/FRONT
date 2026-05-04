@@ -18,7 +18,6 @@ import "react-chatbot-kit/build/main.css";
 import ActionProvider from "@/chatbot/ActionProvider";
 import MessageParser from "@/chatbot/MessageParser";
 import config from "@/chatbot/config";
-import { getToken } from "@/helpers/getToken";
 
 type PublicMenuItem = {
   id: string;
@@ -137,6 +136,9 @@ const RestaurantDetail = () => {
   };
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [pendingSelectedTableId, setPendingSelectedTableId] = useState<
+    string | null
+  >(null);
   const { tables, loading: loadingTables, getTables } = useTables();
 
   // Fecha mínima para el atributo 'min' del input date
@@ -270,6 +272,7 @@ const RestaurantDetail = () => {
       // Solo restaurar si es para este restaurante
       if (parsedData.restaurantId === restaurantId) {
         setFormValues((prev) => ({ ...prev, ...parsedData.bookingDetails }));
+        setPendingSelectedTableId(parsedData.selectedTableId ?? null);
         console.log("Datos de reserva recuperados exitosamente");
         // Limpiar LocalStorage inmediatamente después de restaurar
         localStorage.removeItem("gastroflow_temp_booking");
@@ -357,6 +360,24 @@ const RestaurantDetail = () => {
     }
   }, [selectedTable, selectableTables]);
 
+  useEffect(() => {
+    if (!pendingSelectedTableId) return;
+
+    const restoredTable = selectableTables.find(
+      (table) => table.id === pendingSelectedTableId,
+    );
+
+    if (restoredTable) {
+      setSelectedTable(restoredTable);
+      setPendingSelectedTableId(null);
+      return;
+    }
+
+    if (!loadingTables && tables.length > 0) {
+      setPendingSelectedTableId(null);
+    }
+  }, [loadingTables, pendingSelectedTableId, selectableTables, tables.length]);
+
   const handleConfirmReservation = async () => {
     try {
       await reservationSchema.validate(formValues, { abortEarly: false });
@@ -376,6 +397,7 @@ const RestaurantDetail = () => {
         const dataToSave = {
           restaurantId: restaurantId,
           bookingDetails: formValues,
+          selectedTableId: selectedTable.id,
         };
 
         localStorage.setItem(
@@ -383,33 +405,7 @@ const RestaurantDetail = () => {
           JSON.stringify(dataToSave),
         );
         router.push("/login");
-
-        const token = getToken();
-        const { data: userReservations } = await axios.get(
-          `${API_URL}/users/${isLogged!.id}/reservations`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
-        const alreadyReserved = userReservations.some(
-          (r: { restaurant: { id: string }; status: string }) =>
-            r.restaurant.id === restaurantId &&
-            (r.status === "PENDIENTE" || r.status === "CONFIRMADO"),
-        );
-
-        if (alreadyReserved) {
-          Swal.fire({
-            icon: "warning",
-            title: "Ya tenés una reserva",
-            text: "Ya tenés una reserva activa en este restaurante. Podés verla en tu historial de reservas.",
-            confirmButtonText: "Ver mis reservas",
-            confirmButtonColor: "#ff7e5f",
-            showCancelButton: true,
-            cancelButtonText: "Cerrar",
-          }).then((result) => {
-            if (result.isConfirmed) router.push("/reservations");
-          });
-          return;
-        }
+        return;
       } else {
         const reservationPayload = {
           customer_name: formValues.name,
