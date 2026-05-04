@@ -14,7 +14,8 @@ import CashRegisterPanel from "@/components/cashierDashboard/CashRegisterPanel";
 import { UsersContext } from "@/context/UsersContext";
 import { useSocket } from "@/context/SocketContext";
 import { useTables } from "@/context/TablesContext";
-import { PaymentMethod, Table } from "@/types/cashier";
+import { PaymentMethod, Reservation, Table } from "@/types/cashier";
+import { fetchCashierReservations } from "@/services/cashierReservations";
 import {
   CashRegisterSession,
   CashierDailySummary,
@@ -48,6 +49,12 @@ export default function CashierDashboard() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [cashierTables, setCashierTables] = useState<Table[]>([]);
   const [summaryDate, setSummaryDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [reservationsDate, setReservationsDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [reservationsStatus, setReservationsStatus] = useState("ALL");
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservationsTotal, setReservationsTotal] = useState(0);
+  const [isReservationsLoading, setIsReservationsLoading] = useState(true);
+  const [reservationsError, setReservationsError] = useState<string | null>(null);
   const [dailySummary, setDailySummary] = useState<CashierDailySummary | null>(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState<string | null>(null);
@@ -148,6 +155,31 @@ export default function CashierDashboard() {
     }
   }, [summaryDate]);
 
+  const loadCashierReservations = useCallback(
+    async (nextDate = reservationsDate, nextStatus = reservationsStatus) => {
+      try {
+        setReservationsError(null);
+        setIsReservationsLoading(true);
+
+        const response = await fetchCashierReservations({
+          date: nextDate,
+          status: nextStatus,
+        });
+
+        setReservations(response.data);
+        setReservationsTotal(response.total);
+      } catch (error) {
+        const backendMessage = getBackendMessage(error);
+        setReservationsError(backendMessage || "No se pudieron cargar las reservas del cajero.");
+        setReservations([]);
+        setReservationsTotal(0);
+      } finally {
+        setIsReservationsLoading(false);
+      }
+    },
+    [reservationsDate, reservationsStatus],
+  );
+
   useEffect(() => {
     void loadCashierOrders();
   }, [loadCashierOrders]);
@@ -155,6 +187,10 @@ export default function CashierDashboard() {
   useEffect(() => {
     void loadDailySummary(summaryDate);
   }, [loadDailySummary, summaryDate]);
+
+  useEffect(() => {
+    void loadCashierReservations(reservationsDate, reservationsStatus);
+  }, [loadCashierReservations, reservationsDate, reservationsStatus]);
 
   useEffect(() => {
     void loadCurrentCashRegister();
@@ -219,6 +255,7 @@ export default function CashierDashboard() {
     const intervalId = window.setInterval(() => {
       void loadCashierOrders();
       void loadDailySummary();
+      void loadCashierReservations();
       void loadCurrentCashRegister();
       void loadCashRegisterHistory();
       if (restaurantId) {
@@ -231,6 +268,7 @@ export default function CashierDashboard() {
     getTables,
     loadCashierOrders,
     loadCashRegisterHistory,
+    loadCashierReservations,
     loadCurrentCashRegister,
     loadDailySummary,
     restaurantId,
@@ -251,16 +289,27 @@ export default function CashierDashboard() {
       void loadDailySummary();
     };
 
+    const handleReservationEvent = () => {
+      void loadCashierReservations();
+      if (restaurantId) {
+        void getTables(restaurantId);
+      }
+    };
+
     socket.on("order:closed", handleQueueEvent);
     socket.on("order:updated", handleQueueEvent);
     socket.on("order:paid", handlePaidEvent);
+    socket.on("reservation:created", handleReservationEvent);
+    socket.on("reservation:cancelled", handleReservationEvent);
 
     return () => {
       socket.off("order:closed", handleQueueEvent);
       socket.off("order:updated", handleQueueEvent);
       socket.off("order:paid", handlePaidEvent);
+      socket.off("reservation:created", handleReservationEvent);
+      socket.off("reservation:cancelled", handleReservationEvent);
     };
-  }, [getTables, loadCashierOrders, loadDailySummary, restaurantId, socket]);
+  }, [getTables, loadCashierOrders, loadCashierReservations, loadDailySummary, restaurantId, socket]);
 
   const metrics = useMemo(() => {
     const occupiedTables = backendTables.filter(
@@ -278,9 +327,9 @@ export default function CashierDashboard() {
       occupiedTables,
       totalTables: backendTables.length,
       reservedTables,
-      reservationsToday: reservedTables,
+      reservationsToday: reservationsTotal,
     };
-  }, [backendTables, cashierTables]);
+  }, [backendTables, cashierTables, reservationsTotal]);
 
   function handleTableClick(table: Table) {
     setSelectedTable(table);
@@ -618,7 +667,21 @@ export default function CashierDashboard() {
             <TableGrid tables={cashierTables} onTableClick={handleTableClick} />
           )
         )}
-        {activeTab === "reservas" && <ReservationsTab />}
+        {activeTab === "reservas" && (
+          <ReservationsTab
+            reservations={reservations}
+            total={reservationsTotal}
+            date={reservationsDate}
+            status={reservationsStatus}
+            isLoading={isReservationsLoading}
+            error={reservationsError}
+            onDateChange={(nextDate) => setReservationsDate(nextDate)}
+            onStatusChange={(nextStatus) => setReservationsStatus(nextStatus)}
+            onRefresh={() => {
+              void loadCashierReservations(reservationsDate, reservationsStatus);
+            }}
+          />
+        )}
         {activeTab === "resumen" && (
           <DailySummaryTab
             summary={dailySummary}
