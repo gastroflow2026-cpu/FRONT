@@ -6,7 +6,6 @@ export const PLANS: Plan[] = [
     name: "Básico",
     description: "Ideal para comenzar a digitalizar tu local.",
     monthlyPrice: 50,
-    annualPrice: 40,
     features: [
       { text: "Reservas Online", included: true },
       { text: "Menú digital (1 foto por plato)", included: true },
@@ -23,7 +22,6 @@ export const PLANS: Plan[] = [
     name: "Premium",
     description: "Control total y analíticas avanzadas para tu negocio.",
     monthlyPrice: 80,
-    annualPrice: 64,
     popular: true,
     features: [
       { text: "Todo lo del plan Básico", included: true },
@@ -38,10 +36,16 @@ export const PLANS: Plan[] = [
   },
 ];
 
-export const ANNUAL_DISCOUNT = 0.2; // 20% de descuento
+export function getAnnualTotal(plan: Plan): number {
+  return plan.monthlyPrice * 10;
+}
+
+export function getAnnualMonthlyPrice(plan: Plan): number {
+  return Math.round(getAnnualTotal(plan) / 12);
+}
 
 export function getPrice(plan: Plan, cycle: "mensual" | "anual"): number {
-  return cycle === "mensual" ? plan.monthlyPrice : plan.annualPrice;
+  return cycle === "mensual" ? plan.monthlyPrice : getAnnualTotal(plan);
 }
 
 export function getNextBillingDate(cycle: "mensual" | "anual"): string {

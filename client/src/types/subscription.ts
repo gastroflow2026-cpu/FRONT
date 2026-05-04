@@ -13,7 +13,6 @@ export interface Plan {
   name: string;
   description: string;
   monthlyPrice: number;
-  annualPrice: number;
   features: PlanFeature[];
   popular?: boolean;
 }
