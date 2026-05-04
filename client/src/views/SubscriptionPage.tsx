@@ -31,15 +31,14 @@ export default function SubscriptionPage() {
       )}
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Volver */}
+        
         <button
-          onClick={() => router.push("/admin")}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-8"
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 rounded-lg px-3 py-2 transition-colors"
         >
           <ArrowLeft size={16} />
-          Volver al dashboard
+          Volver al Home
         </button>
-
         {/* Hero */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-4 py-1.5 mb-4">
