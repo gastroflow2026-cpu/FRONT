@@ -117,6 +117,7 @@ const PlatformLoginForm = () => {
                   <div className="flex items-center gap-3 rounded-xl border border-orange-500/30 bg-white/5 px-4 py-3">
                     <Mail className="h-5 w-5 text-white/40" />
                     <Field
+                      placeholder="user@email.com"
                       type="email"
                       name="email"
                       className="w-full bg-transparent text-white outline-none placeholder:text-white/25"
