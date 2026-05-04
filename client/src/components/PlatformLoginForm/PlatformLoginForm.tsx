@@ -150,7 +150,7 @@ const PlatformLoginForm = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="mt-2 inline-flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-4 text-base font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-2 inline-flex items-center justify-center gap-3 rounded-xl bg-linear-to-r from-orange-500 to-pink-500 px-6 py-4 text-base font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <LogIn className="h-5 w-5" />
                   {isSubmitting ? "Validando acceso..." : "Entrar al panel"}

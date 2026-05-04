@@ -67,6 +67,35 @@ export interface CashierDailySummary {
   receipts: DailySummaryReceipt[];
 }
 
+export interface CashRegisterSalesByMethod {
+  efectivo: number;
+  tarjeta: number;
+  transferencia: number;
+  qr: number;
+  unknown: number;
+}
+
+export interface CashRegisterSession {
+  id: string;
+  status: "OPEN" | "CLOSED" | string;
+  openingAmount: number;
+  declaredClosingAmount: number | null;
+  expectedClosingAmount: number | null;
+  differenceAmount: number | null;
+  salesByMethod: CashRegisterSalesByMethod;
+  openedAt: string;
+  closedAt: string | null;
+  notes?: string;
+}
+
+export interface CashRegisterHistoryResult {
+  items: CashRegisterSession[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface OrderItemInput {
   menuItemId: string;
   name: string;
@@ -671,6 +700,249 @@ const mapDailySummaryMethod = (
   count: toNumber(method?.count, 0),
   total: toNumber(method?.total, 0),
 });
+
+const mapSalesByMethodKey = (key: string): keyof CashRegisterSalesByMethod => {
+  const normalized = key.trim().toLowerCase();
+
+  if (["efectivo", "cash"].includes(normalized)) return "efectivo";
+  if (["tarjeta", "card", "debito", "credito", "debit", "credit"].includes(normalized)) {
+    return "tarjeta";
+  }
+  if (["transferencia", "transfer", "bank_transfer"].includes(normalized)) return "transferencia";
+  if (["qr"].includes(normalized)) return "qr";
+  return "unknown";
+};
+
+const normalizeSalesByMethod = (input: unknown): CashRegisterSalesByMethod => {
+  const totals: CashRegisterSalesByMethod = {
+    efectivo: 0,
+    tarjeta: 0,
+    transferencia: 0,
+    qr: 0,
+    unknown: 0,
+  };
+
+  if (!input || typeof input !== "object") {
+    return totals;
+  }
+
+  Object.entries(input as Record<string, unknown>).forEach(([key, value]) => {
+    const mappedKey = mapSalesByMethodKey(key);
+
+    if (typeof value === "number" || typeof value === "string") {
+      totals[mappedKey] += toNumber(value, 0);
+      return;
+    }
+
+    if (value && typeof value === "object") {
+      const nested = value as Record<string, unknown>;
+      totals[mappedKey] += toNumber(
+        (nested.total as string | number | null | undefined) ??
+          (nested.amount as string | number | null | undefined) ??
+          (nested.value as string | number | null | undefined),
+        0,
+      );
+    }
+  });
+
+  return totals;
+};
+
+const extractCashRegisterSessionPayload = (payload: unknown): Record<string, unknown> | null => {
+  if (!payload || typeof payload !== "object") return null;
+
+  const root = payload as Record<string, unknown>;
+  const directCandidates = [root, root.session, root.data, root.current, root.cashRegisterSession];
+
+  for (const candidate of directCandidates) {
+    if (!candidate || typeof candidate !== "object") continue;
+    const current = candidate as Record<string, unknown>;
+
+    if (
+      "openingAmount" in current ||
+      "opening_amount" in current ||
+      "openedAt" in current ||
+      "opened_at" in current ||
+      "status" in current
+    ) {
+      return current;
+    }
+
+    const nested = current.session;
+    if (nested && typeof nested === "object") {
+      return nested as Record<string, unknown>;
+    }
+  }
+
+  return null;
+};
+
+const normalizeCashRegisterSession = (input: unknown): CashRegisterSession | null => {
+  const raw = extractCashRegisterSessionPayload(input);
+  if (!raw) return null;
+
+  const statusRaw =
+    (raw.status as string | undefined) ??
+    (raw.state as string | undefined) ??
+    "";
+
+  const status = String(statusRaw || "").toUpperCase() || "OPEN";
+
+  const declaredClosingAmount =
+    raw.declaredClosingAmount ??
+    raw.declared_closing_amount ??
+    raw.closingAmount ??
+    raw.declared_amount ??
+    null;
+
+  const expectedClosingAmount =
+    raw.expectedClosingAmount ??
+    raw.expected_closing_amount ??
+    raw.expectedAmount ??
+    null;
+
+  const differenceAmount =
+    raw.differenceAmount ??
+    raw.difference_amount ??
+    raw.difference ??
+    null;
+
+  return {
+    id: String(raw.id ?? raw.sessionId ?? raw.session_id ?? ""),
+    status,
+    openingAmount: toNumber(
+      (raw.openingAmount as string | number | null | undefined) ??
+        (raw.opening_amount as string | number | null | undefined),
+      0,
+    ),
+    declaredClosingAmount:
+      declaredClosingAmount === null || declaredClosingAmount === undefined
+        ? null
+        : toNumber(declaredClosingAmount as string | number, 0),
+    expectedClosingAmount:
+      expectedClosingAmount === null || expectedClosingAmount === undefined
+        ? null
+        : toNumber(expectedClosingAmount as string | number, 0),
+    differenceAmount:
+      differenceAmount === null || differenceAmount === undefined
+        ? null
+        : toNumber(differenceAmount as string | number, 0),
+    salesByMethod: normalizeSalesByMethod(raw.salesByMethod ?? raw.sales_by_method),
+    openedAt: String(raw.openedAt ?? raw.opened_at ?? ""),
+    closedAt:
+      raw.closedAt === null || raw.closed_at === null
+        ? null
+        : String(raw.closedAt ?? raw.closed_at ?? "") || null,
+    notes: typeof raw.notes === "string" ? raw.notes : undefined,
+  };
+};
+
+export const fetchCurrentCashRegisterSession = async (): Promise<CashRegisterSession | null> => {
+  const headers = getAuthHeaders();
+  const { data } = await axios.get<unknown>(`${API_URL}/cash-register/current`, { headers });
+
+  if (data === null) return null;
+  if (typeof data === "object" && data && "session" in (data as Record<string, unknown>)) {
+    const session = (data as Record<string, unknown>).session;
+    if (!session) return null;
+  }
+
+  return normalizeCashRegisterSession(data);
+};
+
+export const openCashRegister = async (openingAmount: number): Promise<CashRegisterSession> => {
+  const headers = getAuthHeaders();
+  const { data } = await axios.post<unknown>(
+    `${API_URL}/cash-register/open`,
+    { openingAmount },
+    { headers },
+  );
+
+  const session = normalizeCashRegisterSession(data);
+  if (!session) {
+    throw new Error("No se recibió una sesión de caja válida en la apertura.");
+  }
+
+  return session;
+};
+
+export const closeCashRegister = async (
+  declaredClosingAmount: number,
+  notes?: string,
+): Promise<CashRegisterSession> => {
+  const headers = getAuthHeaders();
+  const payload = {
+    declaredClosingAmount,
+    ...(notes && notes.trim() ? { notes: notes.trim() } : {}),
+  };
+
+  const { data } = await axios.post<unknown>(`${API_URL}/cash-register/close`, payload, {
+    headers,
+  });
+
+  const session = normalizeCashRegisterSession(data);
+  if (!session) {
+    throw new Error("No se recibió una sesión de caja válida en el cierre.");
+  }
+
+  return session;
+};
+
+export const fetchCashRegisterHistory = async (
+  page = 1,
+  limit = 20,
+): Promise<CashRegisterHistoryResult> => {
+  const headers = getAuthHeaders();
+  const { data } = await axios.get<unknown>(`${API_URL}/cash-register/history`, {
+    headers,
+    params: { page, limit },
+  });
+
+  const payload = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
+  const rawItems =
+    (Array.isArray(payload) ? payload : null) ||
+    (Array.isArray(payload.items) ? payload.items : null) ||
+    (Array.isArray(payload.sessions) ? payload.sessions : null) ||
+    (Array.isArray(payload.data) ? payload.data : null) ||
+    (payload.data && typeof payload.data === "object" && Array.isArray((payload.data as Record<string, unknown>).items)
+      ? ((payload.data as Record<string, unknown>).items as unknown[])
+      : null) ||
+    [];
+
+  const items = rawItems
+    .map((item) => normalizeCashRegisterSession(item))
+    .filter((item): item is CashRegisterSession => Boolean(item));
+
+  const meta =
+    (payload.meta && typeof payload.meta === "object" ? payload.meta : null) ||
+    (payload.pagination && typeof payload.pagination === "object" ? payload.pagination : null) ||
+    null;
+
+  const pageValue = toNumber(
+    (meta as Record<string, unknown> | null)?.page as string | number | null | undefined,
+    toNumber(payload.page as string | number | null | undefined, page),
+  );
+  const limitValue = toNumber(
+    (meta as Record<string, unknown> | null)?.limit as string | number | null | undefined,
+    toNumber(payload.limit as string | number | null | undefined, limit),
+  );
+  const totalValue = toNumber(
+    (meta as Record<string, unknown> | null)?.total as string | number | null | undefined,
+    toNumber(payload.total as string | number | null | undefined, items.length),
+  );
+  const totalPagesValue = toNumber(
+    (meta as Record<string, unknown> | null)?.totalPages as string | number | null | undefined,
+    toNumber(payload.totalPages as string | number | null | undefined, Math.max(1, Math.ceil(totalValue / Math.max(limitValue, 1)))),
+  );
+
+  return {
+    items,
+    page: pageValue,
+    limit: limitValue,
+    total: totalValue,
+    totalPages: totalPagesValue,
+  };
+};
 
 export const fetchCashierDailySummary = async (
   date?: string,
