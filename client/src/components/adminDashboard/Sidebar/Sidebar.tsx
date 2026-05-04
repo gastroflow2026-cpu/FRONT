@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
-import { Users, Calendar, UtensilsCrossed, BarChart3, ShoppingBag, Menu, X, Settings } from "lucide-react";
+import { Users, Calendar, UtensilsCrossed, BarChart3, ShoppingBag, Menu, X, Settings, LayoutGrid } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { getToken } from "@/helpers/getToken";
 import { UsersContext } from "@/context/UsersContext";
@@ -13,6 +13,7 @@ const MENU_ITEMS = [
   { id: "reservations", label: "Reservas", icon: Calendar },
   { id: "menu", label: "Menú", icon: UtensilsCrossed },
   { id: "metrics", label: "Métricas", icon: BarChart3 },
+  { id: "tables", label: "Mesas", icon: LayoutGrid },
   { id: "orders", label: "Pedidos", icon: ShoppingBag },
   { id: "settings", label: "Configuración", icon: Settings },
 ];
