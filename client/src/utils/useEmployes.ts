@@ -117,6 +117,30 @@ export function useEmployees() {
     }
   };
 
+  const handleChangeRole = async (id: string, role: string) => {
+    try {
+      const result = await Swal.fire({
+        title: "¿Cambiar rol del empleado?",
+        text: "Esta acción actualizará el rol del empleado en el sistema.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Sí, cambiar rol",
+        cancelButtonText: "Cancelar"
+      })
+
+      if (!result.isConfirmed) return;
+
+      await adminService.changeEmployeeRole(id, role)
+
+      Swal.fire("Rol actualizado", `El rol del empleado ha sido cambiado a ${role} exitosamente`, "success")
+      return true
+    } catch (err) {
+      Swal.fire("Error", "No se pudo actualizar", "error")
+    }
+  }
+
   return {
     employees: filteredEmployees,
     loading,
@@ -126,5 +150,6 @@ export function useEmployees() {
     setRoleFilter,
     handleToggleStatus,
     handleCreateEmployee,
+    handleChangeRole
   };
 }

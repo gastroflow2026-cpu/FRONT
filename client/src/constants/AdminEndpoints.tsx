@@ -7,6 +7,7 @@ export const ADMIN_ENDPOINTS = {
     STATUS: (id: string) => `${API_URL}/employees/${id}/status`,
     CHANGE_PASSWORD: (id: string) =>
       `${API_URL}/users/${id}/resetpassword`,
+    ROLE: (id: string) => `${API_URL}/users/${id}/role`,
   },
 
   RESERVATIONS: {

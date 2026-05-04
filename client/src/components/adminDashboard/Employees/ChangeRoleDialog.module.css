@@ -1,0 +1,216 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  width: 420px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.2s ease;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.closeBtn {
+  border: none;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.closeBtn:hover {
+  color: #111;
+}
+
+.employeeName {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 18px;
+}
+
+.currentRoleBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+.label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.roleBadge {
+  background: #e0edff;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.cocinero {
+  background-color: #e0ebff;
+  color: #3b82f6;
+}
+
+.mesero {
+  background-color: #f3e8ff;
+  color: #9333ea;
+}
+
+.cajero {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.select {
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.select:hover {
+  background: #e5e7eb;
+}
+
+.arrow {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dropdown {
+  position: absolute;
+  top: 110%;
+  width: 100%;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  z-index: 20;
+}
+
+.option {
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.option:hover {
+  background: #f3f4f6;
+}
+
+.selected {
+  background: #e5e7eb;
+}
+
+.check {
+  font-size: 12px;
+}
+
+.current {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.cancel {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+}
+
+.cancel:hover {
+  background: #f9fafb;
+}
+
+.submit {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #f97316;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submit:hover {
+  background: #ea580c;
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.selectError {
+  border: 1px solid #ef4444;
+  background: #fff;
+}
+
+.error {
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 4px;
+}
