@@ -123,6 +123,12 @@
   margin: 12px 0 0;
 }
 
+.helpText {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+
 .feedback {
   background: #fff7ed;
   border: 1px solid #fed7aa;

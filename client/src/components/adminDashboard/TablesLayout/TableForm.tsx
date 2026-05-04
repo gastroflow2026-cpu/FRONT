@@ -23,7 +23,6 @@ const getInitialState = (table?: Table | null) => ({
   zone: table?.zone ?? "",
   layout_shape: table?.layout_shape ?? "square",
   is_visible: table?.is_visible ?? true,
-  is_active: table?.is_active ?? true,
 });
 
 export function TableForm({ table, onCancel, onCreate, onUpdate }: TableFormProps) {
@@ -66,7 +65,6 @@ export function TableForm({ table, onCancel, onCreate, onUpdate }: TableFormProp
       zone: formData.zone.trim(),
       layout_shape: formData.layout_shape,
       is_visible: formData.is_visible,
-      is_active: formData.is_active,
     };
 
     setIsSaving(true);
@@ -153,16 +151,9 @@ export function TableForm({ table, onCancel, onCreate, onUpdate }: TableFormProp
           />
           Visible para comensal
         </label>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={formData.is_active}
-            onChange={(event) => setFormData((prev) => ({ ...prev, is_active: event.target.checked }))}
-          />
-          Activa
-        </label>
       </div>
+
+      <p className={styles.helpText}>Para desactivar mesas se requiere una gestion administrativa separada.</p>
 
       {error && <p className={styles.errorText}>{error}</p>}
 
