@@ -38,7 +38,9 @@
   font-weight: 700;
   min-height: 40px;
   padding: 0 16px;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .primaryButton {
@@ -304,4 +306,138 @@
     padding-left: 0;
     padding-top: 18px;
   }
+}
+
+.markerDot {
+  background: #6366f1;
+}
+
+.markerToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: #f8fafc;
+}
+
+.markerToolbar p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.markerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.markerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.markerButtonActive {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.markerCell {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.markerCell strong {
+  font-size: 0.75rem;
+}
+
+.markerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.removeMarkerButton {
+  border: 1px solid #fecaca;
+  border-radius: 0.85rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.perimeterBoard {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.perimeterTop,
+.perimeterBottom {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0 3.25rem;
+}
+
+.perimeterMiddle {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr) 4.25rem;
+  column-gap: .55rem;
+  row-gap: 0.55rem;
+  align-items: stretch;
+}
+
+.perimeterSide {
+  display: grid;
+  grid-template-rows: repeat(5, minmax(3.7rem, 1fr));
+  gap: 0.55rem;
+}
+
+.perimeterSlot {
+  min-height: 2.25rem;
+  border: 1px dashed #c7d2fe;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #64748b;
+  padding: 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.perimeterSlotFilled {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  border-style: solid;
+  border-color: #818cf8;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.perimeterSlotSelected {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #ffffff;
 }
