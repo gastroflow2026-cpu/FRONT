@@ -1,0 +1,443 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #1f2937;
+}
+
+.header,
+.formHeader,
+.editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header h2,
+.formHeader h3,
+.sidePanel h3 {
+  margin: 0;
+  color: #111827;
+}
+
+.header p,
+.formHeader p,
+.editorFooter p,
+.emptyText {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.primaryButton,
+.secondaryButton {
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 0 16px;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.primaryButton {
+  background: #f97316;
+  color: #ffffff;
+}
+
+.secondaryButton {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.primaryButton:not(:disabled):hover,
+.secondaryButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.formPanel,
+.editorShell,
+.loading {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  padding: 20px;
+}
+
+.formGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.formGrid label,
+.checkRow label {
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.formGrid input,
+.formGrid select {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  color: #111827;
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.checkRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.checkRow label {
+  align-items: center;
+  flex-direction: row;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.errorText {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 12px 0 0;
+}
+
+.helpText {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+
+.feedback {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  color: #9a3412;
+  font-size: 14px;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.editorShell {
+  align-items: stretch;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+
+.editorMain {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.legend span {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.legend i {
+  border-radius: 999px;
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+}
+
+.visibleDot {
+  background: #22c55e;
+}
+
+.hiddenDot {
+  background: #f59e0b;
+}
+
+.inactiveDot {
+  background: #9ca3af;
+}
+
+.gridBoard {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(6, minmax(84px, 1fr));
+}
+
+.cell {
+  align-items: center;
+  aspect-ratio: 1 / 0.78;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  color: #9ca3af;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 76px;
+  padding: 8px;
+  text-align: center;
+}
+
+.cellFilled {
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.cellSelected {
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.28);
+}
+
+.cellHidden {
+  background: #fffbeb;
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+.cellInactive {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+  opacity: 0.72;
+}
+
+.cell strong {
+  font-size: 13px;
+}
+
+.cell span,
+.cell small {
+  font-size: 11px;
+}
+
+.cellEmpty {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sidePanel {
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 20px;
+}
+
+.unplacedList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.unplacedButton {
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px;
+  text-align: left;
+}
+
+.unplacedButton span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.unplacedSelected {
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.16);
+}
+
+.loading {
+  color: #6b7280;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .editorShell,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gridBoard {
+    grid-template-columns: repeat(3, minmax(76px, 1fr));
+  }
+
+  .sidePanel {
+    border-left: 0;
+    border-top: 1px solid #e5e7eb;
+    padding-left: 0;
+    padding-top: 18px;
+  }
+}
+
+.markerDot {
+  background: #6366f1;
+}
+
+.markerToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: #f8fafc;
+}
+
+.markerToolbar p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.markerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.markerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.markerButtonActive {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.markerCell {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.markerCell strong {
+  font-size: 0.75rem;
+}
+
+.markerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.removeMarkerButton {
+  border: 1px solid #fecaca;
+  border-radius: 0.85rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.perimeterBoard {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.perimeterTop,
+.perimeterBottom {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0 3.25rem;
+}
+
+.perimeterMiddle {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr) 4.25rem;
+  column-gap: .55rem;
+  row-gap: 0.55rem;
+  align-items: stretch;
+}
+
+.perimeterSide {
+  display: grid;
+  grid-template-rows: repeat(5, minmax(3.7rem, 1fr));
+  gap: 0.55rem;
+}
+
+.perimeterSlot {
+  min-height: 2.25rem;
+  border: 1px dashed #c7d2fe;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #64748b;
+  padding: 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.perimeterSlotFilled {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  border-style: solid;
+  border-color: #818cf8;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.perimeterSlotSelected {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #ffffff;
+}

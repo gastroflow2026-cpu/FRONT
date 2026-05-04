@@ -8,6 +8,7 @@ import { Orders } from "@/components/adminDashboard/Orders/Orders";
 import { Reservations } from "@/components/adminDashboard/Reservations/Reservations";
 import { Settings } from "@/components/adminDashboard/Settings/Settings";
 import { Sidebar } from "@/components/adminDashboard/Sidebar/Sidebar";
+import { TablesLayout } from "@/components/adminDashboard/TablesLayout";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
 import styles from "./Admin.module.css";
@@ -60,6 +61,7 @@ export default function Admin() {
     employees: <Employees />,
     reservations: <Reservations />,
     menu: <Menu />,
+    tables: <TablesLayout />,
     metrics: <Metrics />,
     orders: <Orders />,
     settings: <Settings />,
@@ -105,8 +107,8 @@ export default function Admin() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Si llega acá tiene suscripción activa → no hace nada, muestra el dashboard
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
         // No tiene suscripción activa → redirigir a planes
         router.push("/admin/subscription");
       }
@@ -116,7 +118,7 @@ export default function Admin() {
   };
 
     checkSubscription();
-  }, [restaurantProfile, isLogged?.restaurant_id]);
+  }, [restaurantProfile, isLogged?.restaurant_id, router]);
 
   if (isLoadingProfile) {
     return (
