@@ -4,6 +4,29 @@ import style from "./ReservationsList.module.css";
 import { GiForkKnifeSpoon } from "react-icons/gi";
 import { Reserva } from "@/types/Reservation";
 
+const formatDate = (value: string) => {
+  if (!value) return "-";
+
+  const [year, month, day] = value.split("-");
+
+  if (!year || !month || !day) return value;
+
+  return `${day}/${month}/${year}`;
+};
+
+const formatTime = (value: string) => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleTimeString("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 export default function ReservList({ reserva }: { reserva: Reserva[] }) {
   return (
     <div className={style.reservaContainer}>
@@ -30,10 +53,10 @@ export default function ReservList({ reserva }: { reserva: Reserva[] }) {
             <div className={style.cardSectionBorder}>
               <div className={style.dateTimeRow}>
                 <div className={style.half}>
-                  <span>{res.date}</span>
+                  <span>{formatDate(res.reservation_date)}</span>
                 </div>
                 <div className={style.half}>
-                  <span>{res.time}</span>
+                  <span>{formatTime(res.start_time)}</span>
                 </div>
               </div>
             </div>
@@ -43,7 +66,7 @@ export default function ReservList({ reserva }: { reserva: Reserva[] }) {
               <div className={style.detailsRow}>
                 <div className={style.half}>
                   <span className={style.label}>COMENSALES</span>
-                  <span className={style.value}>{res.guests}</span>
+                  <span className={style.value}>{res.guests_count}</span>
                 </div>
                 <div className={style.half}>
                   <span className={style.label}>ESTADO</span>

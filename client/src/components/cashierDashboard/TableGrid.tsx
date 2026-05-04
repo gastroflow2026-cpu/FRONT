@@ -53,7 +53,7 @@ export default function TableGrid({ tables, onTableClick }: TableGridProps) {
       <div className="grid grid-cols-3 gap-3">
         {tables.map((table) => (
           <TableCard
-            key={table.id}
+            key={table.currentOrder?.id || `table-${table.id}`}
             table={table}
             onClick={() => onTableClick(table)}
           />

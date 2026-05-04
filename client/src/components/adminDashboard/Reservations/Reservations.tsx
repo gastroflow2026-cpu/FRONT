@@ -1,20 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar } from "../../ui/Calendar";
 import { ReservationCard } from "./ReservationCard";
 import styles from "./Reservations.module.css";
-import { reservations } from "@/utils/reserveInfo"
+import { UsersContext } from "@/context/UsersContext";
+import { Reserva, ReservaUI } from "@/types/Reservation";
+import { adminService } from "@/services/adminService";
 
 export function Reservations() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [reservations, setReservations] = useState<ReservaUI[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
 
-  const filteredReservations = reservations.filter((res) => {
-    if (!selectedDate) return false;
-    return res.date === format(selectedDate, "yyyy-MM-dd");
+  const { isLogged } = useContext(UsersContext);
+
+  const restaurantId = useMemo(() => {
+    return isLogged?.restaurant_id ?? null;
+  }, [isLogged]);
+
+  const mapReservaToUI = (reserva: Reserva): ReservaUI => ({
+    id: reserva.id,
+    date: reserva.reservation_date.split("T")[0],
+    customerName: reserva.customer_name,
+    time: reserva.start_time.split("T")[1].slice(0, 5),
+    guests: reserva.guests_count,
+    status: reserva.status.toLowerCase() as ReservaUI["status"],
   });
+
+const fetchReservations = async () => {
+  if (!restaurantId) return;
+
+  try {
+    const response = await adminService.getAllReservations(restaurantId);
+
+    const reservasArray = Array.isArray(response)
+      ? response
+      : response?.data ?? [];
+
+    const mapped = reservasArray.map(mapReservaToUI);
+
+    setReservations(mapped);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+  useEffect(() => {
+    fetchReservations();
+  }, [restaurantId]);
+
+  const filteredReservations = useMemo(() => {
+    if (!selectedDate) return [];
+
+    const selected = format(selectedDate, "yyyy-MM-dd");
+
+    return reservations.filter((res) => res.date === selected);
+  }, [reservations, selectedDate]);
 
   return (
     <div className={styles.container}>
@@ -32,7 +77,7 @@ export function Reservations() {
               selected={selectedDate}
               onSelect={setSelectedDate}
               locale={es}
-              className="rounded-md border-none" 
+              className="rounded-md border-none"
             />
           </div>
         </aside>
@@ -40,8 +85,12 @@ export function Reservations() {
         <section className={styles.listSection}>
           <div className={styles.listHeader}>
             <h3 className={styles.cardTitle}>
-              Reservas para {selectedDate ? format(selectedDate, "PPPP", { locale: es }) : "..."}
+              Reservas para{" "}
+              {selectedDate
+                ? format(selectedDate, "PPPP", { locale: es })
+                : "..."}
             </h3>
+
             <span className={styles.badge}>
               {filteredReservations.length} reservas
             </span>
