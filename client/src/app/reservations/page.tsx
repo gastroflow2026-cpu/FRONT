@@ -39,6 +39,7 @@ export default function ReservationsPage() {
   const [error, setError] = useState<string | null>(null);
   const { stripeCheckout } = useContext(ReservationsPaymentContext);
   const [loadingPayment, setLoadingPayment] = useState<string | null>(null);
+  const [loadingCancel, setLoadingCancel] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLogged?.id) {
@@ -73,6 +74,25 @@ export default function ReservationsPage() {
     } finally {
         setLoadingPayment(null);
     }
+}
+
+async function handleCancel(restaurantId: string, reservationId: string) {
+  setLoadingCancel(reservationId);
+  try {
+    const token = getToken();
+    await axios.patch(
+      `${API_URL}/restaurants/${restaurantId}/reservations/${reservationId}/cancel`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setReservations(prev =>
+      prev.map(r => r.id === reservationId ? { ...r, status: "CANCELADO" } : r)
+    );
+  } catch {
+    console.error("Error al cancelar la reserva");
+  } finally {
+    setLoadingCancel(null);
+  }
 }
 
   // No logueado
@@ -260,6 +280,15 @@ export default function ReservationsPage() {
                           {loadingPayment === reservation.id ? "Procesando..." : "Completar pago"}
                         </button>
                       )}
+                      {reservation.status !== "CANCELADO" && (
+                      <button
+                        onClick={() => handleCancel(reservation.restaurant.id, reservation.id)}
+                        disabled={loadingCancel === reservation.id}
+                        className="text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                      >
+                        {loadingCancel === reservation.id ? "Cancelando..." : "Cancelar reserva"}
+                      </button>
+                    )}
                       <Link href={`/restaurant/${reservation.restaurant.id}`}>
                         <button className="text-xs font-semibold text-orange-500 hover:text-orange-600 transition">
                           Ver restaurante →

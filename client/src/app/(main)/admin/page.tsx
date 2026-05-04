@@ -108,7 +108,7 @@ export default function Admin() {
     } catch (error: any) {
       if (error?.response?.status === 404) {
         // No tiene suscripción activa → redirigir a planes
-        router.push("admin/subscription");
+        router.push("/admin/subscription");
       }
     } finally {
       setIsLoadingSubscription(false);
