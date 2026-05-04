@@ -8,6 +8,7 @@ import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import styles from "./Employees.module.css";
 import { useEmployees } from "@/utils/useEmployes";
 import { Employee } from "@/types/Employee";
+import { ChangeRoleDialog } from "./ChangeRoleDialog";
 
 export function Employees() {
   const {
@@ -19,6 +20,7 @@ export function Employees() {
     setRoleFilter,
     handleToggleStatus,
     handleCreateEmployee,
+    handleChangeRole,
   } = useEmployees();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -29,11 +31,27 @@ export function Employees() {
     employeeName: "",
   });
 
+  const [roleDialog, setRoleDialog] = useState({
+    isOpen: false,
+    employeeId: "",
+    employeeName: "",
+    currentRole: "",
+  });
+
   const handleOpenPasswordDialog = (employee: any) => {
     setPasswordDialog({
       isOpen: true,
       employeeId: employee.id,
       employeeName: `${employee.name} ${employee.lastName}`,
+    });
+  };
+
+  const handleChangeRoleDialog = (employee: Employee) => {
+    setRoleDialog({
+      isOpen: true,
+      employeeId: employee.id,
+      employeeName: `${employee.name} ${employee.lastName}`,
+      currentRole: employee.role,
     });
   };
 
@@ -91,6 +109,7 @@ export function Employees() {
               employee={employee}
               onToggleStatus={handleToggleStatus}
               onChangePassword={() => handleOpenPasswordDialog(employee)}
+              onChangeRole={() => handleChangeRoleDialog(employee)}
             />
           ))
         ) : (
@@ -119,6 +138,31 @@ export function Employees() {
         onSubmit={() => {}}
         employeeId={passwordDialog.employeeId}
         employeeName={passwordDialog.employeeName}
+      />
+
+      <ChangeRoleDialog
+        isOpen={roleDialog.isOpen}
+        onClose={() =>
+          setRoleDialog({
+            isOpen: false,
+            employeeId: "",
+            employeeName: "",
+            currentRole: "",
+          })
+        }
+        employeeName={roleDialog.employeeName}
+        currentRole={roleDialog.currentRole}
+        onSubmit={async (role) => {
+          const success = await handleChangeRole(roleDialog.employeeId, role);
+          if (success) {
+            setRoleDialog({
+              isOpen: false,
+              employeeId: "",
+              employeeName: "",
+              currentRole: "",
+            });
+          }
+        }}
       />
     </div>
   );
