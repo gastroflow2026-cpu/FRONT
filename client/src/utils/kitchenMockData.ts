@@ -3,7 +3,8 @@ import { KitchenOrder } from "@/types/kitchen";
 export const mockKitchenOrders: KitchenOrder[] = [
   {
     id: "0046",
-    tableId: 3,
+    tableId: "3",
+    tableLabel: "Mesa 3",
     status: "pendiente",
     items: [
       { quantity: 2, name: "Milanesa napolitana", price: 8500 },
@@ -14,7 +15,8 @@ export const mockKitchenOrders: KitchenOrder[] = [
   },
   {
     id: "0047",
-    tableId: 7,
+    tableId: "7",
+    tableLabel: "Mesa 7",
     status: "pendiente",
     items: [
       { quantity: 1, name: "Bife de chorizo", price: 7200 },
@@ -25,7 +27,8 @@ export const mockKitchenOrders: KitchenOrder[] = [
   },
   {
     id: "0048",
-    tableId: 1,
+    tableId: "1",
+    tableLabel: "Mesa 1",
     status: "preparacion",
     items: [
       { quantity: 3, name: "Pizza mozzarella", price: 5500 },
@@ -36,7 +39,8 @@ export const mockKitchenOrders: KitchenOrder[] = [
   },
   {
     id: "0049",
-    tableId: 5,
+    tableId: "5",
+    tableLabel: "Mesa 5",
     status: "preparacion",
     items: [
       { quantity: 2, name: "Ravioles al pesto", price: 14400 },
@@ -48,7 +52,8 @@ export const mockKitchenOrders: KitchenOrder[] = [
   },
   {
     id: "0043",
-    tableId: 2,
+    tableId: "2",
+    tableLabel: "Mesa 2",
     status: "servido",
     items: [
       { quantity: 2, name: "Lomo completo", price: 17000 },
@@ -60,7 +65,8 @@ export const mockKitchenOrders: KitchenOrder[] = [
   },
   {
     id: "0044",
-    tableId: 6,
+    tableId: "6",
+    tableLabel: "Mesa 6",
     status: "servido",
     items: [
       { quantity: 1, name: "Empanadas x6", price: 3200 },

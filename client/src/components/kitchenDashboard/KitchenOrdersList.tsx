@@ -8,6 +8,7 @@ interface Props {
   orders: KitchenOrder[];
   selectedOrderId: string | null;
   onSelectOrder: (order: KitchenOrder) => void;
+  getDisplayId?: (orderId: string) => number | null;
 }
 
 type FilterTab = "todas" | KitchenOrderStatus;
@@ -41,6 +42,7 @@ export default function KitchenOrdersList({
   orders,
   selectedOrderId,
   onSelectOrder,
+  getDisplayId,
 }: Props) {
   const [activeTab, setActiveTab] = useState<FilterTab>("todas");
 
@@ -98,6 +100,7 @@ export default function KitchenOrdersList({
             <OrderCard
               key={order.id}
               order={order}
+              displayId={getDisplayId?.(order.id) ?? null}
               isSelected={selectedOrderId === order.id}
               onClick={() => onSelectOrder(order)}
             />
@@ -110,10 +113,12 @@ export default function KitchenOrdersList({
 
 function OrderCard({
   order,
+  displayId,
   isSelected,
   onClick,
 }: {
   order: KitchenOrder;
+  displayId: number | null;
   isSelected: boolean;
   onClick: () => void;
 }) {
@@ -126,8 +131,10 @@ function OrderCard({
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-800">#{order.id}</span>
-          <span className="text-xs text-gray-400">Mesa {order.tableId}</span>
+          <span className="text-sm font-bold text-gray-800">
+            Orden {displayId ?? "-"}
+          </span>
+          <span className="text-xs text-gray-400">{order.tableLabel}</span>
         </div>
         <span
           className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${

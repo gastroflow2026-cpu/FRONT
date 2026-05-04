@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useMemo, useState, useRef } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -14,11 +14,10 @@ import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
 import type { Table } from "@/context/TablesContext";
-import Chatbot from 'react-chatbot-kit';
-import 'react-chatbot-kit/build/main.css';
-import ActionProvider from '@/chatbot/ActionProvider';
-import MessageParser from '@/chatbot/MessageParser';
-import config from '@/chatbot/config';
+import "react-chatbot-kit/build/main.css";
+import ActionProvider from "@/chatbot/ActionProvider";
+import MessageParser from "@/chatbot/MessageParser";
+import config from "@/chatbot/config";
 
 type PublicMenuItem = {
   id: string;
@@ -27,6 +26,15 @@ type PublicMenuItem = {
   price: string | number;
   image_url?: string | null;
   allergens?: string | null;
+};
+
+type RestaurantLayoutMarkerType = "entrance" | "bathroom" | "kitchen";
+
+type RestaurantLayoutMarker = {
+  id: string;
+  type: RestaurantLayoutMarkerType;
+  layout_x: number;
+  layout_y: number;
 };
 
 type PublicMenuCategory = {
@@ -50,6 +58,7 @@ type PublicRestaurantResponse = {
   logo_url?: string | null;
   rating?: number | string | null;
   about?: string | null;
+  layout_markers?: RestaurantLayoutMarker[] | null;
 };
 
 type RestaurantDetailData = {
@@ -60,6 +69,25 @@ type RestaurantDetailData = {
   rating: string;
   image: string;
   about: string;
+  layout_markers: RestaurantLayoutMarker[];
+};
+
+type ReservationFormValues = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  guests: number;
+};
+
+type ReservationFormErrors = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  guests: string;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
@@ -76,33 +104,44 @@ type PublicRestaurant = {
   country?: string;
   description?: string;
   tables?: Table[];
-  [key: string]: any;
+  [key: string]: unknown;
 };
+
+const hasTableLayout = (table: Table) => typeof table.layout_x === "number" && typeof table.layout_y === "number";
+
+const isPublicVisibleTable = (table: Table) =>
+  table.is_active === true && table.is_visible !== false && hasTableLayout(table);
+
+const isBlockedTable = (table: Table) => {
+  const status = (table.status || "").toUpperCase();
+  return status === "RESERVADA" || status === "OCUPADA" || !table.is_active;
+};
+
+const isSelectableTable = (table: Table) => isPublicVisibleTable(table) && !isBlockedTable(table);
 
 const RestaurantDetail = () => {
   const [categories, setCategories] = useState<PublicMenuCategory[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [loadingRestaurant, setLoadingRestaurant] = useState(true);
-  const [restaurant, setRestaurant] = useState<RestaurantDetailData | null>(
-    null,
-  );
+  const [restaurant, setRestaurant] = useState<RestaurantDetailData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
   //CHATBOT
-  const sessionId = useRef('session_' + Math.random().toString(36).substr(2, 9)).current;
+  const sessionId = useRef("session_" + Math.random().toString(36).substr(2, 9)).current;
 
   const chatConfig = {
-  ...config,
-  state: {
-    ...config.state,
-    restaurantId,
-    sessionId,
-  },
+    ...config,
+    state: {
+      ...config.state,
+      restaurantId,
+      sessionId,
+    },
   };
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [pendingSelectedTableId, setPendingSelectedTableId] = useState<string | null>(null);
   const { tables, loading: loadingTables, getTables } = useTables();
 
   // Fecha mínima para el atributo 'min' del input date
@@ -133,9 +172,7 @@ const RestaurantDetail = () => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const { data } = await axios.get<PublicMenuCategory[]>(
-          `${API_URL}/menu/${restaurantId}/public`,
-        );
+        const { data } = await axios.get<PublicMenuCategory[]>(`${API_URL}/menu/${restaurantId}/public`);
         setCategories(data);
       } catch (error) {
         console.warn("Error cargando menú:", error);
@@ -169,18 +206,14 @@ const RestaurantDetail = () => {
       }
 
       try {
-        const { data } = await axios.get<PublicRestaurantResponse[]>(
-          `${API_URL}/restaurant/public/all`,
-        );
+        const { data } = await axios.get<PublicRestaurantResponse[]>(`${API_URL}/restaurant/public/all`);
 
         if (!Array.isArray(data)) {
           setRestaurant(null);
           return;
         }
 
-        const matchedRestaurant = data.find(
-          (item) => item.id === restaurantId || item.slug === restaurantId,
-        );
+        const matchedRestaurant = data.find((item) => item.id === restaurantId || item.slug === restaurantId);
 
         if (!matchedRestaurant) {
           setRestaurant(null);
@@ -189,27 +222,20 @@ const RestaurantDetail = () => {
 
         const ratingValue = matchedRestaurant.rating;
         const normalizedRating =
-          typeof ratingValue === "number"
-            ? ratingValue.toFixed(1)
-            : ratingValue?.toString().trim() || "-";
+          typeof ratingValue === "number" ? ratingValue.toFixed(1) : ratingValue?.toString().trim() || "-";
 
         setRestaurant({
           id: matchedRestaurant.id || restaurantId,
           name: matchedRestaurant.name?.trim() || "-",
           location: buildLocation(matchedRestaurant),
-          category:
-            matchedRestaurant.category?.trim() ||
-            matchedRestaurant.description?.trim() ||
-            "-",
+          category: matchedRestaurant.category?.trim() || matchedRestaurant.description?.trim() || "-",
           rating: normalizedRating,
-          image:
-            matchedRestaurant.image_url?.trim() ||
-            matchedRestaurant.logo_url?.trim() ||
-            FALLBACK_RESTAURANT_IMAGE,
+          image: matchedRestaurant.image_url?.trim() || matchedRestaurant.logo_url?.trim() || FALLBACK_RESTAURANT_IMAGE,
           about:
             matchedRestaurant.about?.trim() ||
             matchedRestaurant.description?.trim() ||
             "Información del restaurante no disponible.",
+          layout_markers: matchedRestaurant.layout_markers ?? [],
         });
       } catch (error) {
         console.warn("Error cargando restaurante:", error);
@@ -226,7 +252,7 @@ const RestaurantDetail = () => {
   useEffect(() => {
     if (!restaurantId || !formValues.date) return; // ← no llama sin fecha
     getTables(restaurantId, formValues.date, formValues.time);
-}, [restaurantId, formValues.date, formValues.time]);
+  }, [restaurantId, formValues.date, formValues.time]);
 
   // EFECTO 3: Persistencia de datos
   useEffect(() => {
@@ -236,6 +262,7 @@ const RestaurantDetail = () => {
       // Solo restaurar si es para este restaurante
       if (parsedData.restaurantId === restaurantId) {
         setFormValues((prev) => ({ ...prev, ...parsedData.bookingDetails }));
+        setPendingSelectedTableId(parsedData.selectedTableId ?? null);
         console.log("Datos de reserva recuperados exitosamente");
         // Limpiar LocalStorage inmediatamente después de restaurar
         localStorage.removeItem("gastroflow_temp_booking");
@@ -244,19 +271,23 @@ const RestaurantDetail = () => {
   }, [restaurantId]);
 
   // Handler para validar campos individuales con Yup
-  const validateField = async (name: string, value: any, allValues: any) => {
+  const validateField = async (
+    name: keyof ReservationFormValues,
+    value: ReservationFormValues[keyof ReservationFormValues],
+    allValues: ReservationFormValues,
+  ) => {
     try {
       await reservationSchema.validateAt(name, allValues);
       setFormErrors((prev) => ({ ...prev, [name]: "" }));
-    } catch (err: any) {
-      setFormErrors((prev) => ({ ...prev, [name]: err.message }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error de validación";
+      setFormErrors((prev) => ({ ...prev, [name]: message }));
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const name = e.target.name as keyof ReservationFormValues;
+    const { value } = e.target;
     const updatedValues = { ...formValues, [name]: value };
     setFormValues(updatedValues);
     validateField(name, value, updatedValues);
@@ -284,26 +315,86 @@ const RestaurantDetail = () => {
 
   const router = useRouter();
   const { isLogged } = useContext(UsersContext);
+  const { handleReservation } = useContext(ReservationsContext);
+
+  const publicLayoutTables = useMemo(() => tables.filter(isPublicVisibleTable), [tables]);
+
+  const filteredTables = useMemo(
+    () => publicLayoutTables.filter((table) => table.capacity >= formValues.guests),
+    [publicLayoutTables, formValues.guests],
+  );
+
+  const selectableTables = useMemo(() => filteredTables.filter(isSelectableTable), [filteredTables]);
+
+  useEffect(() => {
+    if (!selectedTable) return;
+
+    const isStillSelectable = selectableTables.some((table) => table.id === selectedTable.id);
+
+    if (!isStillSelectable) {
+      setSelectedTable(null);
+    }
+  }, [selectedTable, selectableTables]);
+
+  useEffect(() => {
+    if (!pendingSelectedTableId) return;
+
+    const restoredTable = selectableTables.find((table) => table.id === pendingSelectedTableId);
+
+    if (restoredTable) {
+      setSelectedTable(restoredTable);
+      setPendingSelectedTableId(null);
+      return;
+    }
+
+    if (!loadingTables && tables.length > 0) {
+      setPendingSelectedTableId(null);
+    }
+  }, [loadingTables, pendingSelectedTableId, selectableTables, tables.length]);
 
   const handleConfirmReservation = async () => {
     try {
-      // Validar formulario completo con Yup
       await reservationSchema.validate(formValues, { abortEarly: false });
+      if (!restaurantId) return;
+
+      if (!selectedTable) {
+        Swal.fire({
+          icon: "warning",
+          title: "Selecciona una mesa",
+          text: "Debes seleccionar una mesa disponible en el plano para continuar.",
+          confirmButtonColor: "#ff7e5f",
+        });
+        return;
+      }
 
       if (!isLogged) {
-        // Si NO está logueado, guardar datos en LocalStorage y redirigir a login
-        console.log("Usuario no logueado, guardando datos temporalmente");
         const dataToSave = {
           restaurantId: restaurantId,
           bookingDetails: formValues,
+          selectedTableId: selectedTable.id,
         };
-        localStorage.setItem(
-          "gastroflow_temp_booking",
-          JSON.stringify(dataToSave),
-        );
+
+        localStorage.setItem("gastroflow_temp_booking", JSON.stringify(dataToSave));
         router.push("/login");
+        return;
       } else {
-        // Si ESTÁ logueado, mostrar alerta de éxito
+        const reservationPayload = {
+          customer_name: formValues.name,
+          customer_email: formValues.email,
+          customer_phone: Number(formValues.phone),
+          reservation_date: formValues.date,
+          start_time: `${formValues.date}T${formValues.time}:00.000Z`,
+          guests_count: formValues.guests,
+          notes: "",
+          table_id: selectedTable.id,
+        };
+
+        const result = await handleReservation(restaurantId, reservationPayload);
+
+        if (result?.url) {
+          window.location.href = result.url;
+          return;
+        }
         const [year, month, day] = formValues.date.split("-");
         const formattedDate = `${day}/${month}/${year}`;
         Swal.fire({
@@ -313,12 +404,9 @@ const RestaurantDetail = () => {
           confirmButtonText: "¡Buen provecho!",
           confirmButtonColor: "#ff7e5f",
         });
-        // Aquí iría la lógica de axios.post al backend para crear la reserva
-        console.log("Reserva válida enviando al backend:", formValues);
       }
-    } catch (err: any) {
-      const errorMessage = err?.message || "No se pudo crear la reserva";
-      console.warn("Error al crear reserva:", errorMessage);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "No se pudo crear la reserva";
       Swal.fire({
         icon: "error",
         title: "No se pudo confirmar la reserva",
@@ -327,18 +415,8 @@ const RestaurantDetail = () => {
       });
     }
   };
-
-  if (loadingRestaurant)
-    return <div className="p-10">Cargando restaurante...</div>;
+  if (loadingRestaurant) return <div className="p-10">Cargando restaurante...</div>;
   if (!restaurant) return <div className="p-10">Restaurante no encontrado</div>;
-
-  // Filtrar mesas por capacidad >= comensales y que estén disponibles
-  const filteredTables = tables.filter(
-    (t) =>
-      t.capacity >= formValues.guests &&
-      (t.status === "DISPONIBLE" || t.status === "RESERVADA") &&
-      t.is_active,
-  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -346,20 +424,13 @@ const RestaurantDetail = () => {
 
       <main className="grow pt-20">
         <section className="relative h-[40vh] w-full">
-          <img
-            src={restaurant.image}
-            className="w-full h-full object-cover"
-            alt={restaurant.name}
-          />
+          <img src={restaurant.image} className="w-full h-full object-cover" alt={restaurant.name} />
           <div className="absolute inset-0 bg-black/40 flex items-end">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                {restaurant.name}
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">{restaurant.name}</h1>
               <div className="flex flex-wrap items-center gap-4 text-white">
                 <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
-                  <Star size={16} className="text-orange-400 fill-orange-400" />{" "}
-                  {restaurant.rating}
+                  <Star size={16} className="text-orange-400 fill-orange-400" /> {restaurant.rating}
                 </span>
                 <span className="flex items-center gap-1">
                   <MapPin size={16} /> {restaurant.location}
@@ -375,28 +446,21 @@ const RestaurantDetail = () => {
           {/* Columna Izquierda */}
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-              <h2 className="mb-4 text-2xl font-bold text-slate-900">
-                Sobre nosotros
-              </h2>
-              <p className="text-gray-600 leading-relaxed italic">
-                {restaurant.about}
-              </p>
+              <h2 className="mb-4 text-2xl font-bold text-slate-900">Sobre nosotros</h2>
+              <p className="text-gray-600 leading-relaxed italic">{restaurant.about}</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
               <h2 className="mb-4 text-2xl font-bold text-slate-900">Menú</h2>
               <p className="mb-4 text-xs text-amber-700">
-                Algunos platos contienen ingredientes relevantes para personas
-                con restricciones alimentarias.
+                Algunos platos contienen ingredientes relevantes para personas con restricciones alimentarias.
               </p>
 
               <div className="mb-6 flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedCategory(null)}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                    !selectedCategory
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    !selectedCategory ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   }`}
                 >
                   Todas
@@ -417,24 +481,18 @@ const RestaurantDetail = () => {
               </div>
 
               {loadingMenu ? (
-                <p className="py-10 text-center text-slate-500">
-                  Cargando platos...
-                </p>
+                <p className="py-10 text-center text-slate-500">Cargando platos...</p>
               ) : (
                 categories
                   .filter((category: PublicMenuCategory) =>
-                    selectedCategory
-                      ? category.category_id === selectedCategory
-                      : true,
+                    selectedCategory ? category.category_id === selectedCategory : true,
                   )
                   .map((category: PublicMenuCategory) => {
                     if (!category.items?.length) return null;
 
                     return (
                       <div key={category.category_id} className="mb-8">
-                        <h3 className="mb-4 text-xl font-semibold text-slate-800">
-                          {category.category_name}
-                        </h3>
+                        <h3 className="mb-4 text-xl font-semibold text-slate-800">{category.category_name}</h3>
 
                         <div className="space-y-4">
                           {category.items.map((item: PublicMenuItem) => (
@@ -456,49 +514,32 @@ const RestaurantDetail = () => {
                                 </div>
 
                                 <div className="min-w-0">
-                                  <h4 className="font-semibold text-slate-900">
-                                    {item.name}
-                                  </h4>
+                                  <h4 className="font-semibold text-slate-900">{item.name}</h4>
 
-                                  <p className="mt-1 text-sm text-slate-600">
-                                    {item.description || "Sin descripción"}
-                                  </p>
+                                  <p className="mt-1 text-sm text-slate-600">{item.description || "Sin descripción"}</p>
 
                                   {!!item.allergens?.trim() && (
                                     <>
                                       <div className="mt-2 flex flex-wrap gap-2">
-                                        {item.allergens
-                                          .split(",")
-                                          .map(
-                                            (
-                                              allergen: string,
-                                              index: number,
-                                            ) => {
-                                              const key = allergen
-                                                .trim()
-                                                .toLowerCase();
+                                        {item.allergens.split(",").map((allergen: string, index: number) => {
+                                          const key = allergen.trim().toLowerCase();
 
-                                              const allergenLabels: Record<
-                                                string,
-                                                string
-                                              > = {
-                                                gluten: "Gluten",
-                                                lacteos: "Lácteos",
-                                                huevo: "Huevo",
-                                                sulfitos: "Sulfitos",
-                                              };
+                                          const allergenLabels: Record<string, string> = {
+                                            gluten: "Gluten",
+                                            lacteos: "Lácteos",
+                                            huevo: "Huevo",
+                                            sulfitos: "Sulfitos",
+                                          };
 
-                                              return (
-                                                <span
-                                                  key={`${item.id}-allergen-${index}`}
-                                                  className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-                                                >
-                                                  {allergenLabels[key] ||
-                                                    allergen.trim()}
-                                                </span>
-                                              );
-                                            },
-                                          )}
+                                          return (
+                                            <span
+                                              key={`${item.id}-allergen-${index}`}
+                                              className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                                            >
+                                              {allergenLabels[key] || allergen.trim()}
+                                            </span>
+                                          );
+                                        })}
                                       </div>
                                     </>
                                   )}
@@ -527,16 +568,12 @@ const RestaurantDetail = () => {
           {/* Columna Derecha: Widget de Reserva */}
           <div className="lg:col-span-1">
             <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 sticky top-24">
-              <h3 className="mb-6 text-xl font-bold text-slate-900">
-                Reserva tu mesa
-              </h3>
+              <h3 className="mb-6 text-xl font-bold text-slate-900">Reserva tu mesa</h3>
 
               <div className="space-y-5">
                 {/* Nombre */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Nombre
-                  </label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Nombre</label>
                   <input
                     type="text"
                     name="name"
@@ -545,18 +582,12 @@ const RestaurantDetail = () => {
                     placeholder="Ej.: Juan Perez"
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.name ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
-                  {formErrors.name && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.name}
-                    </p>
-                  )}
+                  {formErrors.name && <p className="mt-1 text-xs text-rose-500">{formErrors.name}</p>}
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Email
-                  </label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Email</label>
                   <input
                     type="email"
                     name="email"
@@ -565,19 +596,16 @@ const RestaurantDetail = () => {
                     placeholder="juan@email.com"
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.email ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
-                  {formErrors.email && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.email}
-                    </p>
-                  )}
+                  {formErrors.email && <p className="mt-1 text-xs text-rose-500">{formErrors.email}</p>}
                 </div>
 
                 {/* Teléfono */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  <label htmlFor="phone" className="mb-2 block text-sm font-semibold text-slate-900">
                     Teléfono
                   </label>
                   <input
+                    id="phone"
                     type="tel"
                     name="phone"
                     value={formValues.phone}
@@ -585,19 +613,16 @@ const RestaurantDetail = () => {
                     placeholder="3515551234"
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.phone ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
-                  {formErrors.phone && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.phone}
-                    </p>
-                  )}
+                  {formErrors.phone && <p className="mt-1 text-xs text-rose-500">{formErrors.phone}</p>}
                 </div>
 
                 {/* Fecha */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  <label htmlFor="date" className="mb-2 block text-sm font-semibold text-slate-900">
                     Fecha
                   </label>
                   <input
+                    id="date"
                     type="date"
                     name="date"
                     min={minReservationDate}
@@ -605,19 +630,16 @@ const RestaurantDetail = () => {
                     onChange={handleInputChange}
                     className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 transition-all ${formErrors.date ? "border-rose-500 focus:ring-rose-200" : "border-gray-200 focus:ring-gastro-coral bg-gray-50"}`}
                   />
-                  {formErrors.date && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.date}
-                    </p>
-                  )}
+                  {formErrors.date && <p className="mt-1 text-xs text-rose-500">{formErrors.date}</p>}
                 </div>
 
                 {/* Hora */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
+                  <label htmlFor="time" className="mb-2 block text-sm font-semibold text-slate-900">
                     Hora
                   </label>
                   <select
+                    id="time"
                     aria-label="Seleccionar hora"
                     name="time"
                     value={formValues.time}
@@ -636,18 +658,12 @@ const RestaurantDetail = () => {
                     <option>22:00</option>
                     <option>23:00</option>
                   </select>
-                  {formErrors.time && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.time}
-                    </p>
-                  )}
+                  {formErrors.time && <p className="mt-1 text-xs text-rose-500">{formErrors.time}</p>}
                 </div>
 
                 {/* Comensales */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Comensales
-                  </label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Comensales</label>
                   <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-200">
                     <button
                       type="button"
@@ -657,8 +673,7 @@ const RestaurantDetail = () => {
                       -
                     </button>
                     <span className="font-bold text-slate-900">
-                      {formValues.guests}{" "}
-                      {formValues.guests === 1 ? "Persona" : "Personas"}
+                      {formValues.guests} {formValues.guests === 1 ? "Persona" : "Personas"}
                     </span>
                     <button
                       type="button"
@@ -668,33 +683,30 @@ const RestaurantDetail = () => {
                       +
                     </button>
                   </div>
-                  {formErrors.guests && (
-                    <p className="mt-1 text-xs text-rose-500">
-                      {formErrors.guests}
-                    </p>
-                  )}
+                  {formErrors.guests && <p className="mt-1 text-xs text-rose-500">{formErrors.guests}</p>}
                 </div>
 
                 {/* Selección de mesa */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-900">
-                    Selecciona tu mesa
-                  </label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-900">Selecciona tu mesa</label>
                   {!formValues.date ? (
                     <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-4 text-center text-sm text-slate-500">
                       Seleccioná una fecha para ver las mesas disponibles
                     </p>
                   ) : loadingTables ? (
-                    <p className="text-center text-sm text-slate-500 py-4">
-                      Cargando mesas...
+                    <p className="text-center text-sm text-slate-500 py-4">Cargando mesas...</p>
+                  ) : publicLayoutTables.length === 0 ? (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
+                      Este restaurante aún no tiene mesas disponibles para seleccionar en el plano.
                     </p>
                   ) : filteredTables.length === 0 ? (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
-                      No hay mesas disponibles para este restaurante en este momento.
+                      No hay mesas disponibles para este horario y cantidad de comensales.
                     </p>
                   ) : (
                     <TableGrid
                       tables={filteredTables}
+                      markers={restaurant.layout_markers}
                       selectedTableId={selectedTable?.id || null}
                       onTableSelect={setSelectedTable}
                     />
@@ -702,9 +714,8 @@ const RestaurantDetail = () => {
                   {selectedTable && (
                     <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl flex justify-between items-center">
                       <p className="text-orange-800 text-xs font-medium">
-                        Has seleccionado la{" "}
-                        <strong>Mesa {selectedTable.table_number}</strong>{" "}
-                        (Capacidad: {selectedTable.capacity} personas)
+                        Has seleccionado la <strong>Mesa {selectedTable.table_number}</strong> (Capacidad:{" "}
+                        {selectedTable.capacity} personas)
                       </p>
                       <button
                         onClick={() => setSelectedTable(null)}
@@ -724,31 +735,14 @@ const RestaurantDetail = () => {
                 >
                   Confirmar Reserva
                 </button>
-                <p className="text-[10px] text-center text-gray-400">
-                  Recibirás confirmación inmediata por email.
-                </p>
+                <p className="text-[10px] text-center text-gray-400">Recibirás confirmación inmediata por email.</p>
               </div>
             </div>
           </div>
         </section>
       </main>
       <Footer />
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          width: '350px',
-          zIndex: 9999,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-          borderRadius: '16px',
-          overflow: 'hidden',
-        }}>
-      <Chatbot
-        config={chatConfig}
-        actionProvider={ActionProvider}
-        messageParser={MessageParser}
-        />
-</div>
+      <div className="fixed bottom-6 right-6 w-87.5 z-9999 shadow-[0_8px_32px_rgba(0,0,0,0.18)] rounded-2xl overflow-hidden"></div>
     </div>
   );
 };

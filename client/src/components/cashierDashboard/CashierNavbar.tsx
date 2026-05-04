@@ -1,41 +1,54 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { UtensilsCrossed, RefreshCw, ChevronDown, User, LogOut, LayoutGrid, X } from "lucide-react";
+import { useContext, useEffect, useRef, useState } from "react";
+import { UtensilsCrossed, RefreshCw, ChevronDown, User, LogOut, LayoutGrid, X, LockKeyholeOpen } from "lucide-react";
+import { UsersContext } from "@/context/UsersContext";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 interface CashierNavbarProps {
   restaurantName: string;
   cashierName: string;
+  hasOpenCashRegister?: boolean;
+  isCashRegisterActionLoading?: boolean;
+  onOpenCashRegister?: () => void;
+  onCloseCashRegister?: () => void;
 }
-
-const MENU_OPTIONS = [
-  { label: "Mis datos personales", icon: User },
-  { label: "Cerrar caja", icon: X },
-  { label: "Asignar mesas", icon: LayoutGrid },
-  { label: "Cerrar sesión", icon: LogOut },
-];
 
 export default function CashierNavbar({
   restaurantName,
   cashierName,
+  hasOpenCashRegister = false,
+  isCashRegisterActionLoading = false,
+  onOpenCashRegister,
+  onCloseCashRegister,
 }: CashierNavbarProps) {
+  const { logoutUser } = useContext(UsersContext);
+  const router = useRouter();
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-  const timer = setTimeout(() => {
-    setMounted(true);
-  }, 0);
-  const interval = setInterval(() => setCurrentTime(new Date()), 1000);
-  return () => {
-    clearTimeout(timer);
-    clearInterval(interval);
-  };
-}, []);
+  async function handleLogout() {
+    const result = await Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "Vas a salir del panel de caja.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#f97316",
+      cancelButtonColor: "#6b7280",
+    });
 
-    useEffect(() => {
+    if (result.isConfirmed) {
+      await logoutUser();
+      router.push("/login");
+    }
+  }
+
+  useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => {
@@ -74,11 +87,23 @@ export default function CashierNavbar({
     .toUpperCase()
     .slice(0, 2);
 
+  const menuOptions = [
+    { label: "Mis datos personales", icon: User, action: undefined as (() => void | Promise<void>) | undefined },
+    {
+      label: hasOpenCashRegister ? "Cerrar caja" : "Abrir caja",
+      icon: hasOpenCashRegister ? X : LockKeyholeOpen,
+      action: hasOpenCashRegister ? onCloseCashRegister : onOpenCashRegister,
+      disabled: isCashRegisterActionLoading,
+    },
+    { label: "Asignar mesas", icon: LayoutGrid, action: undefined as (() => void | Promise<void>) | undefined },
+    { label: "Cerrar sesión", icon: LogOut, action: handleLogout },
+  ];
+
   return (
     <nav className="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
       {/* Logo + nombre restaurante */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-orange-500 to-pink-500">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-linear-to-br from-orange-500 to-pink-500">
           <UtensilsCrossed size={18} className="text-white" />
         </div>
         <div className="leading-tight">
@@ -107,7 +132,7 @@ export default function CashierNavbar({
           onClick={() => setMenuOpen((prev) => !prev)}
           className="flex items-center gap-2 hover:bg-gray-800 rounded-lg px-2 py-1 transition-colors"
         >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-orange-500 to-pink-500 flex items-center justify-center">
             <span className="text-white text-xs font-semibold">{initials}</span>
           </div>
           <div className="leading-tight text-left">
@@ -123,11 +148,17 @@ export default function CashierNavbar({
         {/* Dropdown */}
         {menuOpen && (
           <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
-            {MENU_OPTIONS.map(({ label, icon: Icon }) => (
+            {menuOptions.map(({ label, icon: Icon, action, disabled }) => (
               <button
                 key={label}
-                onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors text-left"
+                onClick={async () => {
+                  setMenuOpen(false);
+                  if (action) {
+                    await action();
+                  }
+                }}
+                disabled={Boolean(disabled)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors text-left disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Icon size={15} className="text-gray-400 shrink-0" />
                 {label}

@@ -117,9 +117,9 @@ const PlatformLoginForm = () => {
                   <div className="flex items-center gap-3 rounded-xl border border-orange-500/30 bg-white/5 px-4 py-3">
                     <Mail className="h-5 w-5 text-white/40" />
                     <Field
+                      placeholder="user@email.com"
                       type="email"
                       name="email"
-                      placeholder="superadmin@gastroflow.com"
                       className="w-full bg-transparent text-white outline-none placeholder:text-white/25"
                     />
                   </div>
@@ -150,7 +150,7 @@ const PlatformLoginForm = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="mt-2 inline-flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-4 text-base font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-2 inline-flex items-center justify-center gap-3 rounded-xl bg-linear-to-r from-orange-500 to-pink-500 px-6 py-4 text-base font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <LogIn className="h-5 w-5" />
                   {isSubmitting ? "Validando acceso..." : "Entrar al panel"}

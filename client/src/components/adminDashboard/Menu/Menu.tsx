@@ -8,9 +8,10 @@ import { useMenu } from "@/utils/useMenu";
 import { useCategories } from "@/utils/useCategory";
 
 export function Menu() {
-  const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
+  const [activeTab, setActiveTab] = useState<"menu" | "categories">("categories");
 
-  const { platesList, createItem, updateItem, deleteItem, changeStatus } = useMenu();
+  const { platesList, createItem, updateItem, deleteItem, changeStatus } =
+    useMenu();
 
   const { categories, createCategory, updateCategory, deleteCategory } =
     useCategories();
@@ -24,20 +25,28 @@ export function Menu() {
 
       <nav className={styles.tabs}>
         <button
-          className={activeTab === "menu" ? styles.activeTab : ""}
-          onClick={() => setActiveTab("menu")}
-        >
-          Platillos
-        </button>
-        <button
           className={activeTab === "categories" ? styles.activeTab : ""}
           onClick={() => setActiveTab("categories")}
         >
           Categorías
         </button>
+        <button
+          className={activeTab === "menu" ? styles.activeTab : ""}
+          onClick={() => setActiveTab("menu")}
+        >
+          Platillos
+        </button>
       </nav>
 
       <main>
+        {activeTab === "categories" && (
+          <CategoriesView
+            categories={categories}
+            onCreateCategory={createCategory}
+            onUpdateCategory={updateCategory}
+            onDeleteCategory={deleteCategory}
+          />
+        )}
         {activeTab === "menu" && (
           <MenuView
             // menuItems={menuItems}
@@ -47,15 +56,6 @@ export function Menu() {
             onUpdateItem={updateItem}
             onDeleteItem={deleteItem}
             onStatusChange={changeStatus}
-          />
-        )}
-
-        {activeTab === "categories" && (
-          <CategoriesView
-            categories={categories}
-            onCreateCategory={createCategory}
-            onUpdateCategory={updateCategory}
-            onDeleteCategory={deleteCategory}
           />
         )}
       </main>

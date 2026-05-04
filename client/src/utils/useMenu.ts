@@ -46,19 +46,42 @@ export function useMenu() {
     try {
       await adminService.createNewPlate(item);
       await fetchMenu();
+
       Swal.fire("Éxito", "Platillo creado", "success");
-    } catch {
+    } catch (error: any) {
+      if (!error.response) {
+        Swal.fire("Error", "La imagen debe ser menor a 2MB", "error");
+        return;
+      }
+
+      if (error.response.status === 413) {
+        Swal.fire("Error", "La imagen debe ser menor a 2MB", "error");
+        return;
+      }
+
       Swal.fire("Error", "No se pudo crear", "error");
     }
   };
 
   const updateItem = async (item: any) => {
     if (!restaurantId) return;
+
     try {
       await adminService.updatePlateInfo(item.id, item, restaurantId);
       await fetchMenu();
+
       Swal.fire("Actualizado", "Cambios guardados", "success");
-    } catch {
+    } catch (error: any) {
+      if (!error.response) {
+        Swal.fire("Error", "La imagen debe ser menor a 2MB", "error");
+        return;
+      }
+
+      if (error.response.status === 413) {
+        Swal.fire("Error", "La imagen debe ser menor a 2MB", "error");
+        return;
+      }
+
       Swal.fire("Error", "No se pudo actualizar", "error");
     }
   };

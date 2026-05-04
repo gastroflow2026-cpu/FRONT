@@ -73,7 +73,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
                     selecciona un archivo
                   </span>
                 </p>
-                <p className={styles.textSub}>PNG, JPG hasta 5MB</p>
+                <p className={styles.textSub}>PNG, JPG hasta 2MB</p>
               </div>
             </div>
 
