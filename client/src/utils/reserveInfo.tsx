@@ -1,13 +1,13 @@
-import { Reserva } from "@/types/Reservation";
+import { ReservaUI } from "@/types/Reservation";
 
-export const reservations: Reserva[] = [
+export const reservations: ReservaUI[] = [
     {
       id: "1",
       date: "2026-04-18",
       customerName: "Ana Martínez",
       time: "14:00",
       guests: 4,
-      status: "confirmada",
+      status: "confirmado",
     },
     {
       id: "2",
@@ -15,7 +15,7 @@ export const reservations: Reserva[] = [
       customerName: "Pedro López",
       time: "20:30",
       guests: 2,
-      status: "confirmada",
+      status: "confirmado",
     },
     {
       id: "3",
