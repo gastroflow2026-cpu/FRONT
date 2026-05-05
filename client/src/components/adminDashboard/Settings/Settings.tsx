@@ -110,8 +110,7 @@ export function Settings() {
           return;
         }
 
-        const { image_url, ...rest } = values;
-        const payload = { ...rest, logo_url: image_url };
+        const payload = values;
 
         const response = await fetch(`${API_URL}/restaurant/profile`, {
           method: "PATCH",
