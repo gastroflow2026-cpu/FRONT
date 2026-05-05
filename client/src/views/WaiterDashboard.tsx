@@ -18,8 +18,8 @@ import WaiterNavbar from "@/components/waiterDashboard/WaiterNavbar";
 import { MenuCategory, MenuItem } from "@/types/MenuItem";
 import { UsersContext } from "@/context/UsersContext";
 import { useSocket } from "@/context/SocketContext";
-import { useTables, Table as BackendTable } from "@/context/TablesContext";
 import { getToken } from "@/helpers/getToken";
+import { fetchMyAssignedTables, WaiterAssignedTable } from "@/services/waiterAssignedTables";
 import {
   addItemsToOrder,
   canOrderBeClosedByWaiter,
@@ -191,10 +191,12 @@ const pickLastActiveOrder = (orders: RestaurantOrderSummary[]): RestaurantOrderS
 export default function WaiterDashboard() {
   const { isLogged } = useContext(UsersContext);
   const { socket } = useSocket();
-  const { tables: backendTables, loading: loadingTables, getTables } = useTables();
   const waiterName = isLogged?.name ?? "Mozo";
   const restaurantId = resolveRestaurantId(isLogged as Record<string, unknown> | null);
   const [restaurantName, setRestaurantName] = useState("Mi Restaurante");
+  const [backendTables, setBackendTables] = useState<WaiterAssignedTable[]>([]);
+  const [loadingTables, setLoadingTables] = useState(false);
+  const [tablesError, setTablesError] = useState<string | null>(null);
 
   const [orderStateByTable, setOrderStateByTable] = useState<OrderStateByTable>({});
   const [isSyncingOrders, setIsSyncingOrders] = useState(false);
@@ -211,7 +213,7 @@ export default function WaiterDashboard() {
   const [generalNote, setGeneralNote] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [itemObservation, setItemObservation] = useState<Record<string, string>>({});
-  const backendTablesRef = useRef<BackendTable[]>([]);
+  const backendTablesRef = useRef<WaiterAssignedTable[]>([]);
   const orderStateByTableRef = useRef<OrderStateByTable>({});
   const isSendingOrderRef = useRef(false);
   const socketRefreshTimeoutRef = useRef<number | null>(null);
@@ -341,6 +343,51 @@ export default function WaiterDashboard() {
     }
   }, [restaurantId]);
 
+  const loadAssignedTables = useCallback(async () => {
+    if (!restaurantId) {
+      setBackendTables([]);
+      setTablesError("No se encontró el restaurante del usuario logueado.");
+      setLoadingTables(false);
+      return;
+    }
+
+    try {
+      setLoadingTables(true);
+      setTablesError(null);
+
+      const assignedTables = await fetchMyAssignedTables(restaurantId);
+      setBackendTables(assignedTables);
+
+      if (
+        selectedTableId &&
+        !assignedTables.some((table) => table.id === selectedTableId)
+      ) {
+        setSelectedTableId(null);
+        setCart([]);
+        setGeneralNote("");
+        setItemObservation({});
+      }
+    } catch (error) {
+      setBackendTables([]);
+
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      const backendMessage = getAxiosErrorMessage(error);
+
+      const message =
+        status === 401
+          ? "Tu sesión expiró. Volvé a iniciar sesión."
+          : status === 403
+            ? "No tenés permisos para ver las mesas asignadas en este restaurante."
+            : status === 404
+              ? "No se encontraron mesas asignadas para tu usuario."
+              : backendMessage || "No se pudieron cargar tus mesas asignadas.";
+
+      setTablesError(message);
+    } finally {
+      setLoadingTables(false);
+    }
+  }, [restaurantId, selectedTableId]);
+
   useEffect(() => {
     void fetchMenu();
   }, [fetchMenu]);
@@ -377,8 +424,8 @@ export default function WaiterDashboard() {
 
   useEffect(() => {
     if (!restaurantId) return;
-    void getTables(restaurantId);
-  }, [getTables, restaurantId]);
+    void loadAssignedTables();
+  }, [loadAssignedTables, restaurantId]);
 
   useEffect(() => {
     if (!restaurantId || backendTables.length === 0) return;
@@ -389,12 +436,12 @@ export default function WaiterDashboard() {
     if (!restaurantId) return;
 
     const intervalId = window.setInterval(() => {
+      void loadAssignedTables();
       void syncActiveOrders();
-      void getTables(restaurantId);
     }, 15000);
 
     return () => window.clearInterval(intervalId);
-  }, [getTables, restaurantId, syncActiveOrders]);
+  }, [loadAssignedTables, restaurantId, syncActiveOrders]);
 
   useEffect(() => {
     if (!socket || !restaurantId) return;
@@ -434,7 +481,7 @@ export default function WaiterDashboard() {
   }, [restaurantId, socket, syncActiveOrders]);
 
   const tables = useMemo<WaiterTable[]>(() => {
-    return backendTables.map((table: BackendTable) => {
+    return backendTables.map((table) => {
       const backendStatus = mapBackendTableStatus(table.status);
       const orderState = orderStateByTable[table.id];
       const orderStatus = orderState?.status;
@@ -607,7 +654,7 @@ export default function WaiterDashboard() {
 
       await syncActiveOrders();
       if (restaurantId) {
-        await getTables(restaurantId);
+        await loadAssignedTables();
       }
 
       await Swal.fire({
@@ -625,9 +672,15 @@ export default function WaiterDashboard() {
       setGeneralNote("");
       setItemObservation({});
     } catch (error) {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      const message =
+        status === 403
+          ? "Esta mesa está asignada a otro mozo."
+          : getAxiosErrorMessage(error) || "No se pudo enviar la orden.";
+
       await Swal.fire({
         title: "Error al enviar",
-        text: getAxiosErrorMessage(error) || "No se pudo enviar la orden.",
+        text: message,
         icon: "error",
         confirmButtonColor: "#f97316",
       });
@@ -696,7 +749,7 @@ export default function WaiterDashboard() {
 
       await syncActiveOrders();
       if (restaurantId) {
-        await getTables(restaurantId);
+        await loadAssignedTables();
       }
 
       await Swal.fire({
@@ -755,7 +808,7 @@ export default function WaiterDashboard() {
 
       await syncActiveOrders();
       if (restaurantId) {
-        await getTables(restaurantId);
+        await loadAssignedTables();
       }
     } catch (error) {
       await Swal.fire({
@@ -782,6 +835,8 @@ export default function WaiterDashboard() {
     : selectedOrderStatus === "pendiente"
       ? "Agregar a orden en espera"
       : "Enviar a cocina";
+
+  const showAssignedTablesEmpty = !loadingTables && !tablesError && restaurantId && tables.length === 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -829,6 +884,25 @@ export default function WaiterDashboard() {
             <div className="flex items-center justify-center py-6 text-gray-400 gap-2">
               <Loader2 size={16} className="animate-spin" />
               <span className="text-xs">Cargando mesas...</span>
+            </div>
+          ) : tablesError ? (
+            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 space-y-1">
+              <p className="font-semibold">No se pudieron cargar tus mesas</p>
+              <p className="text-red-600">{tablesError}</p>
+              <button
+                type="button"
+                onClick={() => void loadAssignedTables()}
+                className="mt-2 inline-flex items-center justify-center rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : showAssignedTablesEmpty ? (
+            <div className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg p-3 space-y-1">
+              <p className="font-semibold">No tenés mesas asignadas</p>
+              <p className="text-indigo-600">
+                Cuando el cajero o admin te asigne mesas, van a aparecer acá automáticamente.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
