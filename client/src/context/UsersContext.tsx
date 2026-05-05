@@ -4,6 +4,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { clearSession, getToken, saveSession } from "@/helpers/getToken";
+import { boolean } from "yup";
+import { setupAxiosInterceptors } from "@/helpers/expiredToken";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -215,6 +217,7 @@ type SessionUser = AuthResponseUser;
 
 interface UsersContextType {
   isLogged: SessionUser | null;
+  isLoading: boolean;
   loginUser: (values: LoginValues) => Promise<{ status: number; user: AuthResponseUser }>;
   loginOwner: (values: LoginValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
   completeOwnerOnboarding: (values: OwnerOnboardingValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
@@ -230,6 +233,7 @@ interface UsersContextType {
 
 export const UsersContext = createContext<UsersContextType>({
   isLogged: null,
+  isLoading: true,
   loginUser: async () => ({ status: 0, user: {} as AuthResponseUser }),
   loginOwner: async () => ({ status: 0 }),
   completeOwnerOnboarding: async () => ({ status: 0 }),
@@ -243,15 +247,22 @@ export const UsersContext = createContext<UsersContextType>({
   loginPlatform: async () => ({ status: 0 }),
 });
 
+
 export const UsersProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const [isLogged, setIsLogged] = useState<SessionUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setupAxiosInterceptors(); 
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
     if (!storedUser) {
       setIsLogged(null);
+      setIsLoading(false);
       return;
     }
 
@@ -260,6 +271,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       setIsLogged(null);
     }
+    setIsLoading(false);
   }, []);
 
   const saveAuthSession = useCallback((token: string, user: AuthResponseUser) => {
@@ -665,6 +677,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
 
   const value: UsersContextType = {
     isLogged,
+    isLoading,
     loginUser,
     loginOwner,
     completeOwnerOnboarding,
