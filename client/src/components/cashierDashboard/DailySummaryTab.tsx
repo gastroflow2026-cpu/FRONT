@@ -40,6 +40,17 @@ function paymentMethodLabel(method: string) {
   return map[method] || method;
 }
 
+function paymentMethodCardClass(method: string) {
+  const normalized = method.toLowerCase();
+
+  if (normalized === "efectivo") return "border-emerald-200 bg-emerald-50";
+  if (normalized === "tarjeta") return "border-sky-200 bg-sky-50";
+  if (normalized === "transferencia") return "border-violet-200 bg-violet-50";
+  if (normalized === "qr") return "border-amber-200 bg-amber-50";
+
+  return "border-gray-200 bg-gray-50";
+}
+
 export default function DailySummaryTab({
   summary,
   date,
@@ -161,7 +172,7 @@ export default function DailySummaryTab({
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-end gap-3">
+      <div className="bg-linear-to-r from-orange-50 via-white to-pink-50 rounded-xl border border-orange-100 shadow-sm p-4 flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Fecha</label>
           <input
@@ -173,7 +184,7 @@ export default function DailySummaryTab({
         </div>
         <button
           onClick={onRefresh}
-          className="h-10 px-4 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 inline-flex items-center gap-2"
+          className="h-10 px-4 rounded-lg border border-orange-200 text-sm font-medium text-orange-700 bg-white hover:bg-orange-50 inline-flex items-center gap-2"
         >
           <RefreshCw size={14} />
           Actualizar resumen
@@ -181,7 +192,7 @@ export default function DailySummaryTab({
         <button
           onClick={() => void handleExportExcel()}
           disabled={!summary || isLoading || isExporting}
-          className="h-10 px-4 rounded-lg border border-emerald-200 bg-emerald-50 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
+          className="h-10 px-4 rounded-lg border border-pink-200 bg-pink-50 text-sm font-medium text-pink-700 hover:bg-pink-100 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
         >
           {isExporting ? "Generando..." : "Descargar Excel"}
         </button>
@@ -204,23 +215,23 @@ export default function DailySummaryTab({
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <p className="text-xs text-gray-400 mb-1 inline-flex items-center gap-1">
+            <div className="bg-linear-to-br from-orange-50 to-pink-50 rounded-xl border border-orange-100 shadow-sm p-4">
+              <p className="text-xs text-orange-700 mb-1 inline-flex items-center gap-1 font-medium">
                 <Wallet size={12} /> Total bruto
               </p>
-              <p className="text-xl font-bold text-gray-800">{formatMoney(summary.totals.gross)}</p>
+              <p className="text-xl font-bold text-gray-900">{formatMoney(summary.totals.gross)}</p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <p className="text-xs text-gray-400 mb-1 inline-flex items-center gap-1">
+            <div className="bg-linear-to-br from-sky-50 to-indigo-50 rounded-xl border border-sky-100 shadow-sm p-4">
+              <p className="text-xs text-sky-700 mb-1 inline-flex items-center gap-1 font-medium">
                 <ReceiptText size={12} /> Órdenes pagadas
               </p>
-              <p className="text-xl font-bold text-gray-800">{summary.totals.ordersCount}</p>
+              <p className="text-xl font-bold text-gray-900">{summary.totals.ordersCount}</p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <p className="text-xs text-gray-400 mb-1 inline-flex items-center gap-1">
+            <div className="bg-linear-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-4">
+              <p className="text-xs text-emerald-700 mb-1 inline-flex items-center gap-1 font-medium">
                 <Calendar size={12} /> Ticket promedio
               </p>
-              <p className="text-xl font-bold text-gray-800">{formatMoney(summary.totals.averageTicket)}</p>
+              <p className="text-xl font-bold text-gray-900">{formatMoney(summary.totals.averageTicket)}</p>
             </div>
           </div>
 
@@ -228,10 +239,10 @@ export default function DailySummaryTab({
             <p className="text-sm font-semibold text-gray-700 mb-3">Totales por método de pago</p>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               {methods.map((method) => (
-                <div key={method.key} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                  <p className="text-xs text-gray-500">{paymentMethodLabel(method.key)}</p>
-                  <p className="text-sm font-semibold text-gray-800">{formatMoney(method.total)}</p>
-                  <p className="text-xs text-gray-400">{method.count} cobros</p>
+                <div key={method.key} className={`rounded-lg border p-3 ${paymentMethodCardClass(method.key)}`}>
+                  <p className="text-xs text-gray-600 font-medium">{paymentMethodLabel(method.key)}</p>
+                  <p className="text-sm font-semibold text-gray-900">{formatMoney(method.total)}</p>
+                  <p className="text-xs text-gray-500">{method.count} cobros</p>
                 </div>
               ))}
             </div>
