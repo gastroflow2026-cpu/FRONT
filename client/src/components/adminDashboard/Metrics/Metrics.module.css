@@ -4,6 +4,14 @@
   gap: 1.5rem;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .header h2 {
   font-size: 1.875rem;
   font-weight: 700;
@@ -13,6 +21,125 @@
 .header p {
   color: #4b5563;
   margin-top: 0.25rem;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.selectLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.select {
+  height: 2.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  padding: 0 0.75rem;
+  background: #fff;
+}
+
+.dateInput {
+  height: 2.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  padding: 0 0.65rem;
+  background: #fff;
+}
+
+.quickDateButtons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rangeGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.rangeSeparator {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.quickDateButton {
+  height: 2.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #4b5563;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0 0.65rem;
+}
+
+.quickDateButton:hover {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+@media (max-width: 1200px) {
+  .controls {
+    width: 100%;
+  }
+
+  .rangeGroup {
+    width: 100%;
+  }
+}
+
+.refreshButton {
+  height: 2.25rem;
+  border: 1px solid #fed7aa;
+  border-radius: 0.5rem;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.refreshButton:hover {
+  background: #ffedd5;
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorBanner {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+.loadingBox {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 
 .metricsGrid {
@@ -29,9 +156,212 @@
   .metricsGrid { grid-template-columns: repeat(4, 1fr); }
 }
 
+.widgetsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .widgetsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.widgetCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top-width: 3px;
+  border-top-color: #f97316;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.widgetOrange {
+  border-top-color: #fb923c;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 40%);
+}
+
+.widgetBlue {
+  border-top-color: #60a5fa;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 40%);
+}
+
+.widgetViolet {
+  border-top-color: #a78bfa;
+  background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 40%);
+}
+
+.widgetTitle {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.widgetValue {
+  margin: 0.5rem 0 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.widgetCaption {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.statusList {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+  color: #4b5563;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1200px) {
+  .chartsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.chartCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top-width: 3px;
+  border-top-color: #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.pieCardAccent {
+  border-top-color: #34d399;
+}
+
+.barCardAccent {
+  border-top-color: #fb7185;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.chartHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.pieWrap {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pieChart {
+  width: 140px;
+  height: 140px;
+  border-radius: 9999px;
+  border: 10px solid #fff;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+}
+
+.legendList {
+  flex: 1;
+  min-width: 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legendItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #4b5563;
+}
+
+.legendDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+}
+
+.barList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.barLabel {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.barTrack {
+  width: 100%;
+  height: 10px;
+  border-radius: 9999px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #f97316, #ec4899);
+}
+
+.barValue {
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.tablesGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1200px) {
+  .tablesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .tableContainer {
   background: white;
   border: 1px solid #E5E7EB;
+  border-top-width: 3px;
+  border-top-color: #f3f4f6;
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -68,6 +398,18 @@
   color: #374151;
 }
 
+.emptyCell {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.waiterCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .amount {
   font-weight: 600;
   color: #111827;
@@ -90,4 +432,19 @@
 .pendiente {
   background-color: #fffbeb;
   color: #b45309;
+}
+
+.emptyText {
+  color: #9ca3af;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.footerInfo {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
 }
