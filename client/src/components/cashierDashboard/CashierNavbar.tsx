@@ -11,6 +11,7 @@ interface CashierNavbarProps {
   cashierName: string;
   hasOpenCashRegister?: boolean;
   isCashRegisterActionLoading?: boolean;
+  onOpenTableAssignment?: () => void;
   onOpenCashRegister?: () => void;
   onCloseCashRegister?: () => void;
 }
@@ -20,6 +21,7 @@ export default function CashierNavbar({
   cashierName,
   hasOpenCashRegister = false,
   isCashRegisterActionLoading = false,
+  onOpenTableAssignment,
   onOpenCashRegister,
   onCloseCashRegister,
 }: CashierNavbarProps) {
@@ -95,7 +97,7 @@ export default function CashierNavbar({
       action: hasOpenCashRegister ? onCloseCashRegister : onOpenCashRegister,
       disabled: isCashRegisterActionLoading,
     },
-    { label: "Asignar mesas", icon: LayoutGrid, action: undefined as (() => void | Promise<void>) | undefined },
+    { label: "Asignar mesas", icon: LayoutGrid, action: onOpenTableAssignment },
     { label: "Cerrar sesión", icon: LogOut, action: handleLogout },
   ];
 
