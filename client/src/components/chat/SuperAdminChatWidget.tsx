@@ -137,7 +137,7 @@ export const SuperAdminChatWidget = () => {
                       <div
                         className={`max-w-xs px-4 py-2 rounded-2xl text-sm ${
                           isMine
-                            ? "bg-orange-500 text-white rounded-br-none"
+                            ? "bg-orange-100 text-gray-900 border border-orange-200 rounded-br-none"
                             : "bg-white text-gray-800 border rounded-bl-none"
                         }`}
                       >
@@ -159,7 +159,7 @@ export const SuperAdminChatWidget = () => {
 
               <div className="flex gap-2 p-3 border-t bg-white">
                 <input
-                  className="flex-1 border rounded-full px-4 py-2 text-sm outline-none focus:border-orange-400"
+                  className="flex-1 border rounded-full px-4 py-2 text-sm text-black placeholder:text-gray-400 outline-none focus:border-orange-400"
                   placeholder="Escribe un mensaje..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
