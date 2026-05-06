@@ -124,10 +124,7 @@ export function Employees() {
         isOpen={isDialogOpen}
         isSubmitting={isCreatingEmployee}
         onClose={() => setIsDialogOpen(false)}
-        onSubmit={async (data) => {
-          const success = await handleCreateEmployee(data);
-          if (success) setIsDialogOpen(false);
-        }}
+        onSubmit={(data) => handleCreateEmployee(data)}
       />
 
       <ChangePasswordDialog
