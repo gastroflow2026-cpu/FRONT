@@ -32,6 +32,9 @@ export default function RegisterForm() {
   const formik = useFormik<RegisterFormValues>({
     initialValues: registerInitialValues,
     validationSchema: registerValidationSchema,
+    validateOnMount: false,
+    validateOnBlur: true,
+    validateOnChange: true,
     onSubmit: async (values, { resetForm }) => {
       const newErrors: Record<string, string> = {};
 
@@ -280,6 +283,9 @@ export default function RegisterForm() {
                 {formik.errors.password}
               </div>
             )}
+            <div className="register-form__error">
+              La contraseña debe tener 8 a 15 caracteres, mayúscula, minúscula, número y carácter especial.
+            </div>
           </div>
 
           {/* CONFIRM PASSWORD */}
@@ -357,6 +363,11 @@ export default function RegisterForm() {
               <p className="register-form__error">{errors.terms}</p>
             )}
           </div>
+          {formik.submitCount > 0 && Object.keys(formik.errors).length > 0 && (
+            <p className="register-form__error">
+              Revisa los campos marcados antes de crear la cuenta.
+            </p>
+          )}
 
           <button type="submit" className="register-form__submit">
             <span className="register-form__submit-text">
