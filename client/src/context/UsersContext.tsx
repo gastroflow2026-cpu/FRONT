@@ -25,6 +25,8 @@ interface RegisterValues {
   confirmPassword: string;
   first_name: string;
   last_name: string;
+  city: string;
+  country: string;
 }
 
 interface OwnerRegisterValues {
@@ -68,7 +70,7 @@ interface AuthResponse {
 }
 
 interface AuthErrorResponse {
-  message?: string;
+  message?: string | string[];
 }
 
 interface RequestResult<T = undefined> {
@@ -213,7 +215,7 @@ interface UsersContextType {
   loginUserGoogle: () => Promise<void>;
   registerUserGoogle: () => Promise<void>;
   logoutUser: () => void;
-  registerNewUser: (values: RegisterValues) => Promise<number>;
+  registerNewUser: (values: RegisterValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
   registerOwner: (values: OwnerRegisterValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
   updateUser: (updatedFields: Partial<SessionUser>) => Promise<void>;
   uploadRestaurantVerificationDocument: (documentType: RestaurantDocumentType, file: File) => Promise<RequestResult>;
@@ -229,7 +231,7 @@ export const UsersContext = createContext<UsersContextType>({
   loginUserGoogle: async () => {},
   registerUserGoogle: async () => {},
   logoutUser: async () => {},
-  registerNewUser: async () => 0,
+  registerNewUser: async () => ({ status: 0 }),
   registerOwner: async () => ({ status: 0 }),
   updateUser: async () => {},
   uploadRestaurantVerificationDocument: async () => ({ status: 0 }),
@@ -552,13 +554,21 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     router.push("/");
   };
 
-  const registerNewUser = async (values: RegisterValues): Promise<number> => {
+  const registerNewUser = async (
+    values: RegisterValues,
+  ): Promise<RequestResult<AuthResponse | AuthErrorResponse>> => {
     try {
-      const res = await axios.post(buildApiUrl("/auth/signup"), values);
-      return res.status;
+      const res = await axios.post<AuthResponse>(buildApiUrl("/auth/signup"), values);
+      return {
+        status: res.status,
+        data: res.data,
+      };
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {
-        return error.response.status;
+        return {
+          status: error.response.status,
+          data: error.response.data,
+        };
       }
       throw error;
     }

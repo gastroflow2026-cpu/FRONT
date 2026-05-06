@@ -1,5 +1,4 @@
 "use client";
-import { RegisterUser } from "@/services/auth.services";
 import {
   RegisterFormValues,
   registerInitialValues,
@@ -45,9 +44,9 @@ export default function RegisterForm() {
         return;
       }
 
-      const res = await registerNewUser(values);
+      const result = await registerNewUser(values);
 
-      if (res === 201) {
+      if (result.status === 201) {
         Swal.fire({
           theme: "dark",
           title: "Éxito!",
@@ -58,20 +57,26 @@ export default function RegisterForm() {
         resetForm();
         return;
       }
-      if (res === 400) {
-        Swal.fire({
-          theme: "dark",
-          title: "Error!",
-          text: "El email ya está registrado",
-          icon: "error",
-        });
-        return;
-      }
+
+      const backendMessageRaw =
+        result.data && "message" in result.data ? result.data.message : undefined;
+      const backendMessage = Array.isArray(backendMessageRaw)
+        ? backendMessageRaw.map((item) => String(item)).join(" | ")
+        : typeof backendMessageRaw === "string"
+          ? backendMessageRaw
+          : null;
+
+      const normalizedBackendMessage = backendMessage?.toLowerCase() ?? "";
+      const isEmailAlreadyRegistered =
+        normalizedBackendMessage.includes("email ya esta registrado") ||
+        normalizedBackendMessage.includes("email ya está registrado");
 
       Swal.fire({
         theme: "dark",
         title: "Error!",
-        text: "Inténtelo nuevamente",
+        text: isEmailAlreadyRegistered
+          ? "El email ya está registrado"
+          : backendMessage || "No fue posible registrar el usuario. Revisa los datos ingresados.",
         icon: "error",
       });
     },
