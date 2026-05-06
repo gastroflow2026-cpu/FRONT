@@ -54,6 +54,19 @@ interface RestaurantReviewDetail {
   documents: VerificationDocument[];
 }
 
+type RestaurantReviewDetailNestedResponse = {
+  restaurant?: PlatformRestaurant;
+  documents?: VerificationDocument[];
+  verification_documents?: VerificationDocument[];
+};
+
+type RestaurantReviewDetailFlatResponse = PlatformRestaurant & {
+  documents?: VerificationDocument[];
+  verification_documents?: VerificationDocument[];
+};
+
+type RestaurantReviewDetailResponse = RestaurantReviewDetailNestedResponse | RestaurantReviewDetailFlatResponse;
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const normalizeBaseUrl = (url?: string | null) => {
@@ -120,13 +133,20 @@ export default function PlatformRestaurantReviewPage() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response = await axios.get<RestaurantReviewDetail>(buildApiUrl(`/platform/restaurants/${restaurantId}`), {
+      const response = await axios.get<RestaurantReviewDetailResponse>(buildApiUrl(`/platform/restaurants/${restaurantId}`), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      setDetail(response.data);
+      const raw = response.data as RestaurantReviewDetailNestedResponse;
+      const restaurant = raw.restaurant ?? (response.data as PlatformRestaurant);
+      const documents = raw.documents ?? raw.verification_documents ?? [];
+
+      setDetail({
+        restaurant,
+        documents: Array.isArray(documents) ? documents : [],
+      });
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
         clearSession();
