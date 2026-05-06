@@ -21,6 +21,8 @@ export function Employees() {
     handleToggleStatus,
     handleCreateEmployee,
     handleChangeRole,
+    isCreatingEmployee,
+    statusUpdatingByEmployeeId,
   } = useEmployees();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -108,6 +110,7 @@ export function Employees() {
               key={employee.id}
               employee={employee}
               onToggleStatus={handleToggleStatus}
+              isStatusUpdating={Boolean(statusUpdatingByEmployeeId[employee.id])}
               onChangePassword={() => handleOpenPasswordDialog(employee)}
               onChangeRole={() => handleChangeRoleDialog(employee)}
             />
@@ -119,6 +122,7 @@ export function Employees() {
 
       <EmployeeFormDialog
         isOpen={isDialogOpen}
+        isSubmitting={isCreatingEmployee}
         onClose={() => setIsDialogOpen(false)}
         onSubmit={async (data) => {
           const success = await handleCreateEmployee(data);

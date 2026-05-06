@@ -5,10 +5,20 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import axios from "axios";
+import Swal from "sweetalert2";
 import { getToken } from "@/helpers/getToken";
 import { UsersContext } from "@/context/UsersContext";
 import { CalendarCheck, MapPin, Users, Clock, CheckCircle, XCircle, Clock3 } from "lucide-react";
 import { ReservationsPaymentContext } from "../../context/ReservationsPayments";
+import {
+  buildHeadersWithRequestId,
+  clearRequestId,
+  CRITICAL_OPERATION_TIMEOUT_MS,
+  extractAsyncErrorInfo,
+  getOrCreateRequestId,
+  logAsyncOperation,
+  mapAsyncErrorToUserMessage,
+} from "@/helpers/asyncOperations";
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
 type ReservationStatus = "PENDIENTE" | "CONFIRMADO" | "CANCELADO";
@@ -41,6 +51,44 @@ export default function ReservationsPage() {
   const [loadingPayment, setLoadingPayment] = useState<string | null>(null);
   const [loadingCancel, setLoadingCancel] = useState<string | null>(null);
 
+  const fetchReservations = async (userId: string) => {
+    setLoading(true);
+    try {
+      const token = getToken();
+      const endpoint = `${API_URL}/users/${userId}/reservations`;
+      const actionKey = `reservations:list:${userId}`;
+      const requestId = getOrCreateRequestId(actionKey);
+      const startedAt = performance.now();
+
+      const { data } = await axios.get(
+        endpoint,
+        {
+          headers: buildHeadersWithRequestId(
+            token ? { Authorization: `Bearer ${token}` } : undefined,
+            requestId,
+          ),
+          timeout: CRITICAL_OPERATION_TIMEOUT_MS,
+        },
+      );
+
+      logAsyncOperation({
+        requestId,
+        endpoint,
+        durationMs: performance.now() - startedAt,
+        ok: true,
+      });
+
+      clearRequestId(actionKey);
+      setReservations(data);
+      setError(null);
+    } catch (error) {
+      const info = extractAsyncErrorInfo(error);
+      setError(mapAsyncErrorToUserMessage(info, "No se pudieron cargar tus reservas."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isLoading) return;
     if (!isLogged?.id) {
@@ -48,23 +96,7 @@ export default function ReservationsPage() {
       return;
     }
 
-    const fetchReservations = async () => {
-      setLoading(true);
-      try {
-        const token = getToken();
-        const { data } = await axios.get(
-          `${API_URL}/users/${isLogged.id}/reservations`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setReservations(data);
-      } catch {
-        setError("Aún no ha hecho reservas.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReservations();
+    void fetchReservations(isLogged.id);
   }, [isLogged?.id, isLoading ]);
 
   async function handlePay(reservationId: string) {
@@ -79,19 +111,79 @@ export default function ReservationsPage() {
 }
 
 async function handleCancel(restaurantId: string, reservationId: string) {
+  if (loadingCancel === reservationId) return;
+
   setLoadingCancel(reservationId);
+  const actionKey = `reservation:cancel:${reservationId}`;
+  const requestId = getOrCreateRequestId(actionKey);
+  const endpoint = `${API_URL}/restaurants/${restaurantId}/reservations/${reservationId}/cancel`;
+  const startedAt = performance.now();
+
+  void Swal.fire({
+    title: "Procesando solicitud...",
+    text: "Estamos cancelando tu reserva.",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+
   try {
     const token = getToken();
     await axios.patch(
-      `${API_URL}/restaurants/${restaurantId}/reservations/${reservationId}/cancel`,
+      endpoint,
       {},
-      { headers: { Authorization: `Bearer ${token}` } }
+      {
+        headers: buildHeadersWithRequestId(
+          token ? { Authorization: `Bearer ${token}` } : undefined,
+          requestId,
+        ),
+        timeout: CRITICAL_OPERATION_TIMEOUT_MS,
+      }
     );
-    setReservations(prev =>
-      prev.map(r => r.id === reservationId ? { ...r, status: "CANCELADO" } : r)
+
+    logAsyncOperation({
+      requestId,
+      endpoint,
+      durationMs: performance.now() - startedAt,
+      ok: true,
+    });
+
+    clearRequestId(actionKey);
+
+    if (isLogged?.id) {
+      await fetchReservations(isLogged.id);
+    }
+
+    Swal.close();
+    await Swal.fire({
+      icon: "success",
+      title: "Reserva cancelada",
+      text: "La reserva fue cancelada correctamente.",
+      confirmButtonColor: "#ff7e5f",
+    });
+  } catch (error) {
+    logAsyncOperation({
+      requestId,
+      endpoint,
+      durationMs: performance.now() - startedAt,
+      ok: false,
+    });
+
+    Swal.close();
+    const info = extractAsyncErrorInfo(error);
+    const message = mapAsyncErrorToUserMessage(
+      info,
+      "No se pudo cancelar la reserva en este momento.",
     );
-  } catch {
-    console.error("Error al cancelar la reserva");
+
+    await Swal.fire({
+      icon: info.status === 400 || info.status === 409 ? "warning" : "error",
+      title: "No se pudo cancelar",
+      text: message,
+      confirmButtonColor: "#ff7e5f",
+    });
   } finally {
     setLoadingCancel(null);
   }

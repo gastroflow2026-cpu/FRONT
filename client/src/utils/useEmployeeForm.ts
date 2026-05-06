@@ -36,7 +36,7 @@ const INITIAL_ERRORS: ErrorsState = {
 };
 
 export function useEmployeeForm(
-  onSubmit: (data: CreateEmployeePayload) => Promise<void> | void,
+  onSubmit: (data: CreateEmployeePayload) => Promise<boolean> | boolean,
   onClose: () => void
 ) {
   const [formData, setFormData] = useState<FormState>(INITIAL_STATE);
@@ -110,13 +110,15 @@ export function useEmployeeForm(
 
     if (!validateForm()) return;
 
-    await onSubmit({
+    const wasCreated = await onSubmit({
       ...formData,
       role: formData.role as EmployeeRole,
     });
 
-    resetForm();
-    onClose();
+    if (wasCreated) {
+      resetForm();
+      onClose();
+    }
   };
 
   const resetForm = () => {

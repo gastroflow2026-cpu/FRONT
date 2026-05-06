@@ -7,6 +7,7 @@ import { EmployeeCardProps } from "@/types/Props/EmployeeCardProps";
 export function EmployeeCard({
   employee,
   onToggleStatus,
+  isStatusUpdating = false,
   onChangePassword,
   onChangeRole
 }: EmployeeCardProps) {
@@ -38,6 +39,7 @@ export function EmployeeCard({
           <input
             type="checkbox"
             checked={employee.isActive}
+            disabled={isStatusUpdating}
             onChange={(e) => onToggleStatus(employee.id, e.target.checked)}
           />
           <span className={styles.slider}></span>

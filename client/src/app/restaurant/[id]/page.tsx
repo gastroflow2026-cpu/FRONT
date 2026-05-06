@@ -10,10 +10,18 @@ import { reservationSchema } from "@/validations/reservationSchema";
 import { UsersContext } from "@/context/UsersContext";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import { ValidationError } from "yup";
 import TableGrid from "@/components/features/table.grid";
 import { ReservationsContext } from "@/context/ReservationsContext";
 import { useTables } from "@/context/TablesContext";
 import type { Table } from "@/context/TablesContext";
+import {
+  buildHeadersWithRequestId,
+  CRITICAL_OPERATION_TIMEOUT_MS,
+  getOrCreateRequestId,
+  logAsyncOperation,
+} from "@/helpers/asyncOperations";
+import { getToken } from "@/helpers/getToken";
 import "react-chatbot-kit/build/main.css";
 import ActionProvider from "@/chatbot/ActionProvider";
 import MessageParser from "@/chatbot/MessageParser";
@@ -88,6 +96,17 @@ type ReservationFormErrors = {
   date: string;
   time: string;
   guests: string;
+};
+
+type UserReservationLookup = {
+  id: string;
+  reservation_date?: string;
+  start_time?: string;
+  status?: string;
+  table?: {
+    id?: string;
+    table_number?: number;
+  };
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
@@ -353,14 +372,78 @@ const RestaurantDetail = () => {
     }
   }, [loadingTables, pendingSelectedTableId, selectableTables, tables.length]);
 
+  const verifyReservationCreated = async () => {
+    if (!API_URL || !isLogged?.id || !selectedTable || !restaurantId) {
+      return false;
+    }
+
+    const actionKey = `reservation:verify:${restaurantId}:${selectedTable.id}:${formValues.date}:${formValues.time}`;
+    const requestId = getOrCreateRequestId(actionKey);
+    const endpoint = `${API_URL}/users/${isLogged.id}/reservations`;
+    const startedAt = performance.now();
+
+    try {
+      const token = getToken();
+      const { data } = await axios.get<UserReservationLookup[]>(
+        endpoint,
+        {
+          headers: buildHeadersWithRequestId(
+            token ? { Authorization: `Bearer ${token}` } : undefined,
+            requestId,
+          ),
+          timeout: CRITICAL_OPERATION_TIMEOUT_MS,
+        },
+      );
+
+      logAsyncOperation({
+        requestId,
+        endpoint,
+        durationMs: performance.now() - startedAt,
+        ok: true,
+      });
+
+      const expectedDate = formValues.date;
+      const expectedTableId = selectedTable.id;
+
+      return data.some((reservation) => {
+        const reservationDate = reservation.reservation_date?.slice(0, 10);
+        const tableId = reservation.table?.id;
+        const isMatchingDate = reservationDate === expectedDate;
+        const isMatchingTable = tableId === expectedTableId;
+        const isActiveStatus = reservation.status !== "CANCELADO";
+        return isMatchingDate && isMatchingTable && isActiveStatus;
+      });
+    } catch {
+      logAsyncOperation({
+        requestId,
+        endpoint,
+        durationMs: performance.now() - startedAt,
+        ok: false,
+      });
+      return false;
+    }
+  };
+
   const handleConfirmReservation = async () => {
     if (isSubmitting) return; 
     setIsSubmitting(true);
+
+    void Swal.fire({
+      title: "Procesando solicitud...",
+      text: "Estamos gestionando tu reserva.",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       await reservationSchema.validate(formValues, { abortEarly: false });
       if (!restaurantId) return;
 
       if (!selectedTable) {
+        Swal.close();
         Swal.fire({
           icon: "warning",
           title: "Selecciona una mesa",
@@ -398,6 +481,20 @@ const RestaurantDetail = () => {
           window.location.href = result.url;
           return;
         }
+
+        const wasReservationStored = await verifyReservationCreated();
+        Swal.close();
+
+        if (!wasReservationStored) {
+          await Swal.fire({
+            icon: "info",
+            title: "Estamos verificando tu reserva",
+            text: "No recibimos confirmación inmediata del pago. Revisa tu sección de reservas en unos segundos.",
+            confirmButtonColor: "#ff7e5f",
+          });
+          return;
+        }
+
         const [year, month, day] = formValues.date.split("-");
         const formattedDate = `${day}/${month}/${year}`;
         Swal.fire({
@@ -409,6 +506,11 @@ const RestaurantDetail = () => {
         });
       }
     } catch (err: unknown) {
+      Swal.close();
+      if (err instanceof ValidationError) {
+        return;
+      }
+
       const errorMessage = err instanceof Error ? err.message : "No se pudo crear la reserva";
       Swal.fire({
         icon: "error",

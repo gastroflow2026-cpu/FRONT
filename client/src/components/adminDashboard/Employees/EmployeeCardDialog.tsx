@@ -6,12 +6,14 @@ import { useEmployeeForm } from "@/utils/useEmployeeForm";
 
 interface EmployeeFormDialogProps {
   isOpen: boolean;
+  isSubmitting?: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void> | void;
+  onSubmit: (data: any) => Promise<boolean> | boolean;
 }
 
 export function EmployeeFormDialog({
   isOpen,
+  isSubmitting = false,
   onClose,
   onSubmit,
 }: EmployeeFormDialogProps) {
@@ -44,6 +46,7 @@ export function EmployeeFormDialog({
                 errors.name ? styles.inputError : ""
               }`}
               value={formData.name}
+              disabled={isSubmitting}
               onChange={(e) => updateField("name", e.target.value)}
               placeholder="Ingresa el nombre"
             />
@@ -60,6 +63,7 @@ export function EmployeeFormDialog({
                 errors.lastName ? styles.inputError : ""
               }`}
               value={formData.lastName}
+              disabled={isSubmitting}
               onChange={(e) => updateField("lastName", e.target.value)}
               placeholder="Ingresa el apellido"
             />
@@ -77,6 +81,7 @@ export function EmployeeFormDialog({
                 errors.email ? styles.inputError : ""
               }`}
               value={formData.email}
+              disabled={isSubmitting}
               onChange={(e) => updateField("email", e.target.value)}
               placeholder="ejemplo@correo.com"
             />
@@ -96,12 +101,14 @@ export function EmployeeFormDialog({
                   errors.password ? styles.inputError : ""
                 }`}
                 value={formData.password}
+                disabled={isSubmitting}
                 onChange={(e) => updateField("password", e.target.value)}
                 placeholder="Mínimo 8 caracteres"
               />
               <button
                 type="button"
                 className={styles.eyeBtn}
+                disabled={isSubmitting}
                 onClick={() => setShowPassword((prev: any) => !prev)}
                 aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
@@ -122,6 +129,7 @@ export function EmployeeFormDialog({
                 errors.role ? styles.inputError : ""
               }`}
               value={formData.role}
+              disabled={isSubmitting}
               onChange={(e) => updateField("role", e.target.value)}
             >
               <option value="">Seleccionar rol</option>
@@ -140,6 +148,7 @@ export function EmployeeFormDialog({
             <button
               type="button"
               className={`${styles.btn} ${styles.btnCancel}`}
+              disabled={isSubmitting}
               onClick={() => {
                 resetForm();
                 onClose();
@@ -151,9 +160,9 @@ export function EmployeeFormDialog({
             <button
               type="submit"
               className={`${styles.btn} ${styles.btnSubmit}`}
-              disabled={Object.values(errors).some(error => error !== "")}
+              disabled={isSubmitting || Object.values(errors).some(error => error !== "")}
             >
-              Crear Empleado
+              {isSubmitting ? "Procesando..." : "Crear Empleado"}
             </button>
           </div>
         </form>
