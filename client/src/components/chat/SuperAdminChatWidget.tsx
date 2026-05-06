@@ -137,7 +137,7 @@ export const SuperAdminChatWidget = () => {
                       <div
                         className={`max-w-xs px-4 py-2 rounded-2xl text-sm ${
                           isMine
-                            ? "bg-orange-100 text-gray-900 border border-orange-200 rounded-br-none"
+                            ? "bg-orange-500 text-black rounded-br-none"
                             : "bg-white text-gray-800 border rounded-bl-none"
                         }`}
                       >
