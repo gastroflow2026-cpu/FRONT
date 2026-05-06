@@ -4,25 +4,14 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { clearSession, getToken, saveSession } from "@/helpers/getToken";
-import { boolean } from "yup";
 import { setupAxiosInterceptors } from "@/helpers/expiredToken";
+import { getApiBaseUrl } from "@/services/apiBaseUrl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-const normalizeBaseUrl = (url?: string | null) => {
-  if (!url) return "";
-  return url.trim().replace(/\/+$/, "");
-};
+const API_URL = getApiBaseUrl();
 
 const buildApiUrl = (path: string) => {
-  const base = normalizeBaseUrl(API_URL);
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  if (!base) {
-    throw new Error("API_URL_NOT_CONFIGURED");
-  }
-
-  return `${base}${normalizedPath}`;
+  return `${API_URL}${normalizedPath}`;
 };
 
 interface LoginValues {
@@ -291,7 +280,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
       const token = getStoredToken();
 
       try {
-        const res = await axios.patch(`${API_URL}/users/${isLogged.id}`, updatedFields, {
+        const res = await axios.patch(buildApiUrl(`/users/${isLogged.id}`), updatedFields, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -378,11 +367,11 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loginUserGoogle = async () => {
-    window.location.href = `${API_URL}/auth/google/login`;
+    window.location.href = buildApiUrl("/auth/google/login");
   };
 
   const registerUserGoogle = async () => {
-    window.location.href = `${API_URL}/auth/google/register`;
+    window.location.href = buildApiUrl("/auth/google/register");
   };
 
   const completeOwnerOnboarding = async (

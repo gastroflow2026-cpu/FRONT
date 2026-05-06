@@ -1,8 +1,9 @@
 import axios from "axios";
 import { getToken } from "@/helpers/getToken";
 import { Reservation } from "@/types/cashier";
+import { getApiBaseUrl } from "@/services/apiBaseUrl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3000";
+const API_URL = getApiBaseUrl();
 
 export type CashierReservationStatus =
   | "PENDING"
