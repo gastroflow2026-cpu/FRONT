@@ -20,6 +20,15 @@ export const useSuperAdminChat = () => {
   const [connected, setConnected] = useState(false);
   const [conversations, setConversations] = useState<Map<string, ChatMessage[]>>(new Map());
   const [activeUserId, setActiveUserId] = useState<string | null>(null);
+  const [unreadByUser, setUnreadByUser] = useState<Map<string, number>>(new Map());
+  const activeUserIdRef = useRef<string | null>(null);
+
+  const resolveOtherUserId = (message: ChatMessage, currentUserId?: string) =>
+    message.sender.id === currentUserId ? message.receiver.id : message.sender.id;
+
+  useEffect(() => {
+    activeUserIdRef.current = activeUserId;
+  }, [activeUserId]);
 
   useEffect(() => {
     const token = getToken();
@@ -36,10 +45,7 @@ export const useSuperAdminChat = () => {
 
     socket.on("new_message", (message: ChatMessage) => {
       const currentUser = getCurrentUser();
-      const otherUserId =
-        message.sender.id === currentUser?.id
-          ? message.receiver.id
-          : message.sender.id;
+      const otherUserId = resolveOtherUserId(message, currentUser?.id);
 
       setConversations((prev) => {
         const updated = new Map(prev);
@@ -47,14 +53,25 @@ export const useSuperAdminChat = () => {
         updated.set(otherUserId, [...existing, message]);
         return updated;
       });
+
+      setUnreadByUser((prev) => {
+        if (
+          message.sender.id === currentUser?.id ||
+          activeUserIdRef.current === otherUserId
+        ) {
+          return prev;
+        }
+
+        const updated = new Map(prev);
+        const currentUnread = updated.get(otherUserId) ?? 0;
+        updated.set(otherUserId, currentUnread + 1);
+        return updated;
+      });
     });
 
     socket.on("message_sent", (message: ChatMessage) => {
       const currentUser = getCurrentUser();
-      const otherUserId =
-        message.sender.id === currentUser?.id
-          ? message.receiver.id
-          : message.sender.id;
+      const otherUserId = resolveOtherUserId(message, currentUser?.id);
 
       setConversations((prev) => {
         const updated = new Map(prev);
@@ -89,8 +106,23 @@ export const useSuperAdminChat = () => {
 
   const loadHistory = (withUserId: string) => {
     setActiveUserId(withUserId);
+    setUnreadByUser((prev) => {
+      const updated = new Map(prev);
+      updated.delete(withUserId);
+      return updated;
+    });
     socketRef.current?.emit("get_history", { withUserId });
   };
+
+  const markConversationRead = (withUserId: string) => {
+    setUnreadByUser((prev) => {
+      const updated = new Map(prev);
+      updated.delete(withUserId);
+      return updated;
+    });
+  };
+
+  const totalUnread = Array.from(unreadByUser.values()).reduce((acc, count) => acc + count, 0);
 
   const sendMessage = (content: string, receiverId: string) => {
     if (!socketRef.current || !content.trim()) return;
@@ -103,6 +135,9 @@ export const useSuperAdminChat = () => {
     activeUserId,
     setActiveUserId,
     loadHistory,
+    unreadByUser,
+    totalUnread,
+    markConversationRead,
     sendMessage,
   };
 };

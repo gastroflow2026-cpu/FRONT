@@ -6,8 +6,28 @@ import { getApiBaseUrl } from "@/services/apiBaseUrl";
 export interface ChatMessage {
   id: string;
   content: string;
-  sender: { id: string };
-  receiver: { id: string };
+  sender: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    restaurant?: {
+      id: string;
+      name?: string;
+      slug?: string | null;
+    } | null;
+  };
+  receiver: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    restaurant?: {
+      id: string;
+      name?: string;
+      slug?: string | null;
+    } | null;
+  };
   read: boolean;
   createdAt: string;
 }
