@@ -54,6 +54,19 @@ interface RestaurantReviewDetail {
   documents: VerificationDocument[];
 }
 
+type RestaurantReviewDetailNestedResponse = {
+  restaurant?: PlatformRestaurant;
+  documents?: VerificationDocument[];
+  verification_documents?: VerificationDocument[];
+};
+
+type RestaurantReviewDetailFlatResponse = PlatformRestaurant & {
+  documents?: VerificationDocument[];
+  verification_documents?: VerificationDocument[];
+};
+
+type RestaurantReviewDetailResponse = RestaurantReviewDetailNestedResponse | RestaurantReviewDetailFlatResponse;
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const normalizeBaseUrl = (url?: string | null) => {
@@ -120,13 +133,20 @@ export default function PlatformRestaurantReviewPage() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response = await axios.get<RestaurantReviewDetail>(buildApiUrl(`/platform/restaurants/${restaurantId}`), {
+      const response = await axios.get<RestaurantReviewDetailResponse>(buildApiUrl(`/platform/restaurants/${restaurantId}`), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      setDetail(response.data);
+      const raw = response.data as RestaurantReviewDetailNestedResponse;
+      const restaurant = raw.restaurant ?? (response.data as PlatformRestaurant);
+      const documents = raw.documents ?? raw.verification_documents ?? [];
+
+      setDetail({
+        restaurant,
+        documents: Array.isArray(documents) ? documents : [],
+      });
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
         clearSession();
@@ -226,6 +246,12 @@ export default function PlatformRestaurantReviewPage() {
 
   const submitReviewAction = async (action: "approve" | "reject" | "suspend", notes: string) => {
     const token = getToken();
+    const statusByAction: Record<typeof action, RestaurantVerificationStatus> = {
+      approve: "approved",
+      reject: "rejected",
+      suspend: "suspended",
+    };
+    const status = statusByAction[action];
 
     if (!token || !isPlatformSessionUser()) {
       clearSession();
@@ -238,7 +264,7 @@ export default function PlatformRestaurantReviewPage() {
 
       await axios.patch(
         buildApiUrl(`/platform/restaurants/${restaurantId}/${action}`),
-        { notes },
+        { status, notes },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -272,11 +298,18 @@ export default function PlatformRestaurantReviewPage() {
         return;
       }
 
+      const backendMessage = axios.isAxiosError(error) ? error.response?.data?.message : null;
+      const parsedBackendMessage = Array.isArray(backendMessage)
+        ? backendMessage.map((item) => String(item)).join(" | ")
+        : typeof backendMessage === "string"
+          ? backendMessage
+          : null;
+
       await Swal.fire({
         theme: "dark",
         icon: "error",
         title: "No fue posible completar la acción",
-        text: "Intenta nuevamente o revisa la sesión.",
+        text: parsedBackendMessage || "Intenta nuevamente o revisa la sesión.",
         confirmButtonColor: "#f97316",
       });
     } finally {

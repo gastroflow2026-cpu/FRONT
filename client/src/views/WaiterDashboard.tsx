@@ -19,6 +19,7 @@ import { MenuCategory, MenuItem } from "@/types/MenuItem";
 import { UsersContext } from "@/context/UsersContext";
 import { useSocket } from "@/context/SocketContext";
 import { getToken } from "@/helpers/getToken";
+import { getApiBaseUrl } from "@/services/apiBaseUrl";
 import { fetchMyAssignedTables, WaiterAssignedTable } from "@/services/waiterAssignedTables";
 import {
   addItemsToOrder,
@@ -34,7 +35,7 @@ import {
   RestaurantOrderSummary,
 } from "@/services/orderLifecycle";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3000";
+const API_URL = getApiBaseUrl();
 
 type TableStatus = "libre" | "ocupada" | "reservada" | "listo";
 

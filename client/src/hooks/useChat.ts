@@ -1,17 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { getToken } from "@/helpers/getToken";
+import { getApiBaseUrl } from "@/services/apiBaseUrl";
 
 export interface ChatMessage {
   id: string;
   content: string;
-  sender: { id: string };
-  receiver: { id: string };
+  sender: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    restaurant?: {
+      id: string;
+      name?: string;
+      slug?: string | null;
+    } | null;
+  };
+  receiver: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    restaurant?: {
+      id: string;
+      name?: string;
+      slug?: string | null;
+    } | null;
+  };
   read: boolean;
   createdAt: string;
 }
 
 export const useChat = (receiverId: string) => {
+  const API_URL = getApiBaseUrl();
   const socketRef = useRef<Socket | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
@@ -20,10 +42,8 @@ export const useChat = (receiverId: string) => {
     const token = getToken();
     if (!token || !receiverId) return;
 
-    const socket = io(`${process.env.NEXT_PUBLIC_API_URL}/admin-chat`, {
-      extraHeaders: {
-        authorization: `Bearer ${token}`,
-      },
+    const socket = io(`${API_URL}/admin-chat`, {
+      auth: { token },
     });
 
     socketRef.current = socket;
@@ -50,7 +70,7 @@ export const useChat = (receiverId: string) => {
     return () => {
       socket.disconnect();
     };
-  }, [receiverId]);
+  }, [API_URL, receiverId]);
 
   const sendMessage = (content: string) => {
     if (!socketRef.current || !content.trim()) return;

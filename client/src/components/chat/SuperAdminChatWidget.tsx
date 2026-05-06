@@ -25,6 +25,9 @@ export const SuperAdminChatWidget = () => {
     activeUserId,
     setActiveUserId,
     loadHistory,
+    unreadByUser,
+    totalUnread,
+    markConversationRead,
     sendMessage,
   } = useSuperAdminChat();
 
@@ -42,6 +45,15 @@ export const SuperAdminChatWidget = () => {
     : [];
 
   const adminList = Array.from(conversations.keys()).filter(Boolean);
+
+  const resolveRestaurantLabel = (message: ChatMessage, otherUserId: string) => {
+    const otherUser = message.sender.id === otherUserId ? message.sender : message.receiver;
+    return (
+      otherUser.restaurant?.name ||
+      otherUser.email ||
+      "Restaurante"
+    );
+  };
 
   const handleSend = () => {
     if (!input.trim() || !activeUserId) return;
@@ -84,16 +96,26 @@ export const SuperAdminChatWidget = () => {
                 adminList.map((userId, index) => {
                   const msgs = conversations.get(userId) || [];
                   const last = msgs[msgs.length - 1];
+                  const unreadCount = unreadByUser.get(userId) ?? 0;
+                  const displayName = last ? resolveRestaurantLabel(last, userId) : "Restaurante";
                   return (
                     <button
                       key={`${userId}-${index}`}
-                      onClick={() => loadHistory(userId)}
-                      className="w-full text-left px-4 py-3 border-b hover:bg-gray-50 transition"
+                      onClick={() => {
+                        markConversationRead(userId);
+                        loadHistory(userId);
+                      }}
+                      className="w-full text-left px-4 py-3 border-b hover:bg-gray-50 transition relative"
                     >
-                      <p className="text-sm font-semibold text-gray-800">Admin</p>
+                      <p className="text-sm font-semibold text-gray-800">{displayName}</p>
                       <p className="text-xs text-gray-500 truncate">
                         {last?.content}
                       </p>
+                      {unreadCount > 0 && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
                     </button>
                   );
                 })
@@ -115,7 +137,7 @@ export const SuperAdminChatWidget = () => {
                       <div
                         className={`max-w-xs px-4 py-2 rounded-2xl text-sm ${
                           isMine
-                            ? "bg-orange-500 text-white rounded-br-none"
+                            ? "bg-orange-500 text-black rounded-br-none"
                             : "bg-white text-gray-800 border rounded-bl-none"
                         }`}
                       >
@@ -137,7 +159,7 @@ export const SuperAdminChatWidget = () => {
 
               <div className="flex gap-2 p-3 border-t bg-white">
                 <input
-                  className="flex-1 border rounded-full px-4 py-2 text-sm outline-none focus:border-orange-400"
+                  className="flex-1 border rounded-full px-4 py-2 text-sm text-black placeholder:text-gray-400 outline-none focus:border-orange-400"
                   placeholder="Escribe un mensaje..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -158,9 +180,14 @@ export const SuperAdminChatWidget = () => {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all"
+        className="relative w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all"
       >
         {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
+        {!isOpen && totalUnread > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+            {totalUnread > 99 ? "99+" : totalUnread}
+          </span>
+        )}
       </button>
     </div>
   );

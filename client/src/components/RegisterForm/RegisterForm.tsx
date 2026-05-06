@@ -1,5 +1,4 @@
 "use client";
-import { RegisterUser } from "@/services/auth.services";
 import {
   RegisterFormValues,
   registerInitialValues,
@@ -20,8 +19,10 @@ import { useContext, useState } from "react";
 import { UsersContext } from "../../context/UsersContext";
 import Swal from "sweetalert2";
 import Link from "next/link"; // ← agregado Link
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
+  const router = useRouter();
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +34,9 @@ export default function RegisterForm() {
   const formik = useFormik<RegisterFormValues>({
     initialValues: registerInitialValues,
     validationSchema: registerValidationSchema,
+    validateOnMount: false,
+    validateOnBlur: true,
+    validateOnChange: true,
     onSubmit: async (values, { resetForm }) => {
       const newErrors: Record<string, string> = {};
 
@@ -45,10 +49,10 @@ export default function RegisterForm() {
         return;
       }
 
-      const res = await registerNewUser(values);
+      const result = await registerNewUser(values);
 
-      if (res === 201) {
-        Swal.fire({
+      if (result.status === 201) {
+        await Swal.fire({
           theme: "dark",
           title: "Éxito!",
           text: "Usuario registrado correctamente",
@@ -56,22 +60,29 @@ export default function RegisterForm() {
         });
 
         resetForm();
+        router.push("/login");
         return;
       }
-      if (res === 400) {
-        Swal.fire({
-          theme: "dark",
-          title: "Error!",
-          text: "El email ya está registrado",
-          icon: "error",
-        });
-        return;
-      }
+
+      const backendMessageRaw =
+        result.data && "message" in result.data ? result.data.message : undefined;
+      const backendMessage = Array.isArray(backendMessageRaw)
+        ? backendMessageRaw.map((item) => String(item)).join(" | ")
+        : typeof backendMessageRaw === "string"
+          ? backendMessageRaw
+          : null;
+
+      const normalizedBackendMessage = backendMessage?.toLowerCase() ?? "";
+      const isEmailAlreadyRegistered =
+        normalizedBackendMessage.includes("email ya esta registrado") ||
+        normalizedBackendMessage.includes("email ya está registrado");
 
       Swal.fire({
         theme: "dark",
         title: "Error!",
-        text: "Inténtelo nuevamente",
+        text: isEmailAlreadyRegistered
+          ? "El email ya está registrado"
+          : backendMessage || "No fue posible registrar el usuario. Revisa los datos ingresados.",
         icon: "error",
       });
     },
@@ -275,6 +286,9 @@ export default function RegisterForm() {
                 {formik.errors.password}
               </div>
             )}
+            <div className="register-form__error">
+              La contraseña debe tener 8 a 15 caracteres, mayúscula, minúscula, número y carácter especial.
+            </div>
           </div>
 
           {/* CONFIRM PASSWORD */}
@@ -352,6 +366,11 @@ export default function RegisterForm() {
               <p className="register-form__error">{errors.terms}</p>
             )}
           </div>
+          {formik.submitCount > 0 && Object.keys(formik.errors).length > 0 && (
+            <p className="register-form__error">
+              Revisa los campos marcados antes de crear la cuenta.
+            </p>
+          )}
 
           <button type="submit" className="register-form__submit">
             <span className="register-form__submit-text">

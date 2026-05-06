@@ -12,9 +12,9 @@ import { io, Socket } from "socket.io-client";
 import { UsersContext } from "@/context/UsersContext";
 import { getToken } from "@/helpers/getToken";
 import { resolveRestaurantId } from "@/services/orderLifecycle";
+import { getApiBaseUrl } from "@/services/apiBaseUrl";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3000";
+const API_URL = getApiBaseUrl();
 
 type SocketContextValue = {
   socket: Socket | null;
