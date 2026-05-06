@@ -56,6 +56,8 @@ interface AuthResponseUser {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  address?: string;
   roles: string[];
   auth_provider: string;
   restaurant_id: string | null;
@@ -157,6 +159,8 @@ const normalizeAuthUser = (input: unknown): AuthResponseUser => {
     id: typeof raw.id === "string" ? raw.id : "",
     name: (typeof raw.name === "string" && raw.name.trim()) || fallbackName || "Usuario",
     email: typeof raw.email === "string" ? raw.email : "",
+    phone: typeof raw.phone === "string" ? raw.phone : "",
+    address: typeof raw.address === "string" ? raw.address : "",
     roles: normalizeRoles(raw.roles ?? raw.role),
     auth_provider: typeof raw.auth_provider === "string" ? raw.auth_provider : "email",
     restaurant_id: restaurantId,

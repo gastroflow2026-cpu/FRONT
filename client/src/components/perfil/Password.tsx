@@ -9,6 +9,7 @@ export const Password = () => {
   const { form, errors, isLoading, handleChange, handleSubmit } =
     usePasswordForm();
 
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
@@ -16,6 +17,36 @@ export const Password = () => {
     <div className={styles.passBox}>
       <form onSubmit={handleSubmit} className={styles.passForm}>
         <h3 className={styles.title}>Actualizar Contraseña</h3>
+
+        {/* Contraseña Actual */}
+        <div className={styles.inputGroup}>
+          <label htmlFor="currentPassword" className={styles.label}>
+            Contraseña Actual
+          </label>
+          <div className={styles.fieldWrapper}>
+            <input
+              type={showCurrentPass ? "text" : "password"}
+              id="currentPassword"
+              name="currentPassword"
+              value={form.currentPassword}
+              onChange={handleChange}
+              className={`${styles.input} ${errors.currentPassword ? styles.inputError : ""}`}
+            />
+            <button
+              type="button"
+              className={styles.eyeBtn}
+              onClick={() => setShowCurrentPass(!showCurrentPass)}
+              aria-label="Mostrar contraseña actual"
+            >
+              {showCurrentPass ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          <span
+            className={`${styles.error} ${errors.currentPassword ? styles.active : ""}`}
+          >
+            {errors.currentPassword}
+          </span>
+        </div>
 
         {/* Nueva Contraseña */}
         <div className={styles.inputGroup}>
@@ -35,7 +66,7 @@ export const Password = () => {
               type="button"
               className={styles.eyeBtn}
               onClick={() => setShowNewPass(!showNewPass)}
-              aria-label="Mostrar contraseña"
+              aria-label="Mostrar nueva contraseña"
             >
               {showNewPass ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -65,7 +96,7 @@ export const Password = () => {
               type="button"
               className={styles.eyeBtn}
               onClick={() => setShowConfirmPass(!showConfirmPass)}
-              aria-label="Mostrar contraseña"
+              aria-label="Confirmar contraseña"
             >
               {showConfirmPass ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>

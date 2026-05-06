@@ -11,6 +11,7 @@
   align-items: center;
   padding-top: 30px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
 }
 
 .avatarWrapper {
@@ -98,8 +99,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  word-break: break-all;
+  word-break: break-word;
   position: relative;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
 .half:first-child {
@@ -128,6 +131,10 @@
 
 .value {
   font-size: 13px;
+  display: block;
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 768px) {
@@ -155,6 +162,12 @@
     height: 60px;
   }
 
+  .autoRow {
+    min-height: 60px;
+    height: auto;
+    padding: 6px 0;
+  }
+
   .label {
     font-size: 10px;
   }
@@ -163,3 +176,134 @@
     font-size: 12px;
   }
 }
+
+/* ── Inline edit: value + pencil ────────────────────────────── */
+.valueRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.valueRowWrap {
+  width: 100%;
+  justify-content: center;
+}
+
+.multilineValue {
+  max-width: calc(100% - 18px);
+  line-height: 1.25;
+}
+
+.autoRow {
+  height: auto;
+  min-height: 70px;
+  padding: 8px 0;
+}
+
+.penBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.penBtn:hover {
+  color: #fb7050;
+  background: rgba(251, 112, 80, 0.12);
+}
+
+/* ── Edit mode block ─────────────────────────────────────────── */
+.editField {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 8px;
+}
+
+.editInput {
+  width: 100%;
+  max-width: 140px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.editInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+}
+
+.editInput:focus {
+  border-color: #fb7050;
+  box-shadow: 0 0 0 2px rgba(251, 112, 80, 0.2);
+}
+
+.editInputError {
+  border-color: #ef4444;
+}
+
+.editError {
+  font-size: 10px;
+  color: #f87171;
+  text-align: center;
+  max-width: 140px;
+  line-height: 1.2;
+}
+
+.editActions {
+  display: flex;
+  gap: 5px;
+}
+
+.saveBtn {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: none;
+  background: #fb7050;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.saveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* When editing, let the row grow */
+.infoRow:has(.editField) {
+  height: auto;
+  min-height: 70px;
+  padding: 6px 0;
+}
+
