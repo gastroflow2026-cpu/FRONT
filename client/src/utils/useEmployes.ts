@@ -5,6 +5,10 @@ import Swal from "sweetalert2";
 import { adminService } from "@/services/adminService";
 import axios from "axios";
 import { CreateEmployeePayload, Employee } from "@/types/Employee";
+import {
+  extractAsyncErrorInfo,
+  mapAsyncErrorToUserMessage,
+} from "@/helpers/asyncOperations";
 
 const getBackendErrorMessage = (error: unknown): string | null => {
   if (!axios.isAxiosError(error)) return null;
@@ -31,6 +35,8 @@ const getBackendErrorMessage = (error: unknown): string | null => {
 export function useEmployees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreatingEmployee, setIsCreatingEmployee] = useState(false);
+  const [statusUpdatingByEmployeeId, setStatusUpdatingByEmployeeId] = useState<Record<string, boolean>>({});
 
   // 🔥 filtros
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
@@ -72,7 +78,14 @@ export function useEmployees() {
   }, [employees, statusFilter, roleFilter]);
 
   const handleToggleStatus = async (id: string, isActive: boolean) => {
+    if (statusUpdatingByEmployeeId[id]) return;
+
     const prev = employees;
+
+    setStatusUpdatingByEmployeeId((curr) => ({
+      ...curr,
+      [id]: true,
+    }));
 
     setEmployees((curr) =>
       curr.map((emp) =>
@@ -92,28 +105,58 @@ export function useEmployees() {
       Swal.fire("Éxito", "Estado actualizado", "success");
     } catch (err) {
       setEmployees(prev);
-      Swal.fire("Error", "No se pudo actualizar", "error");
+      const info = extractAsyncErrorInfo(err);
+      Swal.fire(
+        info.status === 400 || info.status === 409 ? "Atención" : "Error",
+        mapAsyncErrorToUserMessage(info, "No se pudo actualizar el estado del empleado."),
+        info.status === 400 || info.status === 409 ? "warning" : "error",
+      );
+    } finally {
+      setStatusUpdatingByEmployeeId((curr) => ({
+        ...curr,
+        [id]: false,
+      }));
     }
   };
 
   const handleCreateEmployee = async (payload: CreateEmployeePayload) => {
+    if (isCreatingEmployee) return false;
+
+    setIsCreatingEmployee(true);
+
+    void Swal.fire({
+      title: "Procesando solicitud...",
+      text: "Estamos creando el empleado.",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
-      const employee = await adminService.createEmployee(payload);
-
-      setEmployees((prev) => [...prev, employee]);
-
-      Swal.fire("Éxito", "Empleado creado", "success");
+      await adminService.createEmployee(payload);
+      await fetchEmployees();
+      Swal.close();
+      await Swal.fire("Éxito", "Empleado creado", "success");
       return true;
     } catch (err) {
-      const backendMessage = getBackendErrorMessage(err);
+      Swal.close();
+      const info = extractAsyncErrorInfo(err);
+      const backendMessage = getBackendErrorMessage(err) || mapAsyncErrorToUserMessage(
+        info,
+        "No se pudo crear el empleado",
+      );
 
-      Swal.fire(
+      await Swal.fire(
         "Error",
-        backendMessage || "No se pudo crear el empleado",
+        backendMessage,
         "error"
       );
 
       return false;
+    } finally {
+      setIsCreatingEmployee(false);
     }
   };
 
@@ -150,6 +193,8 @@ export function useEmployees() {
     setRoleFilter,
     handleToggleStatus,
     handleCreateEmployee,
-    handleChangeRole
+    handleChangeRole,
+    isCreatingEmployee,
+    statusUpdatingByEmployeeId,
   };
 }
