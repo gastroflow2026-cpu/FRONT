@@ -8,6 +8,7 @@ import { getAuthHeaders } from "@/services/adminService";
 
 export const usePasswordForm = () => {
   const [form, setForm] = useState({
+    currentPassword: "",
     newPassword: "",
     confirmNewPassword: "",
   })
@@ -53,14 +54,33 @@ export const usePasswordForm = () => {
     e.preventDefault()
 
     try {
-      setIsLoading(true)
       setErrors({})
 
       await passwordSchema.validate(form, { abortEarly: false })
 
+      const confirmResult = await Swal.fire({
+        theme: "dark",
+        title: "¿Seguro que quieres cambiar la contraseña?",
+        text: "Se actualizará tu contraseña de acceso.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, cambiar",
+        cancelButtonText: "Cancelar",
+      })
+
+      if (!confirmResult.isConfirmed) {
+        return
+      }
+
+      setIsLoading(true)
+
       const token = getAuthHeaders()
 
-      await axios.patch(`${API_URL}/users/updatepassword`, form, token)
+      await axios.patch(
+        `${API_URL}/users/updatepassword`,
+        { currentPassword: form.currentPassword, newPassword: form.newPassword },
+        token
+      )
 
       Swal.fire({
         theme: "dark",
@@ -70,6 +90,7 @@ export const usePasswordForm = () => {
       })
 
       setForm({
+        currentPassword: "",
         newPassword: "",
         confirmNewPassword: "",
       })
@@ -77,13 +98,14 @@ export const usePasswordForm = () => {
     } catch (err: any) {
       const newErrors: Record<string, string> = {}
 
-      if (err.inner) {
+      if (err?.name === "ValidationError" && err.inner) {
         err.inner.forEach((error: any) => {
           newErrors[error.path] = error.message
         })
-      }
 
-      setErrors(newErrors)
+        setErrors(newErrors)
+        return
+      }
 
       Swal.fire({
         theme: "dark",
