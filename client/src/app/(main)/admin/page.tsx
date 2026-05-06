@@ -116,6 +116,7 @@ export default function Admin() {
           </div>
         </main>
         <Footer />
+        <ChatWidget />
       </div>
     );
   }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { getToken } from "@/helpers/getToken";
 import { ChatMessage } from "./useChat";
+import { getApiBaseUrl } from "@/services/apiBaseUrl";
 
 const getCurrentUser = (): { id: string } | null => {
   const storedUser = localStorage.getItem("user");
@@ -14,6 +15,7 @@ const getCurrentUser = (): { id: string } | null => {
 };
 
 export const useSuperAdminChat = () => {
+  const API_URL = getApiBaseUrl();
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [conversations, setConversations] = useState<Map<string, ChatMessage[]>>(new Map());
@@ -23,8 +25,8 @@ export const useSuperAdminChat = () => {
     const token = getToken();
     if (!token) return;
 
-    const socket = io(`${process.env.NEXT_PUBLIC_API_URL}/admin-chat`, {
-      extraHeaders: { authorization: `Bearer ${token}` },
+    const socket = io(`${API_URL}/admin-chat`, {
+      auth: { token },
     });
 
     socketRef.current = socket;
@@ -83,7 +85,7 @@ export const useSuperAdminChat = () => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [API_URL]);
 
   const loadHistory = (withUserId: string) => {
     setActiveUserId(withUserId);
