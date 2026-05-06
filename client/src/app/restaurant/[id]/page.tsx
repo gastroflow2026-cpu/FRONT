@@ -143,6 +143,7 @@ const RestaurantDetail = () => {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [pendingSelectedTableId, setPendingSelectedTableId] = useState<string | null>(null);
   const { tables, loading: loadingTables, getTables } = useTables();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fecha mínima para el atributo 'min' del input date
   const today = new Date();
@@ -353,6 +354,8 @@ const RestaurantDetail = () => {
   }, [loadingTables, pendingSelectedTableId, selectableTables, tables.length]);
 
   const handleConfirmReservation = async () => {
+    if (isSubmitting) return; 
+    setIsSubmitting(true);
     try {
       await reservationSchema.validate(formValues, { abortEarly: false });
       if (!restaurantId) return;
@@ -413,6 +416,8 @@ const RestaurantDetail = () => {
         text: errorMessage,
         confirmButtonColor: "#ff7e5f",
       });
+    } finally{
+      setIsSubmitting(false); 
     }
   };
   if (loadingRestaurant) return <div className="p-10">Cargando restaurante...</div>;
@@ -730,10 +735,10 @@ const RestaurantDetail = () => {
                 <button
                   type="button"
                   onClick={handleConfirmReservation}
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || isSubmitting}
                   className="w-full rounded-xl bg-linear-to-r from-orange-500 to-pink-600 py-4 font-bold text-white transition-all shadow-lg enabled:hover:scale-[1.02] disabled:opacity-50"
                 >
-                  Confirmar Reserva
+                 {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
                 </button>
                 <p className="text-[10px] text-center text-gray-400">Recibirás confirmación inmediata por email.</p>
               </div>

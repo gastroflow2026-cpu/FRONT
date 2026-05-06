@@ -228,10 +228,10 @@ if (loading) {
               const date = new Date(reservation.reservation_date).toLocaleDateString("es-AR", {
                 weekday: "long", day: "numeric", month: "long", year: "numeric",
               });
+
               const time = new Date(reservation.start_time).toLocaleTimeString("es-AR", {
                 hour: "2-digit", minute: "2-digit",
               });
-
               return (
               <div key={reservation.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 {/* Header con imagen */}
