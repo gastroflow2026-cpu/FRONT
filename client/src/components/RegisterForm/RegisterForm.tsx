@@ -14,13 +14,15 @@ import {
   Eye,
   EyeOff,
   UtensilsCrossed,
-} from "lucide-react"; // ← agregado UtensilsCrossed
+} from "lucide-react"; // â† agregado UtensilsCrossed
 import { useContext, useState } from "react";
 import { UsersContext } from "../../context/UsersContext";
 import Swal from "sweetalert2";
-import Link from "next/link"; // ← agregado Link
+import Link from "next/link"; // â† agregado Link
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
+  const router = useRouter();
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +41,7 @@ export default function RegisterForm() {
       const newErrors: Record<string, string> = {};
 
       if (!acceptTerms) {
-        newErrors.terms = "Debes aceptar los términos y condiciones";
+        newErrors.terms = "Debes aceptar los tÃ©rminos y condiciones";
       }
 
       if (Object.keys(newErrors).length > 0) {
@@ -50,14 +52,15 @@ export default function RegisterForm() {
       const result = await registerNewUser(values);
 
       if (result.status === 201) {
-        Swal.fire({
+        await Swal.fire({
           theme: "dark",
-          title: "Éxito!",
+          title: "Ã‰xito!",
           text: "Usuario registrado correctamente",
           icon: "success",
         });
 
         resetForm();
+        router.push("/login");
         return;
       }
 
@@ -72,13 +75,13 @@ export default function RegisterForm() {
       const normalizedBackendMessage = backendMessage?.toLowerCase() ?? "";
       const isEmailAlreadyRegistered =
         normalizedBackendMessage.includes("email ya esta registrado") ||
-        normalizedBackendMessage.includes("email ya está registrado");
+        normalizedBackendMessage.includes("email ya estÃ¡ registrado");
 
       Swal.fire({
         theme: "dark",
         title: "Error!",
         text: isEmailAlreadyRegistered
-          ? "El email ya está registrado"
+          ? "El email ya estÃ¡ registrado"
           : backendMessage || "No fue posible registrar el usuario. Revisa los datos ingresados.",
         icon: "error",
       });
@@ -86,9 +89,9 @@ export default function RegisterForm() {
   });
 
   return (
-    // ↓ agregado overflow: hidden para que la barra respete el border-radius
+    // â†“ agregado overflow: hidden para que la barra respete el border-radius
     <div className="register-form" style={{ padding: 0, overflow: "hidden" }}>
-      {/* ↓ BARRA SUPERIOR NUEVA - REGISTRO RESTAURANTE */}
+      {/* â†“ BARRA SUPERIOR NUEVA - REGISTRO RESTAURANTE */}
       <Link
         href="/owner"
         style={{
@@ -111,12 +114,12 @@ export default function RegisterForm() {
             whiteSpace: "nowrap",
           }}
         >
-          ¿Sos dueño de un restaurante? Registralo aquí
+          Â¿Sos dueÃ±o de un restaurante? Registralo aquÃ­
         </span>
       </Link>
-      {/* ↑ FIN BARRA SUPERIOR */}
+      {/* â†‘ FIN BARRA SUPERIOR */}
 
-      {/* ↓ Wrapper con el padding original del formulario */}
+      {/* â†“ Wrapper con el padding original del formulario */}
       <div style={{ padding: "1.5rem 1.25rem" }}>
         <div className="register-form__header">
           <h1 className="register-form__logo">
@@ -204,7 +207,7 @@ export default function RegisterForm() {
                 id="country"
                 name="country"
                 type="text"
-                placeholder="País"
+                placeholder="PaÃ­s"
                 value={formik.values.country}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -240,7 +243,7 @@ export default function RegisterForm() {
 
           {/* PASSWORD */}
           <div className="register-form__field">
-            <label className="register-form__label">Contraseña</label>
+            <label className="register-form__label">ContraseÃ±a</label>
             <div
               className="register-form__input-wrapper"
               style={{ position: "relative" }}
@@ -251,7 +254,7 @@ export default function RegisterForm() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -272,7 +275,7 @@ export default function RegisterForm() {
                 }}
                 onClick={() => setShowPassword((prev) => !prev)}
                 aria-label={
-                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  showPassword ? "Ocultar contraseÃ±a" : "Mostrar contraseÃ±a"
                 }
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -284,13 +287,13 @@ export default function RegisterForm() {
               </div>
             )}
             <div className="register-form__error">
-              La contraseña debe tener 8 a 15 caracteres, mayúscula, minúscula, número y carácter especial.
+              La contraseÃ±a debe tener 8 a 15 caracteres, mayÃºscula, minÃºscula, nÃºmero y carÃ¡cter especial.
             </div>
           </div>
 
           {/* CONFIRM PASSWORD */}
           <div className="register-form__field">
-            <label className="register-form__label">Confirmar Contraseña</label>
+            <label className="register-form__label">Confirmar ContraseÃ±a</label>
             <div
               className="register-form__input-wrapper"
               style={{ position: "relative" }}
@@ -301,7 +304,7 @@ export default function RegisterForm() {
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={formik.values.confirmPassword}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -323,8 +326,8 @@ export default function RegisterForm() {
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
                 aria-label={
                   showConfirmPassword
-                    ? "Ocultar contraseña"
-                    : "Mostrar contraseña"
+                    ? "Ocultar contraseÃ±a"
+                    : "Mostrar contraseÃ±a"
                 }
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -338,7 +341,7 @@ export default function RegisterForm() {
               )}
           </div>
 
-          {/* Términos y condiciones */}
+          {/* TÃ©rminos y condiciones */}
           <div className="register-form__terms">
             <label className="register-form__checkbox-label">
               <input
@@ -351,11 +354,11 @@ export default function RegisterForm() {
               <span>
                 Acepto los{" "}
                 <a href="#" className="register-form__link">
-                  términos y condiciones
+                  tÃ©rminos y condiciones
                 </a>{" "}
                 y la{" "}
                 <a href="#" className="register-form__link">
-                  política de privacidad
+                  polÃ­tica de privacidad
                 </a>
               </span>
             </label>
@@ -378,18 +381,18 @@ export default function RegisterForm() {
 
           {/* Enlace a login */}
           <p className="register-form__login">
-            ¿Ya tienes una cuenta?{" "}
+            Â¿Ya tienes una cuenta?{" "}
             <a href="/login" className="register-form__login-link">
-              Inicia sesión aquí
+              Inicia sesiÃ³n aquÃ­
             </a>
           </p>
 
-          {/* ↓ ELIMINADO el segundo enlace de restaurante, ahora está en la barra superior */}
+          {/* â†“ ELIMINADO el segundo enlace de restaurante, ahora estÃ¡ en la barra superior */}
         </form>
 
         {/* Separador */}
         <div className="register-form__divider">
-          <span className="register-form__divider-text">o regístrate con</span>
+          <span className="register-form__divider-text">o regÃ­strate con</span>
         </div>
 
         {/* Botones de redes sociales */}
@@ -421,7 +424,8 @@ export default function RegisterForm() {
           Google
         </button>
       </div>
-      {/* ↑ FIN Wrapper con padding */}
+      {/* â†‘ FIN Wrapper con padding */}
     </div>
   );
 }
+
