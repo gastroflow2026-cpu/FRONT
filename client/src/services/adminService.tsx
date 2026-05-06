@@ -3,6 +3,13 @@ import { ADMIN_ENDPOINTS } from "@/constants/AdminEndpoints";
 import { getToken } from "@/helpers/getToken";
 import { CreateEmployeePayload, Employee } from "@/types/Employee";
 import { MenuItemStatus } from "@/types/MenuItem";
+import {
+  buildHeadersWithRequestId,
+  clearRequestId,
+  CRITICAL_OPERATION_TIMEOUT_MS,
+  getOrCreateRequestId,
+  logAsyncOperation,
+} from "@/helpers/asyncOperations";
 
 export const getAuthHeaders = () => {
   const token = getToken();
@@ -43,21 +50,50 @@ const mapStatusFromAPI = (status: string): MenuItemStatus => {
 export const adminService = {
   // --- SECCION: EMPLEADOS ---
   getAllEmployees: async (): Promise<Employee[]> => {
-    const res = await axios.get(
-      ADMIN_ENDPOINTS.EMPLOYEES.LIST,
-      getAuthHeaders(),
-    );
+    const actionKey = "employees:list";
+    const requestId = getOrCreateRequestId(actionKey);
+    const endpoint = ADMIN_ENDPOINTS.EMPLOYEES.LIST;
+    const startedAt = performance.now();
+
+    const authConfig = getAuthHeaders();
+    const res = await axios.get(endpoint, {
+      ...authConfig,
+      headers: buildHeadersWithRequestId(authConfig.headers, requestId),
+      timeout: CRITICAL_OPERATION_TIMEOUT_MS,
+    });
+
+    logAsyncOperation({
+      requestId,
+      endpoint,
+      durationMs: performance.now() - startedAt,
+      ok: true,
+    });
+    clearRequestId(actionKey);
     return res.data;
   },
 
   createEmployee: async (
     employeeData: CreateEmployeePayload,
   ): Promise<Employee> => {
-    const res = await axios.post(
-      ADMIN_ENDPOINTS.EMPLOYEES.CREATE,
-      employeeData,
-      getAuthHeaders(),
-    );
+    const actionKey = `employee:create:${employeeData.email.toLowerCase()}`;
+    const requestId = getOrCreateRequestId(actionKey);
+    const endpoint = ADMIN_ENDPOINTS.EMPLOYEES.CREATE;
+    const startedAt = performance.now();
+    const authConfig = getAuthHeaders();
+
+    const res = await axios.post(endpoint, employeeData, {
+      ...authConfig,
+      headers: buildHeadersWithRequestId(authConfig.headers, requestId),
+      timeout: CRITICAL_OPERATION_TIMEOUT_MS,
+    });
+
+    logAsyncOperation({
+      requestId,
+      endpoint,
+      durationMs: performance.now() - startedAt,
+      ok: true,
+    });
+    clearRequestId(actionKey);
     return res.data;
   },
 
@@ -65,11 +101,25 @@ export const adminService = {
     employeeId: string,
     isActive: boolean,
   ): Promise<Employee> => {
-    const res = await axios.patch(
-      ADMIN_ENDPOINTS.EMPLOYEES.STATUS(employeeId),
-      { isActive },
-      getAuthHeaders(),
-    );
+    const actionKey = `employee:status:${employeeId}`;
+    const requestId = getOrCreateRequestId(actionKey);
+    const endpoint = ADMIN_ENDPOINTS.EMPLOYEES.STATUS(employeeId);
+    const startedAt = performance.now();
+    const authConfig = getAuthHeaders();
+
+    const res = await axios.patch(endpoint, { isActive }, {
+      ...authConfig,
+      headers: buildHeadersWithRequestId(authConfig.headers, requestId),
+      timeout: CRITICAL_OPERATION_TIMEOUT_MS,
+    });
+
+    logAsyncOperation({
+      requestId,
+      endpoint,
+      durationMs: performance.now() - startedAt,
+      ok: true,
+    });
+    clearRequestId(actionKey);
     return res.data;
   },
 

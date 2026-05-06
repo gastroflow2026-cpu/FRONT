@@ -24,17 +24,37 @@ export const registerInitialValues: RegisterFormValues = {
 
 //Esquema de validaciones
 export const registerValidationSchema = Yup.object({
-  first_name: Yup.string().required("Nombre Requerido"),
-  last_name: Yup.string().required("Apellido Requerido"),
-  city: Yup.string(),
-  Country: Yup.string(),
+  first_name: Yup.string()
+    .min(3, "El nombre debe tener al menos 3 caracteres")
+    .max(20, "El nombre no puede superar los 20 caracteres")
+    .required("Nombre Requerido"),
+  last_name: Yup.string()
+    .min(3, "El apellido debe tener al menos 3 caracteres")
+    .max(60, "El apellido no puede superar los 60 caracteres")
+    .required("Apellido Requerido"),
+  city: Yup.string()
+    .min(2, "La ciudad debe tener al menos 2 caracteres")
+    .max(15, "La ciudad no puede superar los 15 caracteres")
+    .required("Ciudad requerida"),
+  country: Yup.string()
+    .min(2, "El país debe tener al menos 2 caracteres")
+    .max(15, "El país no puede superar los 15 caracteres")
+    .required("País requerido"),
   email: Yup.string()
     .email("Formato de Correo Invalido")
     .required("Correo obligatorio"),
   password: Yup.string()
-    .min(6, "La contrasela debe tener al meenos 6 caracteres")
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .max(15, "La contraseña no puede superar los 15 caracteres")
+    .matches(/[A-Z]/, "La contraseña debe incluir al menos una mayúscula")
+    .matches(/[a-z]/, "La contraseña debe incluir al menos una minúscula")
+    .matches(/[0-9]/, "La contraseña debe incluir al menos un número")
+    .matches(
+      /[^A-Za-z0-9]/,
+      "La contraseña debe incluir al menos un carácter especial",
+    )
     .required("Contraseña Requerida"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")])
+    .oneOf([Yup.ref("password")], "Las contraseñas no coinciden")
     .required("Confirmación Requerida"),
 });

@@ -13,16 +13,19 @@ const getCurrentUser = (): { id: string } | null => {
   }
 };
 
-const SUPER_ADMIN_ID = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID!;
+const SUPER_ADMIN_ID = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID?.trim() ?? "";
 
 const ChatBox = ({
-  receiverId,
   currentUserId,
+  messages,
+  connected,
+  sendMessage,
 }: {
-  receiverId: string;
   currentUserId: string;
+  messages: ChatMessage[];
+  connected: boolean;
+  sendMessage: (content: string) => void;
 }) => {
-  const { messages, connected, sendMessage } = useChat(receiverId);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +68,9 @@ const ChatBox = ({
                 }`}
               >
                 {msg.content}
+                {!isMine && (
+                  <p className="text-xs mt-1 text-gray-500 font-medium">GastroFlow Team</p>
+                )}
                 <p
                   className={`text-xs mt-1 ${isMine ? "text-blue-100" : "text-gray-400"}`}
                 >
@@ -104,11 +110,42 @@ const ChatBox = ({
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const isChatConfigured = Boolean(SUPER_ADMIN_ID);
+  const { messages, connected, sendMessage } = useChat(isChatConfigured ? SUPER_ADMIN_ID : "");
+  const previousMessagesCountRef = useRef(0);
 
   useEffect(() => {
     const user = getCurrentUser();
     if (user) setCurrentUserId(user.id);
   }, []);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const previousLength = previousMessagesCountRef.current;
+    const currentLength = messages.length;
+
+    if (currentLength <= previousLength) {
+      previousMessagesCountRef.current = currentLength;
+      return;
+    }
+
+    const hasIncrementalMessage = previousLength > 0 && currentLength === previousLength + 1;
+    const latestMessage = messages[currentLength - 1];
+
+    if (hasIncrementalMessage && !isOpen && latestMessage?.sender.id !== currentUserId) {
+      setUnreadCount((prev) => prev + 1);
+    }
+
+    previousMessagesCountRef.current = currentLength;
+  }, [currentUserId, isOpen, messages]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setUnreadCount(0);
+    }
+  }, [isOpen]);
 
   if (!currentUserId) return null;
 
@@ -116,14 +153,30 @@ export const ChatWidget = () => {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {isOpen && (
         <div className="w-80 h-[480px] bg-white rounded-2xl shadow-2xl border overflow-hidden flex flex-col">
-          <ChatBox receiverId={SUPER_ADMIN_ID} currentUserId={currentUserId} />
+          {isChatConfigured ? (
+            <ChatBox
+              currentUserId={currentUserId}
+              messages={messages}
+              connected={connected}
+              sendMessage={sendMessage}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-500">
+              Chat no configurado: falta NEXT_PUBLIC_SUPER_ADMIN_ID
+            </div>
+          )}
         </div>
       )}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all"
+        className="relative w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all"
       >
         {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
+        {!isOpen && unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
       </button>
     </div>
   );

@@ -4,25 +4,14 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { clearSession, getToken, saveSession } from "@/helpers/getToken";
-import { boolean } from "yup";
 import { setupAxiosInterceptors } from "@/helpers/expiredToken";
+import { getApiBaseUrl } from "@/services/apiBaseUrl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-const normalizeBaseUrl = (url?: string | null) => {
-  if (!url) return "";
-  return url.trim().replace(/\/+$/, "");
-};
+const API_URL = getApiBaseUrl();
 
 const buildApiUrl = (path: string) => {
-  const base = normalizeBaseUrl(API_URL);
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  if (!base) {
-    throw new Error("API_URL_NOT_CONFIGURED");
-  }
-
-  return `${base}${normalizedPath}`;
+  return `${API_URL}${normalizedPath}`;
 };
 
 interface LoginValues {
@@ -36,6 +25,8 @@ interface RegisterValues {
   confirmPassword: string;
   first_name: string;
   last_name: string;
+  city: string;
+  country: string;
 }
 
 interface OwnerRegisterValues {
@@ -65,6 +56,8 @@ interface AuthResponseUser {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  address?: string;
   roles: string[];
   auth_provider: string;
   restaurant_id: string | null;
@@ -79,7 +72,7 @@ interface AuthResponse {
 }
 
 interface AuthErrorResponse {
-  message?: string;
+  message?: string | string[];
 }
 
 interface RequestResult<T = undefined> {
@@ -166,6 +159,8 @@ const normalizeAuthUser = (input: unknown): AuthResponseUser => {
     id: typeof raw.id === "string" ? raw.id : "",
     name: (typeof raw.name === "string" && raw.name.trim()) || fallbackName || "Usuario",
     email: typeof raw.email === "string" ? raw.email : "",
+    phone: typeof raw.phone === "string" ? raw.phone : "",
+    address: typeof raw.address === "string" ? raw.address : "",
     roles: normalizeRoles(raw.roles ?? raw.role),
     auth_provider: typeof raw.auth_provider === "string" ? raw.auth_provider : "email",
     restaurant_id: restaurantId,
@@ -224,7 +219,7 @@ interface UsersContextType {
   loginUserGoogle: () => Promise<void>;
   registerUserGoogle: () => Promise<void>;
   logoutUser: () => void;
-  registerNewUser: (values: RegisterValues) => Promise<number>;
+  registerNewUser: (values: RegisterValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
   registerOwner: (values: OwnerRegisterValues) => Promise<RequestResult<AuthResponse | AuthErrorResponse>>;
   updateUser: (updatedFields: Partial<SessionUser>) => Promise<void>;
   uploadRestaurantVerificationDocument: (documentType: RestaurantDocumentType, file: File) => Promise<RequestResult>;
@@ -240,7 +235,7 @@ export const UsersContext = createContext<UsersContextType>({
   loginUserGoogle: async () => {},
   registerUserGoogle: async () => {},
   logoutUser: async () => {},
-  registerNewUser: async () => 0,
+  registerNewUser: async () => ({ status: 0 }),
   registerOwner: async () => ({ status: 0 }),
   updateUser: async () => {},
   uploadRestaurantVerificationDocument: async () => ({ status: 0 }),
@@ -291,7 +286,7 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
       const token = getStoredToken();
 
       try {
-        const res = await axios.patch(`${API_URL}/users/${isLogged.id}`, updatedFields, {
+        const res = await axios.patch(buildApiUrl(`/users/${isLogged.id}`), updatedFields, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -378,11 +373,11 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loginUserGoogle = async () => {
-    window.location.href = `${API_URL}/auth/google/login`;
+    window.location.href = buildApiUrl("/auth/google/login");
   };
 
   const registerUserGoogle = async () => {
-    window.location.href = `${API_URL}/auth/google/register`;
+    window.location.href = buildApiUrl("/auth/google/register");
   };
 
   const completeOwnerOnboarding = async (
@@ -563,13 +558,21 @@ export const UsersProvider = ({ children }: { children: ReactNode }) => {
     router.push("/");
   };
 
-  const registerNewUser = async (values: RegisterValues): Promise<number> => {
+  const registerNewUser = async (
+    values: RegisterValues,
+  ): Promise<RequestResult<AuthResponse | AuthErrorResponse>> => {
     try {
-      const res = await axios.post(buildApiUrl("/auth/signup"), values);
-      return res.status;
+      const res = await axios.post<AuthResponse>(buildApiUrl("/auth/signup"), values);
+      return {
+        status: res.status,
+        data: res.data,
+      };
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {
-        return error.response.status;
+        return {
+          status: error.response.status,
+          data: error.response.data,
+        };
       }
       throw error;
     }
