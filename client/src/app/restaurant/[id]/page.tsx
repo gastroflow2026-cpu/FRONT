@@ -383,7 +383,7 @@ const RestaurantDetail = () => {
           customer_email: formValues.email,
           customer_phone: Number(formValues.phone),
           reservation_date: formValues.date,
-          start_time: `${formValues.date}T${formValues.time}:00.000Z`,
+          start_time: `${formValues.date}T${formValues.time}:00.000-03:00`,
           guests_count: formValues.guests,
           notes: "",
           table_id: selectedTable.id,

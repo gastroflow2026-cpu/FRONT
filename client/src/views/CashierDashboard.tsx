@@ -1,39 +1,41 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Swal from "sweetalert2";
 import CashierNavbar from "@/components/cashierDashboard/CashierNavbar";
-import MetricCards from "@/components/cashierDashboard/MetricCards";
-import TableGrid from "@/components/cashierDashboard/TableGrid";
-import TableDrawer from "@/components/cashierDashboard/TableDrawer";
 import ReservationsTab from "@/components/cashierDashboard/ReservationsTab";
 import DailySummaryTab from "@/components/cashierDashboard/DailySummaryTab";
 import CashRegisterPanel from "@/components/cashierDashboard/CashRegisterPanel";
+import TableAssignmentModal from "@/components/cashierDashboard/TableAssignmentModal";
 import { UsersContext } from "@/context/UsersContext";
 import { useSocket } from "@/context/SocketContext";
-import { useTables } from "@/context/TablesContext";
-import { PaymentMethod, Reservation, Table } from "@/types/cashier";
+import { Reservation } from "@/types/cashier";
 import { fetchCashierReservations } from "@/services/cashierReservations";
+import {
+  AssignmentWaiter,
+  TableAssignment,
+  assignWaiter,
+  getTableAssignments,
+  getWaiters,
+  unassignWaiter,
+} from "@/services/tableAssignments";
 import {
   CashRegisterSession,
   CashierDailySummary,
   closeCashRegister,
   fetchCashRegisterHistory,
-  fetchCashierOrders,
   fetchCashierDailySummary,
   fetchCurrentCashRegisterSession,
-  mapCashierOrdersToTables,
   openCashRegister,
-  payOrder,
   resolveRestaurantId,
 } from "@/services/orderLifecycle";
 
 type MainTab = "mesas" | "reservas" | "resumen";
 
 const TABS: { value: MainTab; label: string }[] = [
-  { value: "mesas", label: "Mesas y órdenes" },
+  { value: "mesas", label: "Asignación de mesas" },
   { value: "reservas", label: "Reservas" },
   { value: "resumen", label: "Resumen diario" },
 ];
@@ -43,11 +45,8 @@ export default function CashierDashboard() {
   const { isLogged } = useContext(UsersContext);
   const { socket } = useSocket();
   const restaurantId = resolveRestaurantId(isLogged as Record<string, unknown> | null);
-  const { tables: backendTables, getTables } = useTables();
   const [restaurantName, setRestaurantName] = useState("Mi Restaurante");
   const [activeTab, setActiveTab] = useState<MainTab>("mesas");
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [cashierTables, setCashierTables] = useState<Table[]>([]);
   const [summaryDate, setSummaryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [reservationsDate, setReservationsDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [reservationsStatus, setReservationsStatus] = useState("ALL");
@@ -58,13 +57,17 @@ export default function CashierDashboard() {
   const [dailySummary, setDailySummary] = useState<CashierDailySummary | null>(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [cashRegisterSession, setCashRegisterSession] = useState<CashRegisterSession | null>(null);
   const [cashRegisterHistory, setCashRegisterHistory] = useState<CashRegisterSession[]>([]);
   const [isCashRegisterLoading, setIsCashRegisterLoading] = useState(true);
   const [isCashRegisterSubmitting, setIsCashRegisterSubmitting] = useState(false);
   const [cashRegisterError, setCashRegisterError] = useState<string | null>(null);
+  const [tableAssignments, setTableAssignments] = useState<TableAssignment[]>([]);
+  const [waiters, setWaiters] = useState<AssignmentWaiter[]>([]);
+  const [selectedWaiterByTable, setSelectedWaiterByTable] = useState<Record<string, string>>({});
+  const [isTableAssignmentsLoading, setIsTableAssignmentsLoading] = useState(false);
+  const [tableAssignmentsError, setTableAssignmentsError] = useState<string | null>(null);
+  const [submittingAssignmentTableId, setSubmittingAssignmentTableId] = useState<string | null>(null);
 
   const isCashRegisterOpen = Boolean(
     cashRegisterSession && cashRegisterSession.status.toUpperCase() === "OPEN",
@@ -122,25 +125,6 @@ export default function CashierDashboard() {
     }
   }, []);
 
-  const loadCashierOrders = useCallback(async () => {
-    try {
-      setError(null);
-      setIsLoading(true);
-      const orders = await fetchCashierOrders();
-      const nextTables = mapCashierOrdersToTables(orders);
-      setCashierTables(nextTables);
-      setSelectedTable((prev) => {
-        if (!prev) return null;
-        return nextTables.find((table) => table.id === prev.id) ?? null;
-      });
-    } catch {
-      setError("No se pudo cargar la cola de cobro.");
-      setCashierTables([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   const loadDailySummary = useCallback(async (date = summaryDate) => {
     try {
       setSummaryError(null);
@@ -180,9 +164,44 @@ export default function CashierDashboard() {
     [reservationsDate, reservationsStatus],
   );
 
-  useEffect(() => {
-    void loadCashierOrders();
-  }, [loadCashierOrders]);
+  const loadTableAssignmentsData = useCallback(async () => {
+    if (!restaurantId) {
+      setTableAssignments([]);
+      setWaiters([]);
+      setSelectedWaiterByTable({});
+      setTableAssignmentsError("No se encontró el restaurante del usuario.");
+      return;
+    }
+
+    try {
+      setTableAssignmentsError(null);
+      setIsTableAssignmentsLoading(true);
+
+      const [loadedWaiters, loadedAssignments] = await Promise.all([
+        getWaiters(restaurantId),
+        getTableAssignments(restaurantId),
+      ]);
+
+      setWaiters(loadedWaiters);
+      setTableAssignments(loadedAssignments);
+
+      const nextSelected: Record<string, string> = {};
+      for (const assignment of loadedAssignments) {
+        if (assignment.assignedWaiter?.id) {
+          nextSelected[assignment.tableId] = assignment.assignedWaiter.id;
+        }
+      }
+      setSelectedWaiterByTable(nextSelected);
+    } catch (error) {
+      const backendMessage = getBackendMessage(error);
+      setTableAssignmentsError(backendMessage || "No se pudieron cargar las asignaciones de mesas.");
+      setTableAssignments([]);
+      setWaiters([]);
+      setSelectedWaiterByTable({});
+    } finally {
+      setIsTableAssignmentsLoading(false);
+    }
+  }, [restaurantId]);
 
   useEffect(() => {
     void loadDailySummary(summaryDate);
@@ -247,145 +266,59 @@ export default function CashierDashboard() {
   }, [isLogged]);
 
   useEffect(() => {
-    if (!restaurantId) return;
-    void getTables(restaurantId);
-  }, [getTables, restaurantId]);
-
-  useEffect(() => {
     const intervalId = window.setInterval(() => {
-      void loadCashierOrders();
       void loadDailySummary();
       void loadCashierReservations();
       void loadCurrentCashRegister();
       void loadCashRegisterHistory();
-      if (restaurantId) {
-        void getTables(restaurantId);
+      if (activeTab === "mesas") {
+        void loadTableAssignmentsData();
       }
     }, 15000);
 
     return () => window.clearInterval(intervalId);
   }, [
-    getTables,
-    loadCashierOrders,
     loadCashRegisterHistory,
     loadCashierReservations,
     loadCurrentCashRegister,
     loadDailySummary,
+    loadTableAssignmentsData,
     restaurantId,
+    activeTab,
   ]);
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleQueueEvent = () => {
-      void loadCashierOrders();
-      if (restaurantId) {
-        void getTables(restaurantId);
-      }
-    };
-
     const handlePaidEvent = () => {
-      handleQueueEvent();
       void loadDailySummary();
+      void loadCashRegisterHistory();
     };
 
     const handleReservationEvent = () => {
       void loadCashierReservations();
-      if (restaurantId) {
-        void getTables(restaurantId);
+      if (activeTab === "mesas") {
+        void loadTableAssignmentsData();
       }
     };
 
-    socket.on("order:closed", handleQueueEvent);
-    socket.on("order:updated", handleQueueEvent);
     socket.on("order:paid", handlePaidEvent);
     socket.on("reservation:created", handleReservationEvent);
     socket.on("reservation:cancelled", handleReservationEvent);
 
     return () => {
-      socket.off("order:closed", handleQueueEvent);
-      socket.off("order:updated", handleQueueEvent);
       socket.off("order:paid", handlePaidEvent);
       socket.off("reservation:created", handleReservationEvent);
       socket.off("reservation:cancelled", handleReservationEvent);
     };
-  }, [getTables, loadCashierOrders, loadCashierReservations, loadDailySummary, restaurantId, socket]);
-
-  const metrics = useMemo(() => {
-    const occupiedTables = backendTables.filter(
-      (table) => (table.status || "").toUpperCase() === "OCUPADA",
-    ).length;
-    const reservedTables = backendTables.filter(
-      (table) => (table.status || "").toUpperCase() === "RESERVADA",
-    ).length;
-
-    return {
-      activeOrders: cashierTables.length,
-      ordersInPreparation: cashierTables.filter(
-        (table) => table.currentOrder?.status === "preparacion",
-      ).length,
-      occupiedTables,
-      totalTables: backendTables.length,
-      reservedTables,
-      reservationsToday: reservationsTotal,
-    };
-  }, [backendTables, cashierTables, reservationsTotal]);
-
-  function handleTableClick(table: Table) {
-    setSelectedTable(table);
-  }
-
-  function handleCloseDrawer() {
-    setSelectedTable(null);
-  }
-
-  async function handleCloseOrder(table: Table, paymentMethod: PaymentMethod) {
-    const result = await Swal.fire({
-      title: "¿Cobrar orden?",
-      html: `¿Confirmás el cobro de la orden <strong>#${table.currentOrder?.id}</strong> de la mesa <strong>${table.id}</strong>?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, cobrar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#f97316",
-      cancelButtonColor: "#6b7280",
-    });
-
-    if (!result.isConfirmed || !table.currentOrder?.id) {
-      return;
-    }
-
-    try {
-      await payOrder(table.currentOrder.id, paymentMethod);
-      await loadCashierOrders();
-      await loadDailySummary();
-
-      await Swal.fire({
-        title: "¡Cobro registrado!",
-        text: `Pago registrado correctamente con ${paymentMethod}.`,
-        icon: "success",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#f97316",
-      });
-
-      setSelectedTable(null);
-    } catch (error) {
-      const backendMessage =
-        axios.isAxiosError(error) &&
-        typeof error.response?.data === "object" &&
-        error.response?.data &&
-        "message" in error.response.data
-          ? String((error.response.data as { message?: unknown }).message || "")
-          : "";
-
-      await Swal.fire({
-        title: "Error al cobrar",
-        text: backendMessage || "No se pudo registrar el pago. Intentá de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#f97316",
-      });
-    }
-  }
+  }, [
+    activeTab,
+    loadCashRegisterHistory,
+    loadCashierReservations,
+    loadDailySummary,
+    loadTableAssignmentsData,
+    socket,
+  ]);
 
   async function handleOpenCashRegister() {
     const result = await Swal.fire({
@@ -481,6 +414,21 @@ export default function CashierDashboard() {
         text: "Primero debés abrir una caja para poder cerrarla.",
         confirmButtonColor: "#f97316",
       });
+      return;
+    }
+
+    const confirmClose = await Swal.fire({
+      icon: "question",
+      title: "¿Cerrar caja?",
+      text: "¿Estás seguro de que querés cerrar la caja ahora?",
+      showCancelButton: true,
+      confirmButtonText: "Sí, continuar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+    });
+
+    if (!confirmClose.isConfirmed) {
       return;
     }
 
@@ -585,6 +533,131 @@ export default function CashierDashboard() {
     }
   }
 
+  async function handleOpenTableAssignment() {
+    setActiveTab("mesas");
+    await loadTableAssignmentsData();
+  }
+
+  async function handleAssignTable(table: TableAssignment) {
+    if (!restaurantId) return;
+
+    const waiterId = selectedWaiterByTable[table.tableId];
+    if (!waiterId) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Seleccioná un mozo",
+        text: "Debés seleccionar un mozo antes de asignar la mesa.",
+        confirmButtonColor: "#f97316",
+      });
+      return;
+    }
+
+    const waiter = waiters.find((item) => item.id === waiterId);
+    const waiterName = waiter?.name || "el mozo seleccionado";
+
+    const confirm = await Swal.fire({
+      icon: "question",
+      title: "¿Confirmar asignación?",
+      text: `¿Estás seguro que quieres asignar la mesa ${table.tableNumber} a ${waiterName}?`,
+      showCancelButton: true,
+      confirmButtonText: "Sí, asignar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#16a34a",
+      cancelButtonColor: "#6b7280",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      setSubmittingAssignmentTableId(table.tableId);
+      setTableAssignmentsError(null);
+      await assignWaiter(restaurantId, table.tableId, waiterId);
+      await loadTableAssignmentsData();
+
+      await Swal.fire({
+        icon: "success",
+        title: "Mesa asignada",
+        text: `La mesa ${table.tableNumber} fue asignada a ${waiterName}.`,
+        confirmButtonColor: "#16a34a",
+      });
+    } catch (error) {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      const backendMessage = getBackendMessage(error);
+
+      const message =
+        status === 403
+          ? "No tenés permisos para asignar mesas en este restaurante."
+          : status === 404
+            ? "No se encontró la mesa o el mozo seleccionado."
+            : backendMessage || "No se pudo asignar la mesa. Intentá nuevamente.";
+
+      setTableAssignmentsError(message);
+
+      await Swal.fire({
+        icon: "error",
+        title: "No fue posible asignar",
+        text: message,
+        confirmButtonColor: "#f97316",
+      });
+    } finally {
+      setSubmittingAssignmentTableId(null);
+    }
+  }
+
+  async function handleUnassignTable(table: TableAssignment) {
+    if (!restaurantId || !table.assignedWaiter?.id) return;
+
+    const waiterName = table.assignedWaiter.name || "el mozo asignado";
+
+    const confirm = await Swal.fire({
+      icon: "warning",
+      title: "¿Quitar asignación?",
+      text: `¿Querés quitar la asignación de la mesa ${table.tableNumber} para ${waiterName}?`,
+      showCancelButton: true,
+      confirmButtonText: "Sí, quitar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      setSubmittingAssignmentTableId(table.tableId);
+      setTableAssignmentsError(null);
+      await unassignWaiter(restaurantId, table.tableId);
+      await loadTableAssignmentsData();
+
+      await Swal.fire({
+        icon: "success",
+        title: "Asignación removida",
+        text: `La mesa ${table.tableNumber} quedó sin mozo asignado.`,
+        confirmButtonColor: "#16a34a",
+      });
+    } catch (error) {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      const backendMessage = getBackendMessage(error);
+
+      const message =
+        status === 403
+          ? "No tenés permisos para desasignar mesas en este restaurante."
+          : status === 404
+            ? "No se encontró la mesa asignada."
+            : backendMessage || "No se pudo quitar la asignación. Intentá nuevamente.";
+
+      setTableAssignmentsError(message);
+
+      await Swal.fire({
+        icon: "error",
+        title: "No fue posible quitar",
+        text: message,
+        confirmButtonColor: "#f97316",
+      });
+    } finally {
+      setSubmittingAssignmentTableId(null);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <CashierNavbar
@@ -592,6 +665,9 @@ export default function CashierDashboard() {
         cashierName={isLogged?.name ?? "Cajero"}
         hasOpenCashRegister={isCashRegisterOpen}
         isCashRegisterActionLoading={isCashRegisterLoading || isCashRegisterSubmitting}
+        onOpenTableAssignment={() => {
+          void handleOpenTableAssignment();
+        }}
         onOpenCashRegister={() => {
           void handleOpenCashRegister();
         }}
@@ -613,12 +689,6 @@ export default function CashierDashboard() {
           </h1>
         </div>
 
-        {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
-            {error}
-          </div>
-        )}
-
         <CashRegisterPanel
           session={cashRegisterSession}
           history={cashRegisterHistory}
@@ -637,9 +707,6 @@ export default function CashierDashboard() {
           }}
         />
 
-        {/* Métricas */}
-        <MetricCards metrics={metrics} />
-
         {/* Tabs principales */}
         <div className="flex gap-1 bg-white border border-gray-100 rounded-xl shadow-sm p-1 mb-4">
           {TABS.map((tab) => (
@@ -648,8 +715,8 @@ export default function CashierDashboard() {
               onClick={() => setActiveTab(tab.value)}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab.value
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-md"
+                  : "text-gray-500 hover:text-pink-600 hover:bg-linear-to-r hover:from-orange-50 hover:to-pink-50"
               }`}
             >
               {tab.label}
@@ -659,13 +726,32 @@ export default function CashierDashboard() {
 
         {/* Contenido según tab */}
         {activeTab === "mesas" && (
-          isLoading ? (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-sm text-gray-400">
-              Cargando órdenes para cobro...
-            </div>
-          ) : (
-            <TableGrid tables={cashierTables} onTableClick={handleTableClick} />
-          )
+          <TableAssignmentModal
+            isOpen
+            embedded
+            isLoading={isTableAssignmentsLoading}
+            error={tableAssignmentsError}
+            tables={tableAssignments}
+            waiters={waiters}
+            selectedWaiterByTable={selectedWaiterByTable}
+            submittingTableId={submittingAssignmentTableId}
+            onClose={() => undefined}
+            onRefresh={() => {
+              void loadTableAssignmentsData();
+            }}
+            onSelectWaiter={(tableId, waiterId) => {
+              setSelectedWaiterByTable((prev) => ({
+                ...prev,
+                [tableId]: waiterId,
+              }));
+            }}
+            onAssign={(table) => {
+              void handleAssignTable(table);
+            }}
+            onUnassign={(table) => {
+              void handleUnassignTable(table);
+            }}
+          />
         )}
         {activeTab === "reservas" && (
           <ReservationsTab
@@ -694,11 +780,6 @@ export default function CashierDashboard() {
         )}
       </main>
 
-      <TableDrawer
-        table={selectedTable}
-        onClose={handleCloseDrawer}
-        onCloseOrder={handleCloseOrder}
-      />
     </div>
   );
 }

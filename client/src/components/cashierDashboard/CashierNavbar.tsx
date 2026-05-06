@@ -11,6 +11,7 @@ interface CashierNavbarProps {
   cashierName: string;
   hasOpenCashRegister?: boolean;
   isCashRegisterActionLoading?: boolean;
+  onOpenTableAssignment?: () => void;
   onOpenCashRegister?: () => void;
   onCloseCashRegister?: () => void;
 }
@@ -20,6 +21,7 @@ export default function CashierNavbar({
   cashierName,
   hasOpenCashRegister = false,
   isCashRegisterActionLoading = false,
+  onOpenTableAssignment,
   onOpenCashRegister,
   onCloseCashRegister,
 }: CashierNavbarProps) {
@@ -95,12 +97,12 @@ export default function CashierNavbar({
       action: hasOpenCashRegister ? onCloseCashRegister : onOpenCashRegister,
       disabled: isCashRegisterActionLoading,
     },
-    { label: "Asignar mesas", icon: LayoutGrid, action: undefined as (() => void | Promise<void>) | undefined },
+    { label: "Asignar mesas", icon: LayoutGrid, action: onOpenTableAssignment },
     { label: "Cerrar sesión", icon: LogOut, action: handleLogout },
   ];
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
+    <nav className="bg-[#0b0f1a] border-b border-white/10 px-6 py-3 flex items-center justify-between">
       {/* Logo + nombre restaurante */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-linear-to-br from-orange-500 to-pink-500">
@@ -108,7 +110,7 @@ export default function CashierNavbar({
         </div>
         <div className="leading-tight">
           <p className="font-semibold text-white text-sm">{restaurantName}</p>
-          <p className="text-xs text-gray-400">Sistema de gestión</p>
+          <p className="text-xs text-gray-400">Panel del cajero</p>
         </div>
       </div>
 
@@ -118,11 +120,11 @@ export default function CashierNavbar({
         {mounted ? (
           <>
             <span>{formattedTime}</span>
-            <span className="text-gray-600">|</span>
+            <span className="text-white/20">|</span>
             <span className="capitalize">{formattedDate}</span>
           </>
         ) : (
-          <span className="text-gray-600">--:--:-- --</span>
+          <span className="text-white/20">--:--:-- --</span>
         )}
       </div>
 
@@ -130,7 +132,7 @@ export default function CashierNavbar({
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="flex items-center gap-2 hover:bg-gray-800 rounded-lg px-2 py-1 transition-colors"
+          className="flex items-center gap-2 hover:bg-white/10 rounded-lg px-2 py-1 transition-colors"
         >
           <div className="w-8 h-8 rounded-full bg-linear-to-br from-orange-500 to-pink-500 flex items-center justify-center">
             <span className="text-white text-xs font-semibold">{initials}</span>
