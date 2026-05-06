@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -87,7 +87,7 @@ const buildApiUrl = (path: string) => {
 
 const getDocumentLabel = (type: string) => {
   const labels: Record<string, string> = {
-    official_id: "IdentificaciÃ³n oficial",
+    official_id: "Identificacion oficial",
     tax_or_business_document: "Comprobante fiscal o documento comercial",
     proof_of_address: "Comprobante de domicilio",
   };
@@ -124,7 +124,7 @@ export default function PlatformRestaurantReviewPage() {
     }
 
     if (!restaurantId) {
-      setErrorMessage("ID de restaurante invÃ¡lido.");
+      setErrorMessage("ID de restaurante invalido.");
       setIsLoading(false);
       return;
     }
@@ -171,10 +171,10 @@ export default function PlatformRestaurantReviewPage() {
       theme: "dark",
       icon: "question",
       title: "Aprobar restaurante",
-      text: "El restaurante quedarÃ¡ activo y podrÃ¡ usar el panel administrativo.",
+      text: "El restaurante quedara activo y podra usar el panel administrativo.",
       input: "textarea",
-      inputLabel: "Notas de aprobaciÃ³n",
-      inputPlaceholder: "Ej: DocumentaciÃ³n validada correctamente.",
+      inputLabel: "Notas de aprobacion",
+      inputPlaceholder: "Ej: Documentacion validada correctamente.",
       showCancelButton: true,
       confirmButtonText: "Aprobar",
       cancelButtonText: "Cancelar",
@@ -183,7 +183,7 @@ export default function PlatformRestaurantReviewPage() {
 
     if (!result.isConfirmed) return;
 
-    await submitReviewAction("approve", result.value || "DocumentaciÃ³n validada correctamente.");
+    await submitReviewAction("approve", result.value || "Documentacion validada correctamente.");
   };
 
   const handleReject = async () => {
@@ -193,10 +193,10 @@ export default function PlatformRestaurantReviewPage() {
       theme: "dark",
       icon: "warning",
       title: "Rechazar solicitud",
-      text: "El restaurante no serÃ¡ activado.",
+      text: "El restaurante no sera activado.",
       input: "textarea",
       inputLabel: "Motivo del rechazo",
-      inputPlaceholder: "Ej: DocumentaciÃ³n incompleta o ilegible.",
+      inputPlaceholder: "Ej: Documentacion incompleta o ilegible.",
       inputValidator: (value) => {
         if (!value || !value.trim()) {
           return "Debes escribir el motivo del rechazo.";
@@ -222,13 +222,13 @@ export default function PlatformRestaurantReviewPage() {
       theme: "dark",
       icon: "warning",
       title: "Suspender restaurante",
-      text: "El restaurante dejarÃ¡ de estar activo en la plataforma.",
+      text: "El restaurante dejara de estar activo en la plataforma.",
       input: "textarea",
-      inputLabel: "Motivo de suspensiÃ³n",
-      inputPlaceholder: "Ej: Incumplimiento de requisitos o revisiÃ³n administrativa.",
+      inputLabel: "Motivo de suspension",
+      inputPlaceholder: "Ej: Incumplimiento de requisitos o revision administrativa.",
       inputValidator: (value) => {
         if (!value || !value.trim()) {
-          return "Debes escribir el motivo de suspensiÃ³n.";
+          return "Debes escribir el motivo de suspension.";
         }
 
         return null;
@@ -308,8 +308,8 @@ export default function PlatformRestaurantReviewPage() {
       await Swal.fire({
         theme: "dark",
         icon: "error",
-        title: "No fue posible completar la acción",
-        text: parsedBackendMessage || "Intenta nuevamente o revisa la sesión.",
+        title: "No fue posible completar la accion",
+        text: parsedBackendMessage || "Intenta nuevamente o revisa la sesion.",
         confirmButtonColor: "#f97316",
       });
     } finally {
@@ -338,7 +338,7 @@ export default function PlatformRestaurantReviewPage() {
         </button>
 
         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
-          {errorMessage || "No se encontrÃ³ informaciÃ³n del restaurante."}
+          {errorMessage || "No se encontro informacion del restaurante."}
         </div>
       </main>
     );
@@ -364,7 +364,7 @@ export default function PlatformRestaurantReviewPage() {
 
           <div className="flex items-center gap-2 text-sm font-semibold text-orange-300">
             <ShieldCheck className="h-4 w-4" />
-            RevisiÃ³n de plataforma
+            Revision de plataforma
           </div>
         </div>
       </header>
@@ -391,23 +391,23 @@ export default function PlatformRestaurantReviewPage() {
 
               <div className="rounded-2xl border border-white/10 bg-gray-900 p-4">
                 <Phone className="mb-2 h-5 w-5 text-orange-300" />
-                <p className="text-xs text-white/40">TelÃ©fono</p>
-                <p className="font-semibold">{restaurant.phone || "Sin telÃ©fono"}</p>
+                <p className="text-xs text-white/40">Telefono</p>
+                <p className="font-semibold">{restaurant.phone || "Sin telefono"}</p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-gray-900 p-4 md:col-span-2">
                 <MapPin className="mb-2 h-5 w-5 text-orange-300" />
-                <p className="text-xs text-white/40">UbicaciÃ³n</p>
+                <p className="text-xs text-white/40">Ubicacion</p>
                 <p className="font-semibold">
                   {[restaurant.address, restaurant.city, restaurant.country].filter(Boolean).join(", ") ||
-                    "Sin ubicaciÃ³n"}
+                    "Sin ubicacion"}
                 </p>
               </div>
             </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-gray-900 p-4">
-              <p className="mb-2 text-xs text-white/40">DescripciÃ³n</p>
-              <p className="leading-7 text-white/75">{restaurant.description || "Sin descripciÃ³n registrada."}</p>
+              <p className="mb-2 text-xs text-white/40">Descripcion</p>
+              <p className="leading-7 text-white/75">{restaurant.description || "Sin descripcion registrada."}</p>
             </div>
           </section>
 
@@ -431,7 +431,7 @@ export default function PlatformRestaurantReviewPage() {
                       <div>
                         <p className="font-bold">{getDocumentLabel(document.document_type)}</p>
                         <p className="mt-1 text-xs text-white/45">
-                          {document.original_name} Â· {formatFileSize(document.size)}
+                          {document.original_name} - {formatFileSize(document.size)}
                         </p>
                       </div>
                     </div>
@@ -452,10 +452,10 @@ export default function PlatformRestaurantReviewPage() {
         </div>
 
         <aside className="h-fit rounded-3xl border border-white/10 bg-gray-900 p-6">
-          <h2 className="mb-3 text-xl font-bold">Acciones de revisiÃ³n</h2>
+          <h2 className="mb-3 text-xl font-bold">Acciones de revision</h2>
 
           <p className="mb-6 text-sm leading-6 text-white/55">
-            Revisa que la documentaciÃ³n corresponda al restaurante antes de aprobar la activaciÃ³n.
+            Revisa que la documentacion corresponda al restaurante antes de aprobar la activacion.
           </p>
 
           <div className="grid gap-3">
@@ -507,6 +507,3 @@ export default function PlatformRestaurantReviewPage() {
     </main>
   );
 }
-
-
-
