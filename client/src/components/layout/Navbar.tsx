@@ -154,17 +154,15 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* =========================
-                BUSCADOR DESKTOP
-            ========================= */}
+      
             <div className="relative mx-4 hidden grow max-w-md lg:block">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
 
                 <input
                   type="text"
                   placeholder="Buscar cocina o restaurante..."
-                  className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 transition-all focus:border-orange-500/50 focus:outline-none"
+                  className="w-full rounded-full border border-white/15 bg-white/8 py-2 pl-10 pr-4 text-sm text-white placeholder:text-gray-300 transition-all focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -190,7 +188,7 @@ const Navbar = () => {
                           {restaurant.name}
                         </p>
 
-                        <p className="truncate text-xs text-gray-400">
+                        <p className="truncate text-xs text-gray-300">
                           {restaurant.description} • {restaurant.location}
                         </p>
                       </div>
@@ -247,12 +245,12 @@ const Navbar = () => {
                       ) : (
                         <UserCircle
                           size={32}
-                          className="text-gray-400 transition group-hover:text-white"
+                          className="text-gray-300 transition group-hover:text-white"
                         />
                       )}
                     </div>
 
-                    <span className="max-w-37.5 truncate text-sm text-gray-300">
+                    <span className="max-w-37.5 truncate text-sm text-gray-200">
                       Hola,{" "}
                       <span className="font-semibold text-white transition group-hover:text-orange-400">
                         {greetingName}!
@@ -262,7 +260,7 @@ const Navbar = () => {
 
                   <button
                     onClick={() => logoutUser()}
-                    className="text-sm text-gray-400 transition hover:text-white"
+                    className="text-sm text-gray-300 transition hover:text-white"
                   >
                     Cerrar Sesión
                   </button>
@@ -314,12 +312,12 @@ const Navbar = () => {
             ========================= */}
             <div className="px-4 pt-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
 
                 <input
                   type="text"
                   placeholder="Buscar restaurante..."
-                  className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:outline-none"
+                  className="w-full rounded-xl border border-white/15 bg-white/8 py-3 pl-10 pr-4 text-sm text-white placeholder:text-gray-300 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -345,7 +343,7 @@ const Navbar = () => {
                           {restaurant.name}
                         </p>
 
-                        <p className="truncate text-xs text-gray-400">
+                        <p className="truncate text-xs text-gray-300">
                           {restaurant.description} • {restaurant.location}
                         </p>
                       </div>
@@ -404,12 +402,12 @@ const Navbar = () => {
                           className="object-cover"
                         />
                       ) : (
-                        <UserCircle size={40} className="text-gray-400" />
+                          <UserCircle size={40} className="text-gray-300" />
                       )}
                     </div>
 
                     <div className="min-w-0">
-                      <p className="text-xs text-gray-400">Usuario</p>
+                      <p className="text-xs text-gray-300">Usuario</p>
 
                       <p className="truncate text-sm font-semibold text-white">
                         {greetingName}

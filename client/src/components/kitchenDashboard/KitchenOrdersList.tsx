@@ -56,7 +56,7 @@ export default function KitchenOrdersList({
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col">
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-50 border border-gray-100 rounded-xl p-1 mb-4">
+      <div className="mb-4 flex gap-1 rounded-xl border border-gray-100 bg-gray-50 p-1">
         {TABS.map((tab) => {
           const count =
             tab.value === "todas"
@@ -67,10 +67,10 @@ export default function KitchenOrdersList({
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 ${
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${
                 activeTab === tab.value
                   ? "bg-white text-gray-800 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
+                  : "text-gray-600 hover:bg-white/80 hover:text-gray-800"
               }`}
             >
               {tab.label}
@@ -78,7 +78,7 @@ export default function KitchenOrdersList({
                 className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                   activeTab === tab.value
                     ? "bg-gray-100 text-gray-600"
-                    : "text-gray-300"
+                    : "bg-gray-100 text-gray-500"
                 }`}
               >
                 {count}
@@ -91,7 +91,7 @@ export default function KitchenOrdersList({
       {/* Lista */}
       <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-240px)] pr-1">
         {filteredOrders.length === 0 ? (
-          <div className="text-center py-12 text-gray-300">
+          <div className="py-12 text-center text-gray-400">
             <UtensilsCrossed size={32} className="mx-auto mb-2 opacity-40" />
             <p className="text-sm">No hay órdenes en esta categoría</p>
           </div>
@@ -134,7 +134,7 @@ function OrderCard({
           <span className="text-sm font-bold text-gray-800">
             Orden {displayId ?? "-"}
           </span>
-          <span className="text-xs text-gray-400">{order.tableLabel}</span>
+          <span className="text-xs text-gray-500">{order.tableLabel}</span>
         </div>
         <span
           className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${

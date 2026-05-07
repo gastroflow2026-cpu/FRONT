@@ -150,9 +150,9 @@ export const ChatWidget = () => {
   if (!currentUserId) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
       {isOpen && (
-        <div className="w-80 h-[480px] bg-white rounded-2xl shadow-2xl border overflow-hidden flex flex-col">
+        <div className="flex h-[min(32rem,calc(100vh-7rem))] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:w-80 sm:max-w-none">
           {isChatConfigured ? (
             <ChatBox
               currentUserId={currentUserId}
