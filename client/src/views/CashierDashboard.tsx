@@ -789,7 +789,7 @@ export default function CashierDashboard() {
         />
 
         {/* Tabs principales */}
-        <div className="flex gap-1 bg-white border border-gray-100 rounded-xl shadow-sm p-1 mb-4 overflow-x-auto">
+        <div className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-gray-100 bg-white p-1 shadow-sm">
           {TABS.map((tab) => (
             <button
               key={tab.value}
@@ -797,7 +797,7 @@ export default function CashierDashboard() {
               className={`min-w-32.5 sm:flex-1 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.value
                   ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-md"
-                  : "text-gray-500 hover:text-pink-600 hover:bg-linear-to-r hover:from-orange-50 hover:to-pink-50"
+                  : "text-gray-700 hover:bg-linear-to-r hover:from-orange-50 hover:to-pink-50 hover:text-pink-700"
               }`}
             >
               {tab.label}
@@ -837,7 +837,7 @@ export default function CashierDashboard() {
         {activeTab === "cobros" && (
           <div>
             {isCashierOrdersLoading && (
-              <p className="text-sm text-gray-400 text-center py-8">Cargando órdenes...</p>
+              <p className="py-8 text-center text-sm text-gray-500">Cargando órdenes...</p>
             )}
             {cashierOrdersError && !isCashierOrdersLoading && (
               <div className="flex flex-col items-center gap-2 py-8 text-red-500 text-sm">
@@ -851,9 +851,9 @@ export default function CashierDashboard() {
               </div>
             )}
             {!isCashierOrdersLoading && !cashierOrdersError && cashierTables.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                 <p className="text-base font-medium">No hay órdenes pendientes de cobro</p>
-                <p className="text-sm mt-1">Cuando un mozo cierre una orden, aparecerá aquí.</p>
+                <p className="mt-1 text-sm text-gray-600">Cuando un mozo cierre una orden, aparecerá aquí.</p>
                 <button
                   onClick={() => void loadCashierOrders()}
                   className="mt-4 text-xs underline text-orange-500 hover:text-orange-600"

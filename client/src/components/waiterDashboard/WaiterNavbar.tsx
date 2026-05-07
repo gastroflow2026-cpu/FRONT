@@ -66,18 +66,18 @@ export default function WaiterNavbar({
     .slice(0, 2);
 
   return (
-    <nav className="bg-[#0b0f1a] border-b border-white/10 px-6 py-3 flex items-center justify-between">
+    <nav className="flex items-center justify-between border-b border-white/10 bg-[#0b0f1a] px-4 py-3 text-white sm:px-6">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-linear-to-br from-orange-500 to-pink-500">
           <UtensilsCrossed size={18} className="text-white" />
         </div>
         <div className="leading-tight">
           <p className="font-semibold text-white text-sm">{restaurantName}</p>
-          <p className="text-xs text-gray-400">Panel del mozo</p>
+          <p className="text-xs text-gray-300">Panel del mozo</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-gray-400 text-sm">
+      <div className="flex items-center gap-2 text-sm text-gray-300">
         <span>{isHydrated ? formattedTime : "--:--:--"}</span>
         <span className="text-white/20">|</span>
         <span className="capitalize">{isHydrated ? formattedDate : "Cargando fecha"}</span>
@@ -85,7 +85,7 @@ export default function WaiterNavbar({
 
       <div className="flex items-center gap-4">
         <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
-          <Bell size={18} className="text-gray-400" />
+          <Bell size={18} className="text-gray-300" />
           {notificationCount > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {notificationCount}
@@ -99,14 +99,14 @@ export default function WaiterNavbar({
           </div>
           <div className="leading-tight">
             <p className="text-sm font-semibold text-white">{waiterName}</p>
-            <p className="text-xs text-gray-400">Mozo</p>
+            <p className="text-xs text-gray-300">Mozo</p>
           </div>
         </div>
 
         <button
           onClick={handleLogout}
           title="Cerrar sesión"
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-red-400"
+          className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-red-400"
         >
           <LogOut size={18} />
         </button>
