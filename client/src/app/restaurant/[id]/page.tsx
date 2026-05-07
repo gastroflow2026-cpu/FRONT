@@ -841,16 +841,16 @@ useEffect(() => {
                 >
                  {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
                 </button>
-                <p className="text-[10px] text-center text-gray-400">Recibirás confirmación inmediata por email.</p>
+                <p className="text-[10px] text-center text-gray-500">Recibirás confirmación inmediata por email.</p>
               </div>
 
               {showTableModal && (
                 <div 
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-8"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-8"
                 onClick={() => setShowTableModal(false)} 
               >
                 <div 
-                  className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[75vh] flex flex-col mt-16 overflow-hidden"
+                  className="mt-8 flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:mt-16 sm:max-h-[75vh]"
                   onClick={(e) => e.stopPropagation()} 
                 >
                   {/* Header fijo */}
@@ -863,7 +863,7 @@ useEffect(() => {
                     </button>
                   </div>
                   {/* Contenido con scroll */}
-                  <div className="overflow-y-auto p-5">
+                  <div className="overflow-y-auto p-4 sm:p-5">
                     <TableGrid
                       tables={filteredTables}
                       markers={restaurant.layout_markers}
