@@ -15,7 +15,7 @@ import {
 
 export default function KitchenDashboard() {
   const router = useRouter();
-  const { isLogged, isLoading } = useContext(UsersContext);
+  const { isLogged, isLoading: isAuthLoading } = useContext(UsersContext);
   const { socket } = useSocket();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<KitchenOrder | null>(null);
@@ -65,7 +65,7 @@ export default function KitchenDashboard() {
   }, [loadOrders]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isAuthLoading) return;
 
     const roles = (isLogged?.roles ?? []).map((role) => role.toLowerCase());
     const isKitchen = roles.some((role) => ["chef", "cocinero", "staff_chef", "kitchen", "kitchen_staff"].includes(role));
@@ -88,7 +88,7 @@ export default function KitchenDashboard() {
 
       router.replace("/login");
     }
-  }, [isLoading, isLogged, router]);
+  }, [isAuthLoading, isLogged, router]);
 
   useEffect(() => {
     const user = (isLogged as Record<string, unknown> | null) ?? null;
