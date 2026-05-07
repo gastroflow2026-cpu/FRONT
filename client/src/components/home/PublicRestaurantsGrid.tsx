@@ -36,10 +36,15 @@ const PublicRestaurantsGrid = ({
     loadRestaurants();
   }, []);
 
+  const FEATURED_NAME = "Bella Vita";
+
   const visibleRestaurants = useMemo(() => {
-    const sortedRestaurants = [...restaurants].sort(
-      (a, b) => Number(a.comingSoon) - Number(b.comingSoon),
-    );
+    const sortedRestaurants = [...restaurants].sort((a, b) => {
+      const aFeatured = a.name === FEATURED_NAME ? -1 : 0;
+      const bFeatured = b.name === FEATURED_NAME ? -1 : 0;
+      if (aFeatured !== bFeatured) return aFeatured - bFeatured;
+      return Number(a.comingSoon) - Number(b.comingSoon);
+    });
 
     if (typeof limit === "number") {
       return sortedRestaurants.slice(0, limit);
