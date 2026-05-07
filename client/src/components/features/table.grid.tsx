@@ -139,26 +139,24 @@ const TableGrid: React.FC<TableGridProps> = ({ tables, markers = [], selectedTab
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3">
-        <h3 className="text-xl font-bold text-slate-900">Selecciona tu mesa</h3>
-
         <div className="flex flex-wrap gap-3 text-xs text-slate-500">
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm border border-emerald-200 bg-emerald-50" />
+            <span className="h-3 w-3 rounded-sm border border-emerald-500 bg-emerald-50" />
             Disponible
           </span>
 
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm border border-orange-200 bg-orange-50" />
+            <span className="h-3 w-3 rounded-sm border border-orange-500 bg-orange-50" />
             Reservada
           </span>
 
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm border border-red-200 bg-red-50" />
+            <span className="h-3 w-3 rounded-sm border border-red-500 bg-red-50" />
             Ocupada
           </span>
 
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm border border-indigo-200 bg-indigo-50" />
+            <span className="h-3 w-3 rounded-sm border border-indigo-500 bg-indigo-50" />
             Referencia
           </span>
 

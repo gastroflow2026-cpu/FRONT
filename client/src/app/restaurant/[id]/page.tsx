@@ -5,7 +5,7 @@ import axios from "axios";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Star, MapPin, Utensils } from "lucide-react";
+import {  MapPin, Utensils } from "lucide-react";
 import { reservationSchema } from "@/validations/reservationSchema";
 import { UsersContext } from "@/context/UsersContext";
 import { useRouter } from "next/navigation";
@@ -144,6 +144,7 @@ const RestaurantDetail = () => {
   const [loadingRestaurant, setLoadingRestaurant] = useState(true);
   const [restaurant, setRestaurant] = useState<RestaurantDetailData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showTableModal, setShowTableModal] = useState(false);
   const params = useParams();
   const { id } = params;
   const restaurantId = Array.isArray(id) ? id[0] : id;
@@ -187,6 +188,18 @@ const RestaurantDetail = () => {
     time: "",
     guests: "",
   });
+
+  // EFECTO: Bloquear scroll cuando el modal está abierto
+useEffect(() => {
+  if (showTableModal) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+  return () => {
+    document.body.style.overflow = "";
+  };
+}, [showTableModal]);
 
   // EFECTO 1: Carga de Menú
   useEffect(() => {
@@ -536,9 +549,9 @@ const RestaurantDetail = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full">
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">{restaurant.name}</h1>
               <div className="flex flex-wrap items-center gap-4 text-white">
-                <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
+                {/* <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
                   <Star size={16} className="text-orange-400 fill-orange-400" /> {restaurant.rating}
-                </span>
+                </span> */}
                 <span className="flex items-center gap-1">
                   <MapPin size={16} /> {restaurant.location}
                 </span>
@@ -676,7 +689,6 @@ const RestaurantDetail = () => {
           <div className="lg:col-span-1">
             <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 sticky top-24">
               <h3 className="mb-6 text-xl font-bold text-slate-900">Reserva tu mesa</h3>
-
               <div className="space-y-5">
                 {/* Nombre */}
                 <div>
@@ -797,40 +809,27 @@ const RestaurantDetail = () => {
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-900">Selecciona tu mesa</label>
                   {!formValues.date ? (
-                    <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-4 text-center text-sm text-slate-500">
+                    <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-4 text-center text-sm text-slate-900">
                       Seleccioná una fecha para ver las mesas disponibles
                     </p>
                   ) : loadingTables ? (
                     <p className="text-center text-sm text-slate-500 py-4">Cargando mesas...</p>
                   ) : publicLayoutTables.length === 0 ? (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
-                      Este restaurante aún no tiene mesas disponibles para seleccionar en el plano.
+                      Este restaurante aún no tiene mesas disponibles.
                     </p>
                   ) : filteredTables.length === 0 ? (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-4 text-center text-sm text-amber-800">
                       No hay mesas disponibles para este horario y cantidad de comensales.
                     </p>
                   ) : (
-                    <TableGrid
-                      tables={filteredTables}
-                      markers={restaurant.layout_markers}
-                      selectedTableId={selectedTable?.id || null}
-                      onTableSelect={setSelectedTable}
-                    />
-                  )}
-                  {selectedTable && (
-                    <div className="mt-2 p-2 bg-orange-50 border border-orange-100 rounded-xl flex justify-between items-center">
-                      <p className="text-orange-800 text-xs font-medium">
-                        Has seleccionado la <strong>Mesa {selectedTable.table_number}</strong> (Capacidad:{" "}
-                        {selectedTable.capacity} personas)
-                      </p>
-                      <button
-                        onClick={() => setSelectedTable(null)}
-                        className="text-orange-600 text-xs underline font-bold"
-                      >
-                        Cambiar
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowTableModal(true)}
+                      className="w-full rounded-xl border border-orange-200 bg-orange-50 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-100 transition"
+                    >
+                      {selectedTable ? `Mesa ${selectedTable.table_number} seleccionada — Cambiar` : "Ver plano y seleccionar mesa"}
+                    </button>
                   )}
                 </div>
 
@@ -844,6 +843,40 @@ const RestaurantDetail = () => {
                 </button>
                 <p className="text-[10px] text-center text-gray-400">Recibirás confirmación inmediata por email.</p>
               </div>
+
+              {showTableModal && (
+                <div 
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-8"
+                onClick={() => setShowTableModal(false)} 
+              >
+                <div 
+                  className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[75vh] flex flex-col mt-16 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()} 
+                >
+                  {/* Header fijo */}
+                  <div className="flex justify-between items-center px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
+                    <h2 className="text-lg font-bold text-slate-900">Seleccioná tu mesa</h2>
+                    <button
+                      onClick={() => setShowTableModal(false)}
+                       className="w-8 h-8 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-700 transition text-lg font-bold">
+                      ✕
+                    </button>
+                  </div>
+                  {/* Contenido con scroll */}
+                  <div className="overflow-y-auto p-5">
+                    <TableGrid
+                      tables={filteredTables}
+                      markers={restaurant.layout_markers}
+                      selectedTableId={selectedTable?.id || null}
+                      onTableSelect={(table) => {
+                        setSelectedTable(table);
+                        setShowTableModal(false);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              )}
             </div>
           </div>
         </section>

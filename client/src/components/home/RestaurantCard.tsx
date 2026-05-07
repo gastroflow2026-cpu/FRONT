@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { MapPin, Star, Utensils, Zap } from "lucide-react";
+import { MapPin, Utensils, Zap } from "lucide-react";
 
 interface RestaurantCardProps {
   id: string;
@@ -17,16 +17,13 @@ const RestaurantCard = ({
   name,
   image,
   category,
-  rating,
   location,
   comingSoon,
 }: RestaurantCardProps) => {
   const displayName = name?.trim() || "-";
   const displayCategory = category?.trim() || "-";
   const displayLocation = location?.trim() || "-";
-  const displayRating =
-    typeof rating === "number" ? rating.toFixed(1) : rating?.trim() || "-";
-
+  
   return (
     <div className="group cursor-pointer overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-md transition-all duration-500 hover:shadow-2xl">
       <div className="relative h-56 overflow-hidden">
@@ -60,12 +57,6 @@ const RestaurantCard = ({
           <h3 className="text-xl font-bold text-gray-900 transition-colors group-hover:text-orange-500">
             {displayName}
           </h3>
-          <div className="flex items-center gap-1 rounded-lg bg-orange-50 px-2 py-1">
-            <Star size={14} className="fill-orange-500 text-orange-500" />
-            <span className="text-sm font-bold text-orange-700">
-              {displayRating}
-            </span>
-          </div>
         </div>
 
         <div className="mb-4 flex items-center gap-1 text-sm text-gray-500">
