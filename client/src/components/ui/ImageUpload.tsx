@@ -6,7 +6,7 @@ import styles from "./ImageUpload.module.css";
 
 interface ImageUploadProps {
   value: string;
-  onChange: (url: string) => void;
+  onChange: (url: string,  file?: File) => void;
 }
 
 export function ImageUpload({ value, onChange }: ImageUploadProps) {
@@ -17,7 +17,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        onChange(e.target?.result as string);
+        onChange(e.target?.result as string, file);
       };
       reader.readAsDataURL(file);
     }
