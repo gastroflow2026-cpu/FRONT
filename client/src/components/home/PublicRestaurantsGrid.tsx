@@ -54,7 +54,7 @@ const PublicRestaurantsGrid = ({
         <div className="mb-12 flex items-end justify-between">
           <div>
             <h2 className="mb-2 text-3xl font-bold text-black md:text-4xl">{title}</h2>
-            <p className="text-black">{subtitle}</p>
+            <p className="text-gray-600">{subtitle}</p>
           </div>
 
           {showViewAllLink && (
