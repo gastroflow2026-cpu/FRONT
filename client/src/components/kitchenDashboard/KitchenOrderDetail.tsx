@@ -33,13 +33,13 @@ export default function KitchenOrderDetail({
   if (!order) {
     return (
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center mb-4">
-          <UtensilsCrossed size={36} className="text-gray-200" />
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50">
+          <UtensilsCrossed size={36} className="text-gray-300" />
         </div>
-        <p className="text-sm font-medium text-gray-400">
+        <p className="text-sm font-medium text-gray-500">
           Seleccioná una orden para ver el detalle
         </p>
-        <p className="text-xs text-gray-300 mt-1">
+        <p className="mt-1 text-xs text-gray-400">
           Hacé click en cualquier orden de la lista
         </p>
       </div>
@@ -67,18 +67,18 @@ export default function KitchenOrderDetail({
               {STATUS_LABELS[order.status]}
             </span>
           </div>
-          <p className="text-xs text-gray-400">{order.tableLabel}</p>
+          <p className="text-xs text-gray-500">{order.tableLabel}</p>
         </div>
         <button
           onClick={onClose}
           className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          <X size={16} className="text-gray-400" />
+          <X size={16} className="text-gray-500" />
         </button>
       </div>
 
       {/* Tiempos */}
-      <div className="flex items-center gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs text-gray-400">
+      <div className="flex items-center gap-4 border-b border-gray-100 bg-gray-50 px-5 py-3 text-xs text-gray-500">
         <span className="flex items-center gap-1">
           <Clock size={11} />
           Ingresó: {order.createdAt}
@@ -99,7 +99,7 @@ export default function KitchenOrderDetail({
 
       {/* Items */}
       <div className="flex-1 p-5 space-y-3">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
           Productos
         </p>
         {order.items.map((item, i) => (
@@ -126,7 +126,7 @@ export default function KitchenOrderDetail({
       {/* Botones de acción */}
       <div className="p-5 border-t border-gray-100 space-y-2">
         {isLoading ? (
-          <div className="flex items-center justify-center py-3 gap-2 text-gray-400 text-sm">
+          <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-500">
             <Loader2 size={16} className="animate-spin" />
             Actualizando...
           </div>

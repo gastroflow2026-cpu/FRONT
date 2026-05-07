@@ -8,13 +8,13 @@ const Footer = () => {
   return (
     <footer className="bg-black text-white pt-16 pb-8 border-t border-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
+          <div className="space-y-6 flex flex-col items-center md:items-start">
             <Image src={Logo} alt="GastroFlow" width={180} height={60} className="h-12 w-auto" />
-            <p className="text-gray-400 leading-relaxed">
+            <p className="text-gray-400 leading-relaxed text-center md:text-left">
               Transformando la manera en que descubres y reservas en los mejores restaurantes de la ciudad.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex justify-center md:justify-start space-x-4">
               <a
                 href="#"
                 className="p-2 bg-gray-900 rounded-full hover:bg-linear-to-tr hover:from-gastro-coral hover:to-gastro-magenta transition-all duration-300"
@@ -36,7 +36,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div>
+          <div className="text-center md:text-left">
             <h3 className="text-lg font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-gastro-coral to-gastro-magenta">
               Explorar
             </h3>
@@ -72,22 +72,22 @@ const Footer = () => {
                   Blog Gastronómico
                 </Link>
               </li> */}
-              <li>
+              <li className="flex justify-center md:justify-start">
                 <Link href="/join#planes" className="inline-flex items-center gap-2 hover:text-white transition-colors">
                   <BadgeDollarSign size={16} />
                   <span>Planes para restaurantes</span>
                 </Link>
               </li>
-              <li>
+              <li className="flex justify-center md:justify-start">
                 <Link href="/owner/login" className="inline-flex items-center gap-2 hover:text-white transition-colors">
                   <LogIn size={16} />
                   <span>Inicio de sesión restaurantes</span>
                 </Link>
               </li>
-              <li>
+              <li className="flex justify-center md:justify-start">
                 <Link
                   href="/platform/login"
-                  className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-2 hover:text-white transition-colors"
                 >
                   <ShieldCheck size={16} />
                   <span>Acceso plataforma</span>
@@ -136,21 +136,21 @@ const Footer = () => {
             </ul>
           </div> */}
 
-          <div>
+          <div className="text-center md:text-left">
             <h3 className="text-lg font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-gastro-coral to-gastro-magenta">
               Contacto
             </h3>
             <ul className="space-y-4 text-gray-400">
-              <li className="flex items-center gap-3">
-                <MapPin size={18} className="text-gastro-coral" />
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <MapPin size={18} className="text-gastro-coral shrink-0" />
                 <span>La Plata, Buenos Aires</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="text-gastro-coral" />
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <Phone size={18} className="text-gastro-coral shrink-0" />
                 <span>+54 351 561143</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Mail size={18} className="text-gastro-coral" />
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <Mail size={18} className="text-gastro-coral shrink-0" />
                 <span>gastroflow@gmail.com</span>
               </li>
             </ul>

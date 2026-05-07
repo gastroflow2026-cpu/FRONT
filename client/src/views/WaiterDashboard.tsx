@@ -2,6 +2,7 @@
 
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import {
   CheckCircle2,
@@ -190,7 +191,8 @@ const pickLastActiveOrder = (orders: RestaurantOrderSummary[]): RestaurantOrderS
 };
 
 export default function WaiterDashboard() {
-  const { isLogged } = useContext(UsersContext);
+  const router = useRouter();
+  const { isLogged, isLoading } = useContext(UsersContext);
   const { socket } = useSocket();
   const waiterName = isLogged?.name ?? "Mozo";
   const restaurantId = resolveRestaurantId(isLogged as Record<string, unknown> | null);
@@ -392,6 +394,32 @@ export default function WaiterDashboard() {
   useEffect(() => {
     void fetchMenu();
   }, [fetchMenu]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const roles = (isLogged?.roles ?? []).map((role) => role.toLowerCase());
+    const isWaiter = roles.some((role) => ["waiter", "mesero", "mozo", "staff_waiter"].includes(role));
+
+    if (!isLogged) {
+      router.replace("/login");
+      return;
+    }
+
+    if (roles.length > 0 && !isWaiter) {
+      if (roles.some((role) => ["cashier", "cajero", "staff_cashier"].includes(role))) {
+        router.replace("/cashier");
+        return;
+      }
+
+      if (roles.some((role) => ["chef", "cocinero", "staff_chef", "kitchen", "kitchen_staff"].includes(role))) {
+        router.replace("/kitchen");
+        return;
+      }
+
+      router.replace("/login");
+    }
+  }, [isLoading, isLogged, router]);
 
   useEffect(() => {
     const user = (isLogged as Record<string, unknown> | null) ?? null;
@@ -847,12 +875,12 @@ export default function WaiterDashboard() {
         notificationCount={tables.filter((table) => table.status === "listo").length}
       />
 
-      <main className="p-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <main className="px-4 py-4 sm:p-6 grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
         <div className="xl:col-span-1 bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-1">Mesas – {restaurantName}</h2>
-          <p className="text-xs text-gray-400 mb-4">Seleccioná una mesa para tomar el pedido</p>
+          <p className="mb-4 text-xs text-gray-500">Seleccioná una mesa para tomar el pedido</p>
 
-          <div className="flex flex-wrap gap-3 mb-4 text-xs text-gray-500">
+          <div className="mb-4 flex flex-wrap gap-3 text-xs text-gray-600">
             {(["libre", "ocupada", "reservada", "listo"] as TableStatus[]).map((status) => (
               <span key={status} className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${TABLE_DOT_STYLES[status]}`} />
@@ -868,7 +896,7 @@ export default function WaiterDashboard() {
           </div>
 
           {isSyncingOrders && !loadingTables && (
-            <div className="mb-4 flex items-center gap-2 text-xs text-gray-400">
+            <div className="mb-4 flex items-center gap-2 text-xs text-gray-500">
               <Loader2 size={12} className="animate-spin" />
               Sincronizando estados de órdenes...
             </div>
@@ -931,10 +959,10 @@ export default function WaiterDashboard() {
         <div className="xl:col-span-2 flex flex-col gap-4">
           {selectedTable ? (
             <>
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="font-bold text-gray-800">Mesa {selectedTable.tableNumber}</h2>
-                  <div className="text-xs text-gray-400 flex items-center gap-2 mt-1">
+                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
                     <Clock size={12} />
                     {selectedOrderStatus ? (
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 font-semibold ${ORDER_STATUS_BADGES[selectedOrderStatus]}`}>
@@ -999,7 +1027,7 @@ export default function WaiterDashboard() {
                           <button
                             key={categoryId}
                             onClick={() => setActiveCategory(categoryId)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeCategory === categoryId ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeCategory === categoryId ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-sm" : "bg-gray-100 text-gray-700 ring-1 ring-gray-200 hover:bg-gray-200 hover:text-gray-800"}`}
                           >
                             {categoryName}
                           </button>
@@ -1020,7 +1048,7 @@ export default function WaiterDashboard() {
                             <div className="flex justify-between items-start gap-2">
                               <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-gray-800 text-sm truncate">{item.name}</p>
-                                <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{item.description}</p>
+                                <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">{item.description}</p>
                                 <p className="text-sm font-bold text-orange-500 mt-1">${Number(item.price).toLocaleString("es-AR")}</p>
                               </div>
                               <button
