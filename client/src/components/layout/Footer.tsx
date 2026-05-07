@@ -87,7 +87,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="/platform/login"
-                  className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-2 hover:text-white transition-colors"
                 >
                   <ShieldCheck size={16} />
                   <span>Acceso plataforma</span>
