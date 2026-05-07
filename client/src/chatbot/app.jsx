@@ -5,7 +5,6 @@ import { useSocket } from "@/context/SocketContext";
 
 export default function ChatbotApp() {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ x: 20, y: 500 });
 
   const { socket, isConnected } = useSocket();
 
@@ -67,68 +66,37 @@ export default function ChatbotApp() {
   }, [messages]);
 
   // =========================
-  // DRAG
-  // =========================
-  const dragging = useRef(false);
-  const offset = useRef({ x: 0, y: 0 });
-
-  const handleMouseDown = (e) => {
-    dragging.current = true;
-
-    offset.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    };
-  };
-
-  const handleMouseMove = (e) => {
-    if (!dragging.current) return;
-
-    setPosition({
-      x: e.clientX - offset.current.x,
-      y: e.clientY - offset.current.y,
-    });
-  };
-
-  const handleMouseUp = () => {
-    dragging.current = false;
-  };
-
-  // =========================
   // UI
   // =========================
   return (
     <div
       style={{
         position: "fixed",
-        top: position.y,
-        left: position.x,
+        left: "16px",
+        bottom: "16px",
         zIndex: 9999,
+        maxWidth: "calc(100vw - 32px)",
       }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
     >
       {isOpen && (
         <div
           style={{
-            width: "320px",
-            height: "420px",
+            width: "min(360px, calc(100vw - 32px))",
+            height: "min(480px, calc(100vh - 120px))",
             background: "white",
             borderRadius: "16px",
             boxShadow: "0 12px 35px rgba(0,0,0,0.25)",
             overflow: "hidden",
             marginBottom: "12px",
-            border: "1px solid #e5e7eb",
+            border: "2px solid #f97316",
           }}
         >
           {/* HEADER */}
           <div
-            onMouseDown={handleMouseDown}
             style={{
-              background: "#ff512f",
+              background: "linear-gradient(90deg, #f97316, #db2777)",
               color: "white",
               padding: "14px",
-              cursor: "grab",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -227,14 +195,14 @@ export default function ChatbotApp() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        onMouseDown={handleMouseDown}
+        aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
         style={{
           width: "64px",
           height: "64px",
           borderRadius: "50%",
           background: "linear-gradient(135deg, #ff512f, #dd2476)",
           border: "2px solid rgba(255,255,255,0.15)",
-          cursor: "grab",
+          cursor: "pointer",
           boxShadow: `
             0 10px 25px rgba(0,0,0,0.4),
             0 0 20px rgba(221,36,118,0.6)
