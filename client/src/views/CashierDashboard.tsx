@@ -48,7 +48,7 @@ const TABS: { value: MainTab; label: string }[] = [
 
 export default function CashierDashboard() {
   const router = useRouter();
-  const { isLogged } = useContext(UsersContext);
+  const { isLogged, isLoading } = useContext(UsersContext);
   const { socket } = useSocket();
   const restaurantId = resolveRestaurantId(isLogged as Record<string, unknown> | null);
   const [restaurantName, setRestaurantName] = useState("Mi Restaurante");
@@ -250,8 +250,15 @@ export default function CashierDashboard() {
   }, [activeTab, loadCashierOrders]);
 
   useEffect(() => {
+    if (isLoading) return;
+
     const roles = (isLogged?.roles ?? []).map((role) => role.toLowerCase());
     const isCashier = roles.some((role) => ["cashier", "cajero", "staff_cashier"].includes(role));
+
+    if (!isLogged) {
+      router.replace("/login");
+      return;
+    }
 
     if (roles.length > 0 && !isCashier) {
       if (roles.some((role) => ["waiter", "mesero", "mozo", "staff_waiter"].includes(role))) {
@@ -266,7 +273,7 @@ export default function CashierDashboard() {
 
       router.replace("/login");
     }
-  }, [isLogged?.roles, router]);
+  }, [isLoading, isLogged, isLogged?.roles, router]);
 
   useEffect(() => {
     const user = (isLogged as Record<string, unknown> | null) ?? null;
@@ -750,7 +757,7 @@ export default function CashierDashboard() {
         }}
       />
 
-      <main className="p-6">
+      <main className="px-4 py-4 sm:p-6">
         {/* Título */}
         <div className="flex items-center gap-2 mb-6">
           <div className="w-5 h-5 grid grid-cols-2 gap-0.5">
@@ -782,12 +789,12 @@ export default function CashierDashboard() {
         />
 
         {/* Tabs principales */}
-        <div className="flex gap-1 bg-white border border-gray-100 rounded-xl shadow-sm p-1 mb-4">
+        <div className="flex gap-1 bg-white border border-gray-100 rounded-xl shadow-sm p-1 mb-4 overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`min-w-32.5 sm:flex-1 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.value
                   ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-md"
                   : "text-gray-500 hover:text-pink-600 hover:bg-linear-to-r hover:from-orange-50 hover:to-pink-50"

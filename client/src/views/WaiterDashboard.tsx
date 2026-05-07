@@ -2,6 +2,7 @@
 
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import {
   CheckCircle2,
@@ -190,7 +191,8 @@ const pickLastActiveOrder = (orders: RestaurantOrderSummary[]): RestaurantOrderS
 };
 
 export default function WaiterDashboard() {
-  const { isLogged } = useContext(UsersContext);
+  const router = useRouter();
+  const { isLogged, isLoading } = useContext(UsersContext);
   const { socket } = useSocket();
   const waiterName = isLogged?.name ?? "Mozo";
   const restaurantId = resolveRestaurantId(isLogged as Record<string, unknown> | null);
@@ -392,6 +394,32 @@ export default function WaiterDashboard() {
   useEffect(() => {
     void fetchMenu();
   }, [fetchMenu]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const roles = (isLogged?.roles ?? []).map((role) => role.toLowerCase());
+    const isWaiter = roles.some((role) => ["waiter", "mesero", "mozo", "staff_waiter"].includes(role));
+
+    if (!isLogged) {
+      router.replace("/login");
+      return;
+    }
+
+    if (roles.length > 0 && !isWaiter) {
+      if (roles.some((role) => ["cashier", "cajero", "staff_cashier"].includes(role))) {
+        router.replace("/cashier");
+        return;
+      }
+
+      if (roles.some((role) => ["chef", "cocinero", "staff_chef", "kitchen", "kitchen_staff"].includes(role))) {
+        router.replace("/kitchen");
+        return;
+      }
+
+      router.replace("/login");
+    }
+  }, [isLoading, isLogged, router]);
 
   useEffect(() => {
     const user = (isLogged as Record<string, unknown> | null) ?? null;
@@ -847,7 +875,7 @@ export default function WaiterDashboard() {
         notificationCount={tables.filter((table) => table.status === "listo").length}
       />
 
-      <main className="p-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <main className="px-4 py-4 sm:p-6 grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
         <div className="xl:col-span-1 bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-1">Mesas – {restaurantName}</h2>
           <p className="text-xs text-gray-400 mb-4">Seleccioná una mesa para tomar el pedido</p>
@@ -931,7 +959,7 @@ export default function WaiterDashboard() {
         <div className="xl:col-span-2 flex flex-col gap-4">
           {selectedTable ? (
             <>
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="font-bold text-gray-800">Mesa {selectedTable.tableNumber}</h2>
                   <div className="text-xs text-gray-400 flex items-center gap-2 mt-1">

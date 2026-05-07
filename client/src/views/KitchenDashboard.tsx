@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import KitchenNavbar from "@/components/kitchenDashboard/kitchenNavbar";
 import KitchenOrdersList from "@/components/kitchenDashboard/KitchenOrdersList";
 import KitchenOrderDetail from "@/components/kitchenDashboard/KitchenOrderDetail";
@@ -13,7 +14,8 @@ import {
 } from "@/services/orderLifecycle";
 
 export default function KitchenDashboard() {
-  const { isLogged } = useContext(UsersContext);
+  const router = useRouter();
+  const { isLogged, isLoading } = useContext(UsersContext);
   const { socket } = useSocket();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<KitchenOrder | null>(null);
@@ -61,6 +63,32 @@ export default function KitchenDashboard() {
 
     return () => window.clearInterval(intervalId);
   }, [loadOrders]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const roles = (isLogged?.roles ?? []).map((role) => role.toLowerCase());
+    const isKitchen = roles.some((role) => ["chef", "cocinero", "staff_chef", "kitchen", "kitchen_staff"].includes(role));
+
+    if (!isLogged) {
+      router.replace("/login");
+      return;
+    }
+
+    if (roles.length > 0 && !isKitchen) {
+      if (roles.some((role) => ["waiter", "mesero", "mozo", "staff_waiter"].includes(role))) {
+        router.replace("/waiter");
+        return;
+      }
+
+      if (roles.some((role) => ["cashier", "cajero", "staff_cashier"].includes(role))) {
+        router.replace("/cashier");
+        return;
+      }
+
+      router.replace("/login");
+    }
+  }, [isLoading, isLogged, router]);
 
   useEffect(() => {
     const user = (isLogged as Record<string, unknown> | null) ?? null;
@@ -198,7 +226,7 @@ export default function KitchenDashboard() {
         chefName={chefName}
       />
 
-      <main className="p-6">
+      <main className="px-4 py-4 sm:p-6">
         <div className="flex items-center gap-2 mb-6">
           <UtensilsCrossedIcon />
           <h1 className="text-xl font-semibold text-gray-800">
@@ -218,7 +246,7 @@ export default function KitchenDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           <KitchenOrdersList
             orders={orders}
             selectedOrderId={selectedOrder?.id ?? null}
