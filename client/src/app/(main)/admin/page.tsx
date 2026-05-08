@@ -57,7 +57,7 @@ export default function Admin() {
     reservations: <Reservations />,
     menu: <Menu />,
     tables: <TablesLayout />,
-    metrics: <Metrics />,
+    metrics: <Metrics key={restaurantProfile?.id ?? isLogged?.restaurant_id ?? "metrics"} />,
     orders: <Orders />,
     settings: <Settings />,
   };
@@ -71,6 +71,8 @@ export default function Admin() {
         return;
       }
       try {
+        setIsLoadingProfile(true);
+        setProfileError(null);
         const response = await axios.get<RestaurantProfile>(buildApiUrl("/restaurant/profile"), {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -82,7 +84,7 @@ export default function Admin() {
       }
     };
     fetchRestaurantProfile();
-  }, []);
+  }, [isLogged?.id]);
 
   useEffect(() => {
     const checkSubscription = async () => {
