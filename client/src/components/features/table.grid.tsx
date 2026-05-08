@@ -226,7 +226,7 @@ const TableGrid: React.FC<TableGridProps> = ({ tables, markers = [], selectedTab
                       Cap. {table.capacity}
                     </span>
 
-                    <span className="max-w-full truncate text-[9px] uppercase leading-tight">{table.zone}</span>
+                    <span className="text-[9px] uppercase leading-tight break-words text-center w-full">{table.zone}</span>
 
                     {blockedLabel && (
                       <span className="max-w-full truncate text-[9px] font-bold uppercase leading-tight">
