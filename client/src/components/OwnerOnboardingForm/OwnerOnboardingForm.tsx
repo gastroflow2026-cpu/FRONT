@@ -12,6 +12,9 @@ import {
   ownerOnboardingValidationSchema,
   OwnerOnboardingFormValues,
 } from "@/validations/ownerOnboardingSchema";
+import { getToken } from "@/helpers/getToken";
+import axios from "axios";
+import { ImageUploadDark } from "../ui/ImageUploadDark";
 
 type OwnerRestaurantOnboardingPayload = {
   name: string;
@@ -29,6 +32,25 @@ type OwnerRestaurantOnboardingPayload = {
 
 const fieldClassName =
   "w-full rounded-xl border border-orange-500/30 bg-[#111526] px-4 py-3 text-white outline-none transition focus:border-orange-400";
+
+export const uploadRestaurantImage = async (file: File): Promise<string> => {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await axios.post(
+    `${process.env.NEXT_PUBLIC_API_URL}/restaurant-verification/image`,
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return res.data.image_url;
+};
 
 export default function OwnerOnboardingForm() {
   const router = useRouter();
@@ -60,7 +82,7 @@ export default function OwnerOnboardingForm() {
     validationSchema: ownerOnboardingValidationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const { official_id, tax_or_business_document, proof_of_address, ...restaurantValues } = values;
+        const { official_id, tax_or_business_document, proof_of_address, image_url, ...restaurantValues } = values;
 
         const payload = Object.fromEntries(
           Object.entries(restaurantValues).filter(([key, value]) => {
@@ -118,6 +140,17 @@ export default function OwnerOnboardingForm() {
 
             return;
           }
+        }
+
+        if (image_url?.startsWith("data:image")) {
+        try {
+          const res = await fetch(image_url);
+          const blob = await res.blob();
+          const file = new File([blob], "restaurant-image.jpg", { type: blob.type });
+          await uploadRestaurantImage(file);
+        } catch {
+          console.warn("No se pudo subir la imagen, continuando sin ella");
+        }
         }
 
         try {
@@ -274,21 +307,14 @@ export default function OwnerOnboardingForm() {
               <div>
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-white/80">
                   <ImageIcon className="h-4 w-4 text-orange-300" />
-                  URL de la imagen del restaurante o plato destacado
+                  Imagen del restaurante
                 </label>
-                <input
-                  id="image_url"
-                  name="image_url"
-                  type="url"
-                  placeholder="https://..."
-                  className={fieldClassName}
-                  value={formik.values.image_url}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-                {formik.touched.image_url && formik.errors.image_url && (
-                  <p className="mt-2 text-sm text-red-400">{formik.errors.image_url}</p>
-                )}
+                <ImageUploadDark
+                value={formik.values.image_url}
+                  onChange={(preview) => {
+                  formik.setFieldValue("image_url", preview);
+                }}
+              />
               </div>
             </div>
 

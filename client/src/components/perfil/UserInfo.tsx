@@ -21,7 +21,12 @@ const ROLE_LABELS: Record<string, string> = {
   cajero: "Cajero",
 };
 
-export default function UserInfo({ user }: { user: User }) {
+interface UserInfoProps {
+  user: User;
+  onProfileUpdate?: (fields: { phone?: string; address?: string }) => void;
+}
+
+export default function UserInfo({ user, onProfileUpdate }: UserInfoProps) {
   const { id, name, email, phone, address, imgUrl, roles } = user ?? {};
   const [showPop, setShowPop] = useState(false);
 
@@ -90,6 +95,7 @@ export default function UserInfo({ user }: { user: User }) {
         getAuthHeaders()
       );
       syncSessionUser({ phone: phoneValue });
+      onProfileUpdate?.({ phone: phoneValue });
       setEditingPhone(false);
       setPhoneError("");
       Swal.fire({ theme: "dark", icon: "success", title: "Número actualizado", timer: 1500, showConfirmButton: false });
@@ -125,6 +131,7 @@ export default function UserInfo({ user }: { user: User }) {
         getAuthHeaders()
       );
       syncSessionUser({ address: addressValue });
+      onProfileUpdate?.({ address: addressValue });
       setEditingAddress(false);
       setAddressError("");
       Swal.fire({ theme: "dark", icon: "success", title: "Ubicación actualizada", timer: 1500, showConfirmButton: false });
@@ -208,9 +215,9 @@ export default function UserInfo({ user }: { user: User }) {
         </div>
       </div>
 
-      {/* Ubicación / Reservas */}
+      {/* Ubicación */}
       <div className={`${styles.infoRow} ${styles.autoRow}`}>
-        <div className={styles.half}>
+        <div className={styles.full}>
           <span className={styles.label}>UBICACIÓN</span>
           {editingAddress ? (
             <div className={styles.editField}>
@@ -243,10 +250,6 @@ export default function UserInfo({ user }: { user: User }) {
               </button>
             </div>
           )}
-        </div>
-        <div className={styles.half}>
-          <span className={styles.label}>RESERVAS</span>
-          <span className={styles.value}>0</span>
         </div>
       </div>
 

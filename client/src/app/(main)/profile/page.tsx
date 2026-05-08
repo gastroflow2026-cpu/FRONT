@@ -85,12 +85,16 @@ export default function Perfil() {
     roles: isLogged?.roles?.[0] ? [isLogged.roles[0]] : [],
   };
 
+  const handleProfileUpdate = (fields: { phone?: string; address?: string }) => {
+    setProfileData((prev) => ({ ...prev, ...fields }));
+  };
+
   return (
     <>
       <Navbar />
       <div className={styles.profile}>
         <div className={styles.userLayout}>
-          <UserInfo user={userData}/>
+          <UserInfo user={userData} onProfileUpdate={handleProfileUpdate} />
           <Password />
         </div>
       </div>
