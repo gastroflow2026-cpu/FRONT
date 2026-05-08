@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   keywords: ["restaurantes", "reservas", "gastronomía", "La Plata", "GastroFlow"],
   authors: [{ name: "GastroFlow" }],
   metadataBase: new URL("https://gastroflow.vercel.app"),
+  icons:{
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "GastroFlow – Reservas y gestión de restaurantes",
     description:

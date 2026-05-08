@@ -319,11 +319,10 @@ if (loading) {
               const status = STATUS_CONFIG[reservation.status] ?? STATUS_CONFIG.PENDING;
               const date = new Date(reservation.reservation_date).toLocaleDateString("es-AR", {
                 weekday: "long", day: "numeric", month: "long", year: "numeric",
+                timeZone: "UTC",
               });
 
-              const time = new Date(reservation.start_time).toLocaleTimeString("es-AR", {
-                hour: "2-digit", minute: "2-digit",
-              });
+              const time = reservation.start_time.slice(11, 16);
               return (
               <div key={reservation.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 {/* Header con imagen */}
