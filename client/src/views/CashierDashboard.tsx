@@ -250,6 +250,13 @@ export default function CashierDashboard() {
   }, [activeTab, loadCashierOrders]);
 
   useEffect(() => {
+    if (!isCashRegisterOpen && activeTab === "cobros") {
+      setActiveTab("mesas");
+      setSelectedTable(null);
+    }
+  }, [activeTab, isCashRegisterOpen]);
+
+  useEffect(() => {
     if (isLoading) return;
 
     const roles = (isLogged?.roles ?? []).map((role) => role.toLowerCase());
@@ -791,17 +798,29 @@ export default function CashierDashboard() {
         {/* Tabs principales */}
         <div className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-gray-100 bg-white p-1 shadow-sm">
           {TABS.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={`min-w-32.5 sm:flex-1 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.value
-                  ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-md"
-                  : "text-gray-700 hover:bg-linear-to-r hover:from-orange-50 hover:to-pink-50 hover:text-pink-700"
-              }`}
-            >
-              {tab.label}
-            </button>
+            (() => {
+              const isCobrosTab = tab.value === "cobros";
+              const isDisabled = isCobrosTab && !isCashRegisterOpen;
+
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    setActiveTab(tab.value);
+                  }}
+                  disabled={isDisabled}
+                  title={isDisabled ? "Abrí la caja para habilitar Cobros" : undefined}
+                  className={`min-w-32.5 sm:flex-1 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeTab === tab.value
+                      ? "bg-linear-to-r from-orange-500 to-pink-500 text-white shadow-md"
+                      : "text-gray-700 hover:bg-linear-to-r hover:from-orange-50 hover:to-pink-50 hover:text-pink-700"
+                  } ${isDisabled ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-gray-700" : ""}`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })()
           ))}
         </div>
 
