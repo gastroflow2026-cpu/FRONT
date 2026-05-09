@@ -441,20 +441,11 @@ useEffect(() => {
     if (isSubmitting) return; 
     setIsSubmitting(true);
 
-    void Swal.fire({
-      title: "Procesando solicitud...",
-      text: "Estamos gestionando tu reserva.",
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
+    
     try {
       await reservationSchema.validate(formValues, { abortEarly: false });
       if (!restaurantId) return;
-
+      
       if (!selectedTable) {
         Swal.close();
         Swal.fire({
@@ -466,58 +457,70 @@ useEffect(() => {
         return;
       }
 
+      
       if (!isLogged) {
         const dataToSave = {
           restaurantId: restaurantId,
           bookingDetails: formValues,
           selectedTableId: selectedTable.id,
         };
-
+        
         localStorage.setItem("gastroflow_temp_booking", JSON.stringify(dataToSave));
         router.push("/login");
         return;
-      } else {
-        const reservationPayload = {
-          customer_name: formValues.name,
-          customer_email: formValues.email,
-          customer_phone: Number(formValues.phone),
-          reservation_date: formValues.date,
-          start_time: `${formValues.date}T${formValues.time}:00.000`,
-          guests_count: formValues.guests,
-          notes: "",
-          table_id: selectedTable.id,
-        };
+      } 
+      
+      void Swal.fire({
+        title: "Procesando solicitud...",
+        text: "Estamos gestionando tu reserva.",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      
+      const reservationPayload = {
+        customer_name: formValues.name,
+        customer_email: formValues.email,
+        customer_phone: Number(formValues.phone),
+        reservation_date: formValues.date,
+        start_time: `${formValues.date}T${formValues.time}:00.000`,
+        guests_count: formValues.guests,
+        notes: "",
+        table_id: selectedTable.id,
+      };
 
-        const result = await handleReservation(restaurantId, reservationPayload);
+      const result = await handleReservation(restaurantId, reservationPayload);
 
-        if (result?.url) {
-          window.location.href = result.url;
-          return;
-        }
+      if (result?.url) {
+        window.location.href = result.url;
+        return;
+      }
 
-        const wasReservationStored = await verifyReservationCreated();
-        Swal.close();
+      const wasReservationStored = await verifyReservationCreated();
+      Swal.close();
 
-        if (!wasReservationStored) {
-          await Swal.fire({
-            icon: "info",
-            title: "Estamos verificando tu reserva",
-            text: "No recibimos confirmación inmediata del pago. Revisa tu sección de reservas en unos segundos.",
-            confirmButtonColor: "#ff7e5f",
-          });
-          return;
-        }
-
-        const [year, month, day] = formValues.date.split("-");
-        const formattedDate = `${day}/${month}/${year}`;
-        Swal.fire({
-          icon: "success",
-          title: "¡Reserva Exitosa!",
-          text: `Tu mesa para ${formValues.guests} personas el ${formattedDate} ha sido confirmada.`,
-          confirmButtonText: "¡Buen provecho!",
+      if (!wasReservationStored) {
+        await Swal.fire({
+          icon: "info",
+          title: "Estamos verificando tu reserva",
+          text: "No recibimos confirmación inmediata del pago. Revisa tu sección de reservas en unos segundos.",
           confirmButtonColor: "#ff7e5f",
         });
+        return;
       }
+
+      const [year, month, day] = formValues.date.split("-");
+      const formattedDate = `${day}/${month}/${year}`;
+      Swal.fire({
+        icon: "success",
+        title: "¡Reserva Exitosa!",
+        text: `Tu mesa para ${formValues.guests} personas el ${formattedDate} ha sido confirmada.`,
+        confirmButtonText: "¡Buen provecho!",
+        confirmButtonColor: "#ff7e5f",
+      });
+    
     } catch (err: unknown) {
       Swal.close();
       if (err instanceof ValidationError) {
